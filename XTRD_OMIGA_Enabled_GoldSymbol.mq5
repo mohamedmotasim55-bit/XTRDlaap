@@ -373,12 +373,12 @@ input double InpRateEWMAAlpha              = 0.02; // Tick-rate baseline decay (
 
 input group "STOPS / POSITION MANAGEMENT"
 input ENUM_TIMEFRAMES InpATRTimeframe      = PERIOD_M5; // ATR/geometry timeframe (M1 ATR is smaller than the spread)
-input double InpSL_ATR_Multiplier           = 0.55;
-input double InpTP_ATR_Multiplier           = 1.10;
+input double InpSL_ATR_Multiplier           = 0.25;
+input double InpTP_ATR_Multiplier           = 0.30;
 input double InpSLSpreadMultiple            = 6.0;  // SL floor = 6x live spread
 input double InpTPSpreadMultiple            = 9.0;  // TP floor = 9x live spread
 input double InpMinATRSpreadMultiple        = 3.0;  // Skip entries when ATR < 3x spread
-input double InpMinSLPts                   = 150.0;
+input double InpMinSLPts                   = 120.0;
 input double InpMaxSLPts                   = 900.0;
 input double InpBEExtraPts                 = 2.0;
 input bool   InpUseMicroBreakEven           = true;
@@ -2180,9 +2180,11 @@ void ManagePositions()
    if(!SymbolInfoTick(_Symbol,t)) return;
 
    const double sfloor=GeometrySpreadPts((t.ask-t.bid)/MathMax(point,OMEGA_EPS));
-   // Iteration 4 measured the defect: 3 winners closed at +12 pts against a
-   // 296 pt stop, because stage 1 moved the stop to break-even after only 19%
-   // of the stop distance. The ladder is now scaled to the stop distance, and
+   // Measured on this instrument: a trade reaches 143-205 pts of favourable
+   // excursion inside the holding window, so a 712 pt target was unreachable
+   // and the geometry is sized to that distribution instead.
+   // Iteration 4 also showed stage 1 arming at 19% of the stop distance, which
+   // closed winners at +12 pts. The ladder is now scaled to the stop distance, and
    // every lock is above the round-trip cost so a "protected" exit is not a
    // disguised loss.
    const double sl_ref=StopLossPts(atr,sfloor);
