@@ -303,7 +303,7 @@ input double InpBayesWeightPersistence     = 0.16;
 input double InpBayesWeightIntensity       = 0.10;
 input double InpBayesWeightDisplacement    = 0.10;
 input double InpMinEdgePts                 = 25.0; // Expected capture (pts) that must be left after costs
-input double InpEdgeToSpreadMin            = 1.50; // Edge must be >= 1.5x the live spread
+input double InpEdgeToSpreadMin            = 1.15; // Edge must beat the round-trip cost by 15%
 
 input group "SPREAD / EXECUTION"
 input double InpMaxSpreadPts               = 45.0; // Hard spread ceiling for a 25-35 pt standard account
@@ -395,7 +395,7 @@ input double InpTrailVelocityStrong         = 100.0;
 input double InpTrailVelocityWeak           = 20.0;
 input double InpTrailStrongATR              = 1.00;
 input double InpTrailWeakATR                = 0.60;
-input int    InpMaxTradeAgeSec              = 900;
+input int    InpMaxTradeAgeSec              = 600;
 input double InpStallVelocityPtsSec         = 3.0;
 input double InpStallProfitFloorPts         = -30.0; // Only cut stalls that are worse than -1 spread
 input bool   InpCloseStalledTrades          = true;
@@ -500,6 +500,7 @@ RollingStat g_rs_persist;
 RollingStat g_rs_absvel;
 RollingStat g_rs_absacc;
 RollingStat g_rs_absdisp;
+RollingStat g_rs_confidence;
 long g_stats_last_msc=0;
 long g_stats_pct_msc=0;
 long g_rate_sec_msc=0;
@@ -507,6 +508,7 @@ int g_rate_sec_ticks=0;
 double g_rate_current=0.0;
 double g_rate_ewma=0.0;
 double g_intensity_max=0.0;
+double g_last_confidence=0.0;
 double g_intensity_min=DBL_MAX;
 long g_rej[REJ_COUNT];
 int  g_gate_code=REJ_SESSION;
@@ -1028,6 +1030,7 @@ void SampleMarketStats(const long now_msc)
 {
    if(now_msc-g_stats_last_msc<1000) return;
    g_stats_last_msc=now_msc;
+   if(g_last_confidence>0.0) RS_Push(g_rs_confidence,g_last_confidence);
    g_intensity_max=MathMax(g_intensity_max,g_last_intensity);
    if(g_last_intensity>0.0) g_intensity_min=MathMin(g_intensity_min,g_last_intensity);
    RS_Push(g_rs_intensity,g_last_intensity);
@@ -1045,6 +1048,7 @@ void SampleMarketStats(const long now_msc)
    RS_UpdatePercentiles(g_rs_absvel);
    RS_UpdatePercentiles(g_rs_absacc);
    RS_UpdatePercentiles(g_rs_absdisp);
+   RS_UpdatePercentiles(g_rs_confidence);
 }
 
 // Percentile gates fall back to the absolute inputs until the sample is deep
@@ -1121,6 +1125,20 @@ double TakeProfitPts(const double atr,const double sl_pts,const double spread)
    return ClampD(MathMax(tp,sl_pts*1.25),InpMinSLPts,InpMaxSLPts*2.0);
 }
 
+// The fixed confidence floors were calibrated on a different probability
+// model: in iteration 5 about 1.3M signals reached this gate and almost none
+// cleared 0.56, which capped the whole system at 5 trades in 45 days. The
+// floor now tracks the instrument's own confidence distribution, keeping the
+// absolute value as a hard minimum.
+double ProbabilityFloor(const double abs_floor)
+{
+   if(!StatsReady(g_rs_confidence)) return 0.42;
+   // Deliberately allowed to fall below the legacy constant: on this
+   // instrument the model's own confidence tops out near 0.55, so a fixed
+   // 0.56 floor would be an unreachable wall rather than a filter.
+   return ClampD(g_rs_confidence.p60,0.42,0.95);
+}
+
 bool BuildSignal(const int strategy,SignalInfo &s)
 {
    ZeroMemory(s);
@@ -1183,12 +1201,13 @@ bool BuildSignal(const int strategy,SignalInfo &s)
       if(spread>InpBaselineSpreadPts*1.20) return RejectSignal(REJ_SPREAD);
       if(MathAbs(pr)>InpMicroPressureMax) return RejectSignal(REJ_DISPLACEMENT);
 
-      if(disp>0.0 && psell>=InpMicroProbabilityMin)
+      const double pfloor=ProbabilityFloor(InpMicroProbabilityMin);
+      if(disp>0.0 && psell>=pfloor)
       {
          s.direction=-1;
          probability=psell;
       }
-      else if(disp<0.0 && pbuy>=InpMicroProbabilityMin)
+      else if(disp<0.0 && pbuy>=pfloor)
       {
          s.direction=1;
          probability=pbuy;
@@ -1207,12 +1226,13 @@ bool BuildSignal(const int strategy,SignalInfo &s)
       if(MathAbs(a)<acc_gate) return RejectSignal(REJ_ACCELERATION);
       if(regime==REGIME_QUIET) return RejectSignal(REJ_REGIME);
 
-      if(v>0.0 && pbuy>=InpMomentumProbabilityMin)
+      const double pfloor=ProbabilityFloor(InpMomentumProbabilityMin);
+      if(v>0.0 && pbuy>=pfloor)
       {
          s.direction=1;
          probability=pbuy;
       }
-      else if(v<0.0 && psell>=InpMomentumProbabilityMin)
+      else if(v<0.0 && psell>=pfloor)
       {
          s.direction=-1;
          probability=psell;
@@ -1231,12 +1251,13 @@ bool BuildSignal(const int strategy,SignalInfo &s)
       if(MathAbs(v)>MathMax(1.0,atr)*InpExhaustionVelocityRatio) return RejectSignal(REJ_PERSISTENCE);
       if(MathAbs(pr)>MathMax(1.0,atr)*InpExhaustionPressureRatio) return RejectSignal(REJ_DISPLACEMENT);
 
-      if(disp>0.0 && psell>=InpExhaustionProbabilityMin)
+      const double pfloor=ProbabilityFloor(InpExhaustionProbabilityMin);
+      if(disp>0.0 && psell>=pfloor)
       {
          s.direction=-1;
          probability=psell;
       }
-      else if(disp<0.0 && pbuy>=InpExhaustionProbabilityMin)
+      else if(disp<0.0 && pbuy>=pfloor)
       {
          s.direction=1;
          probability=pbuy;
@@ -1247,6 +1268,7 @@ bool BuildSignal(const int strategy,SignalInfo &s)
 
    // Edge is the probability-weighted share of the *actual* target, in points.
    s.probability=probability;
+   g_last_confidence=probability;
    const double edge=(probability-0.5)*2.0*s.tp_pts;
    if(edge<InpMinEdgePts) return RejectSignal(REJ_EDGE);
    if(!SpreadGate(edge,spread)) return RejectSignal(REJ_SPREAD);
@@ -2982,6 +3004,9 @@ void WriteTesterSummary()
    FileWrite(h,"last_check_retcode",(string)g_last_check_retcode);
    FileWrite(h,"check_advisory_override",(string)g_check_advisory_override);
    FileWrite(h,"max_affordable_stop",DoubleToString(MaxAffordableStopPts(),1));
+   FileWrite(h,"p50_confidence",DoubleToString(g_rs_confidence.p50,4));
+   FileWrite(h,"p60_confidence",DoubleToString(g_rs_confidence.p60,4));
+   FileWrite(h,"p90_confidence",DoubleToString(g_rs_confidence.p90,4));
    FileWrite(h,"ticks_seen",(string)g_count);
    FileWrite(h,"ea_deals",(string)g_total_deals);
    FileClose(h);
