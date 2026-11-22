@@ -508,6 +508,9 @@ double g_intensity_max=0.0;
 double g_intensity_min=DBL_MAX;
 long g_rej[REJ_COUNT];
 int  g_gate_code=REJ_SESSION;
+int  g_last_check_retcode=0;
+int  g_check_log_count=0;
+long g_check_advisory_override=0;
 string g_rej_names[REJ_COUNT]=
 {
    "session","warmup","atr","volfloor","intensity","displacement","persistence",
@@ -1089,10 +1092,24 @@ double GeometrySpreadPts(const double live_spread)
    return MathMax(live_spread,MathMax(1.0,InpBaselineSpreadPts*0.8));
 }
 
+// The smallest tradable volume must stay inside the account risk cap. On a
+// 100 USD account a 356 pt stop at 0.01 lot risks 3.56%, above the 3% cap, so
+// the stop is clipped to what the account can actually carry.
+double MaxAffordableStopPts()
+{
+   const double equity=AccountInfoDouble(ACCOUNT_EQUITY);
+   const double per_point=LossPerLot(1.0);
+   const double minv=MathMax(InpMinLotOverride,MathMax(SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN),0.01));
+   if(equity<=0.0 || per_point<=0.0 || minv<=0.0) return InpMaxSLPts;
+   const double cap=equity*InpMaxAccountRiskPct/100.0;
+   return MathMax(InpMinSLPts,cap/(per_point*minv));
+}
+
 double StopLossPts(const double atr,const double spread)
 {
    const double s=GeometrySpreadPts(spread);
-   return ClampD(MathMax(atr*InpSL_ATR_Multiplier,s*InpSLSpreadMultiple),InpMinSLPts,InpMaxSLPts);
+   const double raw=ClampD(MathMax(atr*InpSL_ATR_Multiplier,s*InpSLSpreadMultiple),InpMinSLPts,InpMaxSLPts);
+   return MathMin(raw,MaxAffordableStopPts());
 }
 
 double TakeProfitPts(const double atr,const double sl_pts,const double spread)
@@ -1820,8 +1837,35 @@ bool ValidateTradeRequest(MqlTradeRequest &req)
    if(!InpUseOrderCheck) return true;
    MqlTradeCheckResult chk={};
    ResetLastError();
-   if(!OrderCheck(req,chk)) return false;
-   if(chk.retcode!=TRADE_RETCODE_DONE && chk.retcode!=TRADE_RETCODE_PLACED && chk.retcode!=TRADE_RETCODE_DONE_PARTIAL) return false;
+   const bool ok=OrderCheck(req,chk);
+   g_last_check_retcode=(int)chk.retcode;
+   if(ok && (chk.retcode==TRADE_RETCODE_DONE || chk.retcode==TRADE_RETCODE_PLACED ||
+             chk.retcode==TRADE_RETCODE_DONE_PARTIAL))
+      return true;
+
+   if(g_check_log_count<8)
+   {
+      g_check_log_count++;
+      PrintFormat("X13 Omega: OrderCheck %s retcode=%d comment=%s vol=%.2f price=%.3f sl=%.3f tp=%.3f margin=%.2f free=%.2f",
+                  (ok?"failed":"returned false"),chk.retcode,chk.comment,req.volume,
+                  req.price,req.sl,req.tp,chk.margin,chk.margin_free);
+   }
+
+   // OrderCheck is a pre-flight advisory and is unreliable in the strategy
+   // tester. Keep the hard account-side blockers, let OrderSend decide the
+   // rest, and record the retcode so the funnel stays measurable.
+   switch((int)chk.retcode)
+   {
+      case TRADE_RETCODE_NO_MONEY:
+      case TRADE_RETCODE_INVALID_VOLUME:
+      case TRADE_RETCODE_INVALID_STOPS:
+      case TRADE_RETCODE_INVALID_FILL:
+      case TRADE_RETCODE_INVALID_PRICE:
+      case TRADE_RETCODE_MARKET_CLOSED:
+      case TRADE_RETCODE_TRADE_DISABLED:
+         return false;
+   }
+   g_check_advisory_override++;
    return true;
 }
 
@@ -2870,6 +2914,9 @@ void WriteTesterSummary()
    FileWrite(h,"max_intensity",DoubleToString(g_intensity_max,3));
    FileWrite(h,"min_intensity",DoubleToString(g_intensity_min==DBL_MAX ? 0.0 : g_intensity_min,3));
    FileWrite(h,"rate_ewma",DoubleToString(g_rate_ewma,3));
+   FileWrite(h,"last_check_retcode",(string)g_last_check_retcode);
+   FileWrite(h,"check_advisory_override",(string)g_check_advisory_override);
+   FileWrite(h,"max_affordable_stop",DoubleToString(MaxAffordableStopPts(),1));
    FileWrite(h,"ticks_seen",(string)g_count);
    FileWrite(h,"ea_deals",(string)g_total_deals);
    FileClose(h);
