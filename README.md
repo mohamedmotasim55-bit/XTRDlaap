@@ -60,3 +60,15 @@ is below the best previous score the row is marked `REVERT`.
 
 `tools/mql5_lint.py` is a proxy, not a compiler. The CI job is the authoritative
 compile check.
+
+## Stress backtest loop
+
+`XTRD_OMIGA_FINAL.mq5` is the best measured iteration of the automated loop.
+Each iteration compiles the expert, runs a real-tick stress backtest on
+`XAUUSD.m` with a 15 ms execution delay, and records net profit, profit factor,
+drawdown, trade count, per-strategy results and every rejection counter in
+`CHANGELOG.md`.
+
+See `FINAL_REPORT.md` for the defects found, the fixes applied and the measured
+results. The pipeline lives in `.github/workflows/backtest.yml`; analysis and
+local linting are in `tools/analyze_backtest.py` and `tools/mql5_lint.py`.

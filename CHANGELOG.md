@@ -45,6 +45,54 @@ execution delay, 100 USD, stress spread 26 pts (matches the live quote).
   periodic log, so the next iteration is measurement driven.
 - Exhaustion and momentum no longer require an unreachable regime label.
 
+## Iteration log
+
+Every row is a real-tick run on `XAUUSD.m`, M1, 2026.10.07 -> 2026.11.21,
+100 USD, 1:100, 15 ms execution delay, 26 pt spread.
+
+| iter | change under test | trades | net USD | PF | max DD |
+| --- | --- | --- | --- | --- | --- |
+| 0 | pipeline bring-up | 0 | 0.00 | - | 0.00% |
+| 1 | percentile gates replace fixed constants | 0 | 0.00 | - | 0.00% |
+| 2 | tick intensity rebuilt as rate / EWMA | 0 | 0.00 | - | 0.00% |
+| 3 | rejection counters through the send path | 0 | 0.00 | - | 0.00% |
+| **4** | **OrderCheck advisory, affordable stop** | **4** | **-1.20** | **0.231** | **2.31%** |
+| 5 | BE ladder scaled to the stop, deal sync | 5 | -2.43 | 0.233 | 3.98% |
+| 6 | probability floor self-calibrated | 4 | -4.41 | 0.066 | 4.98% |
+| 7 | passive entries for reversion | 5 | -7.37 | 0.028 | 7.37% |
+| 8 | stop/target sized to measured excursions | 3 | -3.00 | 0.065 | 3.47% |
+
+Iteration 4 is the best measured configuration and is shipped as
+`XTRD_OMIGA_FINAL.mq5`.
+
+### What each iteration proved
+
+1. **Iteration 1** - 44,519,586 of 44,519,586 signals died at the intensity
+   gate (`p70 = 0.951`). The gate was not strict, it was unreachable.
+2. **Iteration 2** - `TickIntensity()` compared a window against a baseline
+   built from the same window, so the ratio sat at 1.0 with almost no
+   variance. Replaced by current tick rate over a slow EWMA (`max 7.47`,
+   `p90 1.67`), which restored a usable distribution.
+3. **Iteration 3** - 1,630 signals reached the send path and all 1,630 were
+   killed by `ValidateTradeRequest`. `OrderCheck` is advisory in the tester.
+4. **Iteration 4** - first trades. The 356 pt stop risked 3.56% of a 100 USD
+   account at the 0.01 minimum lot, above the 3% cap, so stops are clipped to
+   what the account can carry. Winners averaged +12 pts against a 296 pt
+   stop: stage 1 armed at 19% of the stop distance and locked 15.6 pts, less
+   than the 26 pt round-trip cost.
+5. **Iteration 5** - deals reconciled from history (OnTradeTransaction never
+   fired in the tester), which finally produced the ledger. It showed every
+   trade reaching 143-205 pts of favourable excursion and still closing at
+   the stop.
+6. **Iteration 6** - 1.3M signals reached the confidence gate and almost none
+   cleared the fixed 0.56 floor; the model's own confidence tops out near
+   0.55 on this instrument.
+7. **Iteration 7** - the terminal log reported `avg_slip=44.86` points per
+   market fill against a 26 pt spread, 29% of the stop burned on entry.
+   Reversion strategies now enter passively.
+8. **Iteration 8** - the target sat at 712 pts while the measured excursion
+   tops out near 205 pts, so the target was unreachable by construction.
+
 <!-- METRICS:START -->
 | iter | net USD | PF | trades | equity DD % | recovery | score | verdict |
 | --- | --- | --- | --- | --- | --- | --- | --- |
