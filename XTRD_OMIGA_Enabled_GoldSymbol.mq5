@@ -477,6 +477,7 @@ RollingStat g_rs_absvel;
 RollingStat g_rs_absacc;
 RollingStat g_rs_absdisp;
 long g_stats_last_msc=0;
+long g_stats_pct_msc=0;
 long g_rej[REJ_COUNT];
  int g_last_session=SESSION_OFF;
 
@@ -965,11 +966,17 @@ double RS_Quantile(const RollingStat &s,const double q)
 void RS_UpdatePercentiles(RollingStat &s)
 {
    if(s.cnt<=0) return;
-   s.p50=RS_Quantile(s,0.50);
-   s.p60=RS_Quantile(s,0.60);
-   s.p70=RS_Quantile(s,0.70);
-   s.p85=RS_Quantile(s,0.85);
-   s.p90=RS_Quantile(s,0.90);
+   // One sort feeds all five quantiles.
+   double tmp[];
+   ArrayResize(tmp,s.cnt);
+   for(int i=0;i<s.cnt;i++) tmp[i]=s.v[i];
+   ArraySort(tmp);
+   const int last=s.cnt-1;
+   s.p50=tmp[ClampI((int)MathFloor(0.50*last+0.5),0,last)];
+   s.p60=tmp[ClampI((int)MathFloor(0.60*last+0.5),0,last)];
+   s.p70=tmp[ClampI((int)MathFloor(0.70*last+0.5),0,last)];
+   s.p85=tmp[ClampI((int)MathFloor(0.85*last+0.5),0,last)];
+   s.p90=tmp[ClampI((int)MathFloor(0.90*last+0.5),0,last)];
 }
 
 void SampleMarketStats(const long now_msc)
@@ -981,6 +988,11 @@ void SampleMarketStats(const long now_msc)
    RS_Push(g_rs_absvel,MathAbs(g_last_velocity));
    RS_Push(g_rs_absacc,MathAbs(g_last_acceleration));
    RS_Push(g_rs_absdisp,MathAbs(g_last_displacement));
+   // Sorting 5 windows every second dominates the tester runtime on a
+   // 45 day real-tick run, and a minute of staleness is irrelevant to the
+   // gates, so the quantiles are refreshed on a slower clock.
+   if(now_msc-g_stats_pct_msc<60000) return;
+   g_stats_pct_msc=now_msc;
    RS_UpdatePercentiles(g_rs_intensity);
    RS_UpdatePercentiles(g_rs_persist);
    RS_UpdatePercentiles(g_rs_absvel);
