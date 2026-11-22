@@ -498,7 +498,9 @@ def main(argv: list[str]) -> int:
 
     metrics: dict = {"iteration": args.iteration}
 
-    report = args.report or glob_first(["artifacts/backtest_report.htm", "artifacts/*.htm", "artifacts/*.html"])
+    report = args.report or glob_first(["artifacts/backtest_report.htm", "artifacts/*.htm",
+                                        "artifacts/*.html", "artifacts/**/*.htm",
+                                        "artifacts/**/*.html"])
     if report and os.path.exists(report):
         html = open(report, encoding="utf-8", errors="replace").read()
         tables = parse_tables(html)
@@ -515,7 +517,8 @@ def main(argv: list[str]) -> int:
         metrics["summary"] = {}
         metrics["error"] = "report not found"
 
-    summary_path = glob_first(args.summary or ["artifacts/*Summary*.csv", "artifacts/*summary*.csv"])
+    summary_path = glob_first(args.summary or ["artifacts/*Summary*.csv", "artifacts/*summary*.csv",
+                                               "artifacts/**/*Summary*.csv", "artifacts/**/*summary*.csv"])
     if summary_path:
         metrics["ea_summary"] = parse_summary_csv(summary_path)
         if not metrics["summary"]:
@@ -531,10 +534,12 @@ def main(argv: list[str]) -> int:
             metrics.update({k: v for k, v in metrics["summary"].items() if k not in metrics})
             metrics.pop("error", None)
 
-    telemetry_path = glob_first(args.telemetry or ["artifacts/*Telemetry*.csv", "artifacts/*telemetry*.csv"])
+    telemetry_path = glob_first(args.telemetry or ["artifacts/*Telemetry*.csv", "artifacts/*telemetry*.csv",
+                                             "artifacts/**/*Telemetry*.csv", "artifacts/**/*telemetry*.csv"])
     metrics["telemetry"] = summarize_telemetry(load_csv(telemetry_path)) if telemetry_path else {}
 
-    ledger_path = glob_first(args.ledger or ["artifacts/*Ledger*.csv", "artifacts/*ledger*.csv"])
+    ledger_path = glob_first(args.ledger or ["artifacts/*Ledger*.csv", "artifacts/*ledger*.csv",
+                                          "artifacts/**/*Ledger*.csv", "artifacts/**/*ledger*.csv"])
     metrics["ledger"] = summarize_ledger(load_csv(ledger_path)) if ledger_path else {}
     metrics["sources"] = {"report": report, "telemetry": telemetry_path,
                           "ledger": ledger_path, "summary": summary_path}

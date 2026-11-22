@@ -1,9 +1,0 @@
-2026-11-22 21:14:12.158: [INFO] CurrentProfilePath: C:\mt5\temp\EBWebView\Default
-2026-11-22 21:14:12.158: [INFO] Profiles total count: 1
-2026-11-22 21:14:12.158: [INFO] Profile: name=Profile 1 path=C:\mt5\temp\EBWebView\Default lastActive=null
-2026-11-22 21:14:12.158: [INFO] LastUsedProfileDir: C:\mt5\temp\EBWebView\Default
-2026-11-22 21:14:12.158: [INFO] OnDoneLoading sync enabled: 0
-2026-11-22 21:14:12.158: [INFO] BookmarkModelLoaded, ids_reassigned: 0
-2026-11-22 21:14:12.158: [INFO] BookmarksLoadDropped droppedNodes=0
-2026-11-22 21:14:12.158: [INFO] BookmarksSnapshot Startup total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1
-2026-11-22 21:16:03.528: [INFO] BookmarksSnapshot Shutdown total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1

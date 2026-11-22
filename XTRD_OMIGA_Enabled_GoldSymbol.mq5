@@ -55,7 +55,28 @@
 #define REJ_PROBABILITY            9
 #define REJ_EDGE                  10
 #define REJ_SPREAD                11
-#define REJ_COUNT                 12
+#define REJ_NOT_CONNECTED         12
+#define REJ_MQL_DISABLED          13
+#define REJ_ACCT_DISABLED         14
+#define REJ_ROLLOVER              15
+#define REJ_DD_HARD               16
+#define REJ_DAILY_DD              17
+#define REJ_MAXPOS                18
+#define REJ_SAMEDIR               19
+#define REJ_LOTS_CAP              20
+#define REJ_DELTA_CAP             21
+#define REJ_MARGIN_CAP            22
+#define REJ_PORTFOLIO_RISK        23
+#define REJ_COOLDOWN              24
+#define REJ_LOT_ZERO              25
+#define REJ_SEND_CANNOT           26
+#define REJ_SEND_MARGIN           27
+#define REJ_SEND_STOPS            28
+#define REJ_SEND_SLOT             29
+#define REJ_SEND_VALIDATE         30
+#define REJ_SEND_TOKEN            31
+#define REJ_SEND_ORDER            32
+#define REJ_COUNT                 33
 
 //----------------------------- Enums -------------------------------//
 enum ENUM_OMEGA_STRATEGY
@@ -486,6 +507,16 @@ double g_rate_ewma=0.0;
 double g_intensity_max=0.0;
 double g_intensity_min=DBL_MAX;
 long g_rej[REJ_COUNT];
+int  g_gate_code=REJ_SESSION;
+string g_rej_names[REJ_COUNT]=
+{
+   "session","warmup","atr","volfloor","intensity","displacement","persistence",
+   "acceleration","regime","probability","edge","spread","not_connected",
+   "mql_disabled","acct_disabled","rollover","dd_hard","daily_dd","maxpos",
+   "samedir","lots_cap","delta_cap","margin_cap","portfolio_risk","cooldown",
+   "lot_zero","send_cannot","send_margin","send_stops","send_slot",
+   "send_validate","send_token","send_order"
+};
  int g_last_session=SESSION_OFF;
 
  double g_peak_equity=0.0;
@@ -1582,7 +1613,7 @@ double OutstandingRequestMargin()
 
 bool PortfolioRiskGate(const SignalInfo &s,const double lot)
 {
-   if(lot<=0.0) return false;
+   if(lot<=0.0) { g_gate_code=REJ_LOT_ZERO; return false; }
    const double equity=AccountInfoDouble(ACCOUNT_EQUITY);
    const double margin=AccountInfoDouble(ACCOUNT_MARGIN);
    const double free_margin=AccountInfoDouble(ACCOUNT_MARGIN_FREE);
@@ -1595,21 +1626,21 @@ bool PortfolioRiskGate(const SignalInfo &s,const double lot)
    {
       max_allowed_pos = MathMin(15, 2 + (int)MathFloor(MathMax(0.0, equity - 20.0) / 20.0));
    }
-   if(CountOurPositions()>=max_allowed_pos) return false;
-   if(CountOurPositionsDirection(s.direction)>=InpMaxSameDirectionPositions) return false;
-   if(OurLots()+lot>InpMaxPortfolioLots) return false;
+   if(CountOurPositions()>=max_allowed_pos) { g_gate_code=REJ_MAXPOS; return false; }
+   if(CountOurPositionsDirection(s.direction)>=InpMaxSameDirectionPositions) { g_gate_code=REJ_SAMEDIR; return false; }
+   if(OurLots()+lot>InpMaxPortfolioLots) { g_gate_code=REJ_LOTS_CAP; return false; }
 
    const double delta=OurDeltaLots();
-   if(MathAbs(delta+s.direction*lot)>InpMaxPortfolioDeltaLots) return false;
+   if(MathAbs(delta+s.direction*lot)>InpMaxPortfolioDeltaLots) { g_gate_code=REJ_DELTA_CAP; return false; }
    if(equity<=0.0 || free_margin<=0.0) return false;
    const double reserved_margin=OutstandingRequestMargin();
-   if((margin+reserved_margin)/equity>=InpMarginUtilizationMax) return false;
+   if((margin+reserved_margin)/equity>=InpMarginUtilizationMax) { g_gate_code=REJ_MARGIN_CAP; return false; }
 
    // Portfolio risk cap using actual SL distance.
    const double new_risk=LossPerLot(s.sl_pts)*lot;
    const double existing=OpenRiskMoney()+PendingRiskMoney()+OutstandingRequestRiskMoney();
    const double cap=equity*InpPortfolioRiskCapPct/100.0;
-   if(existing+new_risk>cap) return false;
+   if(existing+new_risk>cap) { g_gate_code=REJ_PORTFOLIO_RISK; return false; }
 
    return true;
 }
@@ -1721,9 +1752,9 @@ ENUM_ORDER_TYPE_FILLING GetFillingMode()
 
 bool IsTradeEnvironmentReady()
 {
-   if(!TerminalInfoInteger(TERMINAL_CONNECTED)) return false;
-   if(!MQLInfoInteger(MQL_TRADE_ALLOWED)) return false;
-   if(!AccountInfoInteger(ACCOUNT_TRADE_ALLOWED)) return false;
+   if(!TerminalInfoInteger(TERMINAL_CONNECTED)) { g_gate_code=REJ_NOT_CONNECTED; return false; }
+   if(!MQLInfoInteger(MQL_TRADE_ALLOWED)) { g_gate_code=REJ_MQL_DISABLED; return false; }
+   if(!AccountInfoInteger(ACCOUNT_TRADE_ALLOWED)) { g_gate_code=REJ_ACCT_DISABLED; return false; }
    return true;
 }
 
@@ -1796,15 +1827,16 @@ bool ValidateTradeRequest(MqlTradeRequest &req)
 
 bool SendMarket(const SignalInfo &s,const double lot)
 {
-   if(lot<=0.0 || !CanSendOrder()) return false;
+   if(lot<=0.0) { g_gate_code=REJ_LOT_ZERO; return false; }
+   if(!CanSendOrder()) { g_gate_code=REJ_SEND_CANNOT; return false; }
    MqlTick t;
-   if(!SymbolInfoTick(_Symbol,t)) return false;
+   if(!SymbolInfoTick(_Symbol,t)) { g_gate_code=REJ_SEND_CANNOT; return false; }
    const ENUM_ORDER_TYPE type=(s.direction>0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL);
    const double price=(s.direction>0 ? t.ask : t.bid);
-   if(!CheckMarginForOrder(type,lot,price)) return false;
+   if(!CheckMarginForOrder(type,lot,price)) { g_gate_code=REJ_SEND_MARGIN; return false; }
 
    const double point=PointValue();
-   if(point<=0.0 || !StopDistancesValid(s.sl_pts,s.tp_pts)) return false;
+   if(point<=0.0 || !StopDistancesValid(s.sl_pts,s.tp_pts)) { g_gate_code=REJ_SEND_STOPS; return false; }
    const double sl=NormalizePrice(s.direction>0 ? price-s.sl_pts*point : price+s.sl_pts*point);
    const double tp=NormalizePrice(s.direction>0 ? price+s.tp_pts*point : price-s.tp_pts*point);
 
@@ -1825,16 +1857,24 @@ bool SendMarket(const SignalInfo &s,const double lot)
    const ulong local_id=++g_local_request_counter;
    const long sent_us=NowMicroseconds();
    const int slot=TrackRequest(req,local_id,sent_us,s.strategy,s.signal_id);
-   if(slot<0) return false;
+   if(slot<0) { g_gate_code=REJ_SEND_SLOT; return false; }
 
-   if(!ValidateTradeRequest(req) || !ConsumeToken())
+   if(!ValidateTradeRequest(req))
    {
+      g_gate_code=REJ_SEND_VALIDATE;
+      ClearRequest(slot);
+      return false;
+   }
+   if(!ConsumeToken())
+   {
+      g_gate_code=REJ_SEND_TOKEN;
       ClearRequest(slot);
       return false;
    }
    ResetLastError();
    if(!OrderSendAsync(req,res))
    {
+      g_gate_code=REJ_SEND_ORDER;
       ClearRequest(slot);
       return false;
    }
@@ -1847,18 +1887,19 @@ bool SendMarket(const SignalInfo &s,const double lot)
 
 bool SendLimit(const SignalInfo &s,const double lot)
 {
-   if(lot<=0.0 || !CanSendOrder()) return false;
-   if(CountOurPending()>=InpMaxPendingOrders) return false;
+   if(lot<=0.0) { g_gate_code=REJ_LOT_ZERO; return false; }
+   if(!CanSendOrder()) { g_gate_code=REJ_SEND_CANNOT; return false; }
+   if(CountOurPending()>=InpMaxPendingOrders) { g_gate_code=REJ_MAXPOS; return false; }
    MqlTick t;
-   if(!SymbolInfoTick(_Symbol,t)) return false;
+   if(!SymbolInfoTick(_Symbol,t)) { g_gate_code=REJ_SEND_CANNOT; return false; }
    const double point=PointValue();
-   if(point<=0.0) return false;
+   if(point<=0.0) { g_gate_code=REJ_SEND_STOPS; return false; }
 
    // Passive reversion: buy limit below bid, sell limit above ask.
    double price=(s.direction>0 ? t.bid-InpLimitDistancePts*point : t.ask+InpLimitDistancePts*point);
    price=NormalizePrice(price);
    const ENUM_ORDER_TYPE type=(s.direction>0 ? ORDER_TYPE_BUY_LIMIT : ORDER_TYPE_SELL_LIMIT);
-   if(!CheckMarginForOrder(type,lot,price)) return false;
+   if(!CheckMarginForOrder(type,lot,price)) { g_gate_code=REJ_SEND_MARGIN; return false; }
 
    const double sl=NormalizePrice(s.direction>0 ? price-s.sl_pts*point : price+s.sl_pts*point);
    const double tp=NormalizePrice(s.direction>0 ? price+s.tp_pts*point : price-s.tp_pts*point);
@@ -1881,15 +1922,23 @@ bool SendLimit(const SignalInfo &s,const double lot)
    const ulong local_id=++g_local_request_counter;
    const long sent_us=NowMicroseconds();
    const int slot=TrackRequest(req,local_id,sent_us,s.strategy,s.signal_id);
-   if(slot<0) return false;
-   if(!ValidateTradeRequest(req) || !ConsumeToken())
+   if(slot<0) { g_gate_code=REJ_SEND_SLOT; return false; }
+   if(!ValidateTradeRequest(req))
    {
+      g_gate_code=REJ_SEND_VALIDATE;
+      ClearRequest(slot);
+      return false;
+   }
+   if(!ConsumeToken())
+   {
+      g_gate_code=REJ_SEND_TOKEN;
       ClearRequest(slot);
       return false;
    }
    ResetLastError();
    if(!OrderSendAsync(req,res))
    {
+      g_gate_code=REJ_SEND_ORDER;
       ClearRequest(slot);
       return false;
    }
@@ -2283,16 +2332,16 @@ bool IsNewsHaltActive()
 
 bool GeneralTradingGate()
 {
-   if(!InpEnableTrading) return false;
-   if(IsNewsHaltActive()) return false;
-   if(!SymbolAllowed()) return false;
+   if(!InpEnableTrading) { g_gate_code=REJ_MQL_DISABLED; return false; }
+   if(IsNewsHaltActive()) { g_gate_code=REJ_REGIME; return false; }
+   if(!SymbolAllowed()) { g_gate_code=REJ_SESSION; return false; }
    if(!IsTradeEnvironmentReady()) return false;
-   if(IsRollover()) return false;
-   if(g_count<InpMinTicksBeforeSignal) return false;
-   if(CurrentDrawdownPct()>=InpHardDrawdownPct) return false;
-   if(InpDailyLossLimitPct>0.0 && DailyDrawdownPct()>=InpDailyLossLimitPct) return false;
-   if(MarginUtilization()>=InpMarginUtilizationMax) return false;
-   if(CountOurPending()>=InpMaxPendingOrders && !InpAllowMultipleStrategies) return false;
+   if(IsRollover()) { g_gate_code=REJ_ROLLOVER; return false; }
+   if(g_count<InpMinTicksBeforeSignal) { g_gate_code=REJ_WARMUP; return false; }
+   if(CurrentDrawdownPct()>=InpHardDrawdownPct) { g_gate_code=REJ_DD_HARD; return false; }
+   if(InpDailyLossLimitPct>0.0 && DailyDrawdownPct()>=InpDailyLossLimitPct) { g_gate_code=REJ_DAILY_DD; return false; }
+   if(MarginUtilization()>=InpMarginUtilizationMax) { g_gate_code=REJ_MARGIN_CAP; return false; }
+   if(CountOurPending()>=InpMaxPendingOrders && !InpAllowMultipleStrategies) { g_gate_code=REJ_MAXPOS; return false; }
    return true;
 }
 
@@ -2312,11 +2361,11 @@ void RouteOneStrategy(const int strategy)
 {
    SignalInfo s;
    if(!BuildSignal(strategy,s)) return;
-   if(!StrategyDuplicateGate(s)) return;
+   if(!StrategyDuplicateGate(s)) { RejectSignal(REJ_COOLDOWN); return; }
 
    double lot=RiskLot(s);
-   if(lot<=0.0) return;
-   if(!PortfolioRiskGate(s,lot)) return;
+   if(lot<=0.0) { RejectSignal(REJ_LOT_ZERO); return; }
+   if(!PortfolioRiskGate(s,lot)) { RejectSignal(g_gate_code); return; }
 
    // In high-intensity momentum, market execution is intentional. In
    // exhaustion, passive limit is intentional. Micro-reversion uses market
@@ -2336,17 +2385,17 @@ double SignalRank(const SignalInfo &s)
 
 void ExecuteCandidate(const SignalInfo &s)
 {
-   if(!StrategyDuplicateGate(s)) return;
+   if(!StrategyDuplicateGate(s)) { RejectSignal(REJ_COOLDOWN); return; }
    double lot=RiskLot(s);
-   if(lot<=0.0) return;
-   if(!PortfolioRiskGate(s,lot)) return;
-   if(s.strategy==STRAT_EXHAUSTION) SendLimit(s,lot);
-   else SendMarket(s,lot);
+   if(lot<=0.0) { RejectSignal(REJ_LOT_ZERO); return; }
+   if(!PortfolioRiskGate(s,lot)) { RejectSignal(g_gate_code); return; }
+   const bool sent=(s.strategy==STRAT_EXHAUSTION ? SendLimit(s,lot) : SendMarket(s,lot));
+   if(!sent) RejectSignal(g_gate_code);
 }
 
 void RouteSignals()
 {
-   if(!GeneralTradingGate()) return;
+   if(!GeneralTradingGate()) { RejectSignal(g_gate_code); return; }
 
    SignalInfo candidates[3];
    bool valid[3]={false,false,false};
@@ -2798,18 +2847,17 @@ void WriteTesterSummary()
    FileWrite(h,"avg_loss_trade",DoubleToString(TesterStatistics(STAT_GROSS_LOSS)/MathMax(1.0,TesterStatistics(STAT_LOSS_TRADES)),4));
    FileWrite(h,"max_profit_trade",DoubleToString(TesterStatistics(STAT_MAX_PROFITTRADE),2));
    FileWrite(h,"max_loss_trade",DoubleToString(TesterStatistics(STAT_MAX_LOSSTRADE),2));
-   FileWrite(h,"rej_session",(string)g_rej[REJ_SESSION]);
-   FileWrite(h,"rej_warmup",(string)g_rej[REJ_WARMUP]);
-   FileWrite(h,"rej_atr",(string)g_rej[REJ_ATR]);
-   FileWrite(h,"rej_volfloor",(string)g_rej[REJ_VOLFLOOR]);
-   FileWrite(h,"rej_intensity",(string)g_rej[REJ_INTENSITY]);
-   FileWrite(h,"rej_displacement",(string)g_rej[REJ_DISPLACEMENT]);
-   FileWrite(h,"rej_persistence",(string)g_rej[REJ_PERSISTENCE]);
-   FileWrite(h,"rej_acceleration",(string)g_rej[REJ_ACCELERATION]);
-   FileWrite(h,"rej_regime",(string)g_rej[REJ_REGIME]);
-   FileWrite(h,"rej_probability",(string)g_rej[REJ_PROBABILITY]);
-   FileWrite(h,"rej_edge",(string)g_rej[REJ_EDGE]);
-   FileWrite(h,"rej_spread",(string)g_rej[REJ_SPREAD]);
+   for(int i=0;i<REJ_COUNT;i++)
+      FileWrite(h,"rej_"+g_rej_names[i],(string)g_rej[i]);
+   FileWrite(h,"equity",DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY),2));
+   FileWrite(h,"margin",DoubleToString(AccountInfoDouble(ACCOUNT_MARGIN),2));
+   FileWrite(h,"margin_util",DoubleToString(MarginUtilization(),4));
+   FileWrite(h,"volume_min",DoubleToString(SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN),3));
+   FileWrite(h,"leverage",(string)AccountInfoInteger(ACCOUNT_LEVERAGE));
+   FileWrite(h,"spread_pts_last",DoubleToString(g_last_spread_pts,1));
+   FileWrite(h,"atr_pts_last",DoubleToString(g_last_atr_pts,1));
+   FileWrite(h,"sl_pts",DoubleToString(StopLossPts(g_last_atr_pts,g_last_spread_pts),1));
+   FileWrite(h,"tp_pts",DoubleToString(TakeProfitPts(g_last_atr_pts,StopLossPts(g_last_atr_pts,g_last_spread_pts),g_last_spread_pts),1));
    FileWrite(h,"gate_intensity",DoubleToString(GateIntensity(),3));
    FileWrite(h,"gate_persistence",DoubleToString(GatePersistence(),3));
    FileWrite(h,"gate_acceleration",DoubleToString(GateAcceleration(),3));
