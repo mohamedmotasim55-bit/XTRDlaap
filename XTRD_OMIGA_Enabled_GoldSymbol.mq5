@@ -2043,7 +2043,8 @@ void CancelOurPending()
       req.symbol=_Symbol;
       req.magic=(ulong)magic;
       req.comment=InpCommentPrefix+"|ROLLOVER_REMOVE";
-      OrderSendAsync(req,res);
+      if(!OrderSendAsync(req,res))
+         PrintFormat("X13 Omega: rollover remove failed for #%I64u (retcode %d)",ticket,res.retcode);
    }
 }
 
@@ -2691,7 +2692,13 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
          if(g_requests[qi].active && g_requests[qi].order_ticket==trans.order) { slot=qi; break; }
       }
    }
-   if(slot<0 && trans.request_id!=0) slot=FindRequestById(trans.request_id);
+   if(slot<0 && trans.position!=0)
+   {
+      for(int qi=0;qi<OMEGA_REQ_CAPACITY;qi++)
+      {
+         if(g_requests[qi].active && g_requests[qi].position_ticket==trans.position) { slot=qi; break; }
+      }
+   }
    if(slot>=0)
    {
       requested=g_requests[slot].requested_price;
