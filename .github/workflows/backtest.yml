@@ -291,8 +291,16 @@ jobs:
             Select-Object FullName, Length | Format-Table -AutoSize
 
           # A green run without any result file is a silent no-op; fail loudly.
-          $summaryCsv = Get-ChildItem -Path $env:MT5_DIR -Filter '*Summary*.csv' -Recurse -ErrorAction SilentlyContinue
-          if ((-not (Test-Path "$env:REPORT_BASE.htm")) -and (-not $summaryCsv)) {
+          $summaryCsv = @()
+          foreach ($dir in @((Join-Path $env:MT5_DIR 'Common\Files'),
+                             (Join-Path $env:MT5_DIR 'MQL5\Files'),
+                             (Join-Path $env:APPDATA 'MetaQuotes\Terminal\Common\Files'))) {
+            if (Test-Path $dir) {
+              $summaryCsv += Get-ChildItem -Path $dir -Filter '*Summary*.csv' -Recurse -ErrorAction SilentlyContinue
+            }
+          }
+          Write-Host "summary files found: $($summaryCsv.Count)"
+          if ((-not (Test-Path "$env:REPORT_BASE.htm")) -and ($summaryCsv.Count -eq 0)) {
             Write-Host '----- terminal log tail -----'
             Get-ChildItem (Join-Path $env:MT5_DIR 'logs') -Filter '*.log' -ErrorAction SilentlyContinue |
               ForEach-Object { Write-Host "=== $($_.Name) ==="; Get-Content $_.FullName -Tail 30 }

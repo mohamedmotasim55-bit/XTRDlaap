@@ -348,6 +348,7 @@ input double InpIntensityGateAbs           = 1.10; // Absolute floor for the tic
 input double InpMinPersistenceFloor        = 0.55; // Floor for the persistence gate
 input double InpMinAccelerationFloor       = 0.30; // Floor for the acceleration gate
 input double InpMicroDisplacementATR       = 0.25; // Displacement gate floor in ATR units
+input double InpRateEWMAAlpha              = 0.02; // Tick-rate baseline decay (1/s, ~50 s memory)
 
 input group "STOPS / POSITION MANAGEMENT"
 input ENUM_TIMEFRAMES InpATRTimeframe      = PERIOD_M5; // ATR/geometry timeframe (M1 ATR is smaller than the spread)
@@ -478,6 +479,12 @@ RollingStat g_rs_absacc;
 RollingStat g_rs_absdisp;
 long g_stats_last_msc=0;
 long g_stats_pct_msc=0;
+long g_rate_sec_msc=0;
+int g_rate_sec_ticks=0;
+double g_rate_current=0.0;
+double g_rate_ewma=0.0;
+double g_intensity_max=0.0;
+double g_intensity_min=DBL_MAX;
 long g_rej[REJ_COUNT];
  int g_last_session=SESSION_OFF;
 
@@ -664,6 +671,31 @@ void PushTick(const MqlTick &t)
    g_ticks[g_head].volume=MathMax(vol,1.0);
    g_ticks[g_head].time_msc=(long)t.time_msc;
    if(g_count<OMEGA_TICK_CAPACITY) g_count++;
+   AccountTickRate((long)t.time_msc);
+}
+
+// Tick intensity is the current tick rate over a slow EWMA of it. Comparing a
+// window against a baseline built from the same window has no variance at all
+// (the ratio stays near 1.0), which silently disables every burst gate.
+void AccountTickRate(const long now_msc)
+{
+   if(g_rate_sec_msc==0)
+   {
+      g_rate_sec_msc=now_msc;
+      g_rate_sec_ticks=0;
+      return;
+   }
+   const long elapsed=now_msc-g_rate_sec_msc;
+   if(elapsed<1000)
+   {
+      g_rate_sec_ticks++;
+      return;
+   }
+   const double rate=(double)g_rate_sec_ticks/((double)elapsed/OMEGA_MS_PER_SEC);
+   g_rate_current=rate;
+   g_rate_ewma=(g_rate_ewma<=0.0 ? rate : g_rate_ewma*(1.0-InpRateEWMAAlpha)+rate*InpRateEWMAAlpha);
+   g_rate_sec_ticks=1;
+   g_rate_sec_msc=now_msc;
 }
 
 bool GetBackTick(const int back,TickNode &out)
@@ -712,31 +744,8 @@ double AccelerationTicks(const int fast_n,const int context_n)
 
 double TickIntensity()
 {
-   if(g_count<10) return 0.0;
-   const int n=ClampI(InpIntensityLookback,5,g_count-1);
-   TickNode now,old;
-   if(!GetBackTick(0,now) || !GetBackTick(n,old)) return 0.0;
-   const double current_dt=EffectiveDtMs(now.time_msc,old.time_msc)/OMEGA_MS_PER_SEC;
-   if(current_dt<=0.0) return 0.0;
-   const double current=(double)n/current_dt;
-
-   const int seg=MathMax(2,MathMin(20,n/2));
-   double baseline_sum=0.0;
-   int samples=0;
-   for(int k=seg;k<=n;k+=seg)
-   {
-      TickNode x,y;
-      if(!GetBackTick(k-seg,x) || !GetBackTick(k,y)) continue;
-      const double dt=EffectiveDtMs(x.time_msc,y.time_msc)/OMEGA_MS_PER_SEC;
-      if(dt>0.0)
-      {
-         baseline_sum+=(double)seg/dt;
-         samples++;
-      }
-   }
-   const double baseline=(samples>0 ? baseline_sum/samples : current);
-   if(baseline<=OMEGA_EPS) return 0.0;
-   return ClampD(current/baseline,0.0,100.0);
+   if(g_rate_ewma<=0.0 || g_rate_current<=0.0) return 0.0;
+   return ClampD(g_rate_current/g_rate_ewma,0.0,50.0);
 }
 
 double Persistence(const int n)
@@ -983,6 +992,8 @@ void SampleMarketStats(const long now_msc)
 {
    if(now_msc-g_stats_last_msc<1000) return;
    g_stats_last_msc=now_msc;
+   g_intensity_max=MathMax(g_intensity_max,g_last_intensity);
+   if(g_last_intensity>0.0) g_intensity_min=MathMin(g_intensity_min,g_last_intensity);
    RS_Push(g_rs_intensity,g_last_intensity);
    RS_Push(g_rs_persist,g_last_persistence);
    RS_Push(g_rs_absvel,MathAbs(g_last_velocity));
@@ -2807,6 +2818,12 @@ void WriteTesterSummary()
    FileWrite(h,"p70_persist",DoubleToString(g_rs_persist.p70,3));
    FileWrite(h,"p50_absacc",DoubleToString(g_rs_absacc.p50,3));
    FileWrite(h,"p60_absdisp",DoubleToString(g_rs_absdisp.p60,1));
+   FileWrite(h,"p90_intensity",DoubleToString(g_rs_intensity.p90,3));
+   FileWrite(h,"max_intensity",DoubleToString(g_intensity_max,3));
+   FileWrite(h,"min_intensity",DoubleToString(g_intensity_min==DBL_MAX ? 0.0 : g_intensity_min,3));
+   FileWrite(h,"rate_ewma",DoubleToString(g_rate_ewma,3));
+   FileWrite(h,"ticks_seen",(string)g_count);
+   FileWrite(h,"ea_deals",(string)g_total_deals);
    FileClose(h);
    PrintFormat("X13 Omega: tester summary written to %s",fname);
 }
