@@ -213,7 +213,7 @@ def declared_names(src: str) -> set[str]:
 
 
 def check_struct_fields(src: str) -> list[str]:
-    findings = []
+    findings = list(check_enum_members(src))
     for m in re.finditer(r"struct\s+(\w+)\s*\{(.*?)\n\};", src, re.S):
         name, body = m.group(1), m.group(2)
         fields = re.findall(r"^\s*(?:[A-Za-z_]\w*)\s+(\w+)\s*(?:\[[^\]]*\])?\s*;", body, re.M)
@@ -265,6 +265,34 @@ def check_struct_members(src: str) -> list[str]:
             findings.append(f"line {line}: {var}.{field} is not a field of struct {stype}")
     return findings
 
+
+
+# ENUM_STATISTICS members, so a typo in TesterStatistics() fails locally
+# instead of costing a CI round trip.
+STAT_ENUM = set("""
+STAT_INITIAL_DEPOSIT STAT_WITHDRAWAL STAT_PROFIT STAT_GROSS_PROFIT STAT_GROSS_LOSS
+STAT_MAX_PROFITTRADE STAT_MAX_LOSSTRADE STAT_CONPROFITMAX_TRADES
+STAT_MAX_CONPROFIT_TRADES STAT_CONLOSSMAX_TRADES STAT_MAX_CONLOSS_TRADES
+STAT_CONPROFITMAX STAT_MAX_CONPROFIT STAT_CONLOSSMAX STAT_MAX_CONLOSS
+STAT_BALANCE_MIN STAT_BALANCE_DD STAT_BALANCEDD_PERCENT STAT_BALANCE_DDREL_PERCENT
+STAT_BALANCE_DD_RELATIVE STAT_EQUITY_MIN STAT_EQUITY_DD STAT_EQUITYDD_PERCENT
+STAT_EQUITY_DDREL_PERCENT STAT_EQUITY_DD_RELATIVE STAT_EXPECTED_PAYOFF
+STAT_PROFIT_FACTOR STAT_RECOVERY_FACTOR STAT_SHARPE_RATIO STAT_MIN_MARGINLEVEL
+STAT_CUSTOM_ONTESTER STAT_DEALS STAT_TRADES STAT_PROFIT_TRADES STAT_LOSS_TRADES
+STAT_SHORT_TRADES STAT_LONG_TRADES STAT_PROFIT_SHORTTRADES STAT_PROFIT_LONGTRADES
+STAT_PROFITTRADES_AVGCON STAT_LOSSTRADES_AVGCON
+""".split())
+
+
+def check_enum_members(src: str) -> list[str]:
+    findings = []
+    for m in re.finditer(r"\bSTAT_[A-Z0-9_]+\b", src):
+        name = m.group(0)
+        if name in STAT_ENUM:
+            continue
+        line = src[: m.start()].count("\n") + 1
+        findings.append(f"line {line}: {name} is not an ENUM_STATISTICS member")
+    return findings
 
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()

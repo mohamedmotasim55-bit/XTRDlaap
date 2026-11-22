@@ -2771,10 +2771,10 @@ void WriteTesterSummary()
    FileWrite(h,"loss_trades",DoubleToString(TesterStatistics(STAT_LOSS_TRADES),0));
    FileWrite(h,"short_trades",DoubleToString(TesterStatistics(STAT_SHORT_TRADES),0));
    FileWrite(h,"long_trades",DoubleToString(TesterStatistics(STAT_LONG_TRADES),0));
-   FileWrite(h,"avg_profit_trade",DoubleToString(TesterStatistics(STAT_AVG_PROFIT_TRADE),4));
-   FileWrite(h,"avg_loss_trade",DoubleToString(TesterStatistics(STAT_AVG_LOSS_TRADE),4));
-   FileWrite(h,"max_profit_trade",DoubleToString(TesterStatistics(STAT_MAX_PROFIT_TRADE),2));
-   FileWrite(h,"max_loss_trade",DoubleToString(TesterStatistics(STAT_MAX_LOSS_TRADE),2));
+   FileWrite(h,"avg_profit_trade",DoubleToString(TesterStatistics(STAT_GROSS_PROFIT)/MathMax(1.0,TesterStatistics(STAT_PROFIT_TRADES)),4));
+   FileWrite(h,"avg_loss_trade",DoubleToString(TesterStatistics(STAT_GROSS_LOSS)/MathMax(1.0,TesterStatistics(STAT_LOSS_TRADES)),4));
+   FileWrite(h,"max_profit_trade",DoubleToString(TesterStatistics(STAT_MAX_PROFITTRADE),2));
+   FileWrite(h,"max_loss_trade",DoubleToString(TesterStatistics(STAT_MAX_LOSSTRADE),2));
    FileWrite(h,"rej_session",(string)g_rej[REJ_SESSION]);
    FileWrite(h,"rej_warmup",(string)g_rej[REJ_WARMUP]);
    FileWrite(h,"rej_atr",(string)g_rej[REJ_ATR]);

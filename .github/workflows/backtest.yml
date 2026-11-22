@@ -96,6 +96,15 @@ jobs:
           Copy-Item -Path (Join-Path $src '*') -Destination $env:MT5_DIR -Recurse -Force
           Get-ChildItem $env:MT5_DIR -Filter '*.exe' | Select-Object Name, Length | Format-Table
 
+      # actions/cache only persists on job success, and a failed compile is
+      # still a valid install. Save explicitly so iterations stay cheap.
+      - name: Save MT5 installation cache
+        if: always() && steps.mt5cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: C:\mt5
+          key: mt5-justmarkets-v1
+
       - name: Resolve MT5 paths
         shell: pwsh
         run: |
