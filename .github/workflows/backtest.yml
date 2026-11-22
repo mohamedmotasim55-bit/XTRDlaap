@@ -127,7 +127,9 @@ jobs:
           $src = Join-Path $env:EXPERTS_DIR "$env:EA_NAME.mq5"
           Write-Host "Compiling $src"
           $p = Start-Process -FilePath $env:METAEDITOR -ArgumentList "/portable","/compile:$src","/log:$log" -Wait -PassThru
-          Write-Host "MetaEditor exit code: $($p.ExitCode)"
+          # metaeditor64.exe returns 1 even on a clean build, so the log text and
+          # the produced .ex5 are the authoritative signals.
+          Write-Host "MetaEditor exit code: $($p.ExitCode) (not authoritative)"
           if (-not (Test-Path $log)) { Write-Error 'Compile log was not produced.'; exit 1 }
           $text = Get-Content -Path $log -Encoding Unicode -Raw
           Write-Host "----- compile log -----"
@@ -135,15 +137,19 @@ jobs:
           Write-Host "-----------------------"
           if ($text -match '(\d+)\s+errors?,\s*(\d+)\s+warnings?') {
             if ([int]$Matches[1] -gt 0) { Write-Error "Compilation failed with $($Matches[1]) error(s)."; exit 1 }
+            Write-Host "Compiler reported $($Matches[1]) errors, $($Matches[2]) warnings."
           } elseif ($text -match '(?im)^.*\berror\b.*$') {
             Write-Error 'Compilation log contains errors.'
             exit 1
+          } else {
+            Write-Error 'No compiler result line found in the log.'
+            exit 1
           }
-          if ($p.ExitCode -ne 0) { Write-Error "MetaEditor returned $($p.ExitCode)"; exit 1 }
           $ex5 = Join-Path $env:EXPERTS_DIR "$env:EA_NAME.ex5"
           if (-not (Test-Path $ex5)) { Write-Error 'EX5 was not produced.'; exit 1 }
+          if ((Get-Item $ex5).Length -lt 1024) { Write-Error 'EX5 looks truncated.'; exit 1 }
           Copy-Item $log (Join-Path $env:RUNNER_TEMP 'compile-artifact.log') -Force
-          Write-Host "Compiled OK: $ex5"
+          Write-Host "Compiled OK: $ex5 ($((Get-Item $ex5).Length) bytes)"
 
       - name: Build tester.ini
         shell: pwsh
