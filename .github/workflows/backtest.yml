@@ -1,0 +1,243 @@
+name: MT5 Stress Backtest
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Backtest window length in days (ending at the last full day)"
+        default: "45"
+      model:
+        description: "MT5 model: 4=real ticks, 1=every tick, 2=1 min OHLC"
+        default: "4"
+      execution_mode:
+        description: "Simulated execution delay in ms (stress mode)"
+        default: "15"
+      tag:
+        description: "Iteration tag used to name artifacts"
+        default: "manual"
+  push:
+    branches:
+      - main
+      - "iter/**"
+    paths:
+      - "*.mq5"
+      - "tools/**"
+      - ".github/workflows/backtest.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backtest-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  INSTALLER_URL: https://download.mql5.com/cdn/web/just.global.markets/mt5/justmarkets5setup.exe
+  EA_NAME: XTRD_OMIGA_Enabled_GoldSymbol
+  MT5_DIR: C:\mt5
+
+jobs:
+  backtest:
+    runs-on: windows-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        shell: pwsh
+        env:
+          MT5_LOGIN: ${{ secrets.MT5_LOGIN }}
+          MT5_PASSWORD: ${{ secrets.MT5_PASSWORD }}
+          MT5_SERVER: ${{ secrets.MT5_SERVER }}
+        run: |
+          $missing = @()
+          if ([string]::IsNullOrWhiteSpace($env:MT5_LOGIN))    { $missing += 'MT5_LOGIN' }
+          if ([string]::IsNullOrWhiteSpace($env:MT5_PASSWORD)) { $missing += 'MT5_PASSWORD' }
+          if ([string]::IsNullOrWhiteSpace($env:MT5_SERVER))   { $missing += 'MT5_SERVER' }
+          if ($missing.Count -gt 0) {
+            Write-Error ("Missing repository secrets: " + ($missing -join ', ') + ". Add them under Settings > Secrets and variables > Actions.")
+            exit 1
+          }
+          Write-Host "Credentials present (login length $($env:MT5_LOGIN.Length), server $($env:MT5_SERVER))"
+
+      - name: Restore MT5 installation cache
+        id: mt5cache
+        uses: actions/cache@v4
+        with:
+          path: C:\mt5
+          key: mt5-justmarkets-${{ hashFiles('.github/workflows/backtest.yml') }}
+
+      - name: Install JustMarkets MT5 (silent)
+        if: steps.mt5cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP 'justmarkets5setup.exe'
+          Write-Host "Downloading $env:INSTALLER_URL"
+          Invoke-WebRequest -Uri $env:INSTALLER_URL -OutFile $installer -UseBasicParsing
+          Write-Host "Installing silently"
+          $p = Start-Process -FilePath $installer -ArgumentList '/auto' -Wait -PassThru
+          Write-Host "Installer exit code: $($p.ExitCode)"
+
+          $found = @()
+          foreach ($root in @('C:\Program Files', 'C:\Program Files (x86)', $env:LOCALAPPDATA)) {
+            if (Test-Path $root) {
+              $found += Get-ChildItem -Path $root -Filter 'terminal64.exe' -Recurse -ErrorAction SilentlyContinue |
+                        Where-Object { Test-Path (Join-Path $_.DirectoryName 'metaeditor64.exe') }
+            }
+          }
+          if ($found.Count -eq 0) { Write-Error 'MT5 terminal64.exe not found after silent install.'; exit 1 }
+          $src = $found[0].DirectoryName
+          Write-Host "Detected MT5 install directory: $src"
+          New-Item -ItemType Directory -Force -Path $env:MT5_DIR | Out-Null
+          Copy-Item -Path (Join-Path $src '*') -Destination $env:MT5_DIR -Recurse -Force
+          Get-ChildItem $env:MT5_DIR -Filter '*.exe' | Select-Object Name, Length | Format-Table
+
+      - name: Resolve MT5 paths
+        shell: pwsh
+        run: |
+          $terminal = Join-Path $env:MT5_DIR 'terminal64.exe'
+          $metaeditor = Join-Path $env:MT5_DIR 'metaeditor64.exe'
+          if (-not (Test-Path $terminal))   { Write-Error "terminal64.exe missing in $env:MT5_DIR"; exit 1 }
+          if (-not (Test-Path $metaeditor)) { Write-Error "metaeditor64.exe missing in $env:MT5_DIR"; exit 1 }
+          "TERMINAL=$terminal"     | Out-File -FilePath $env:GITHUB_ENV -Append
+          "METAEDITOR=$metaeditor" | Out-File -FilePath $env:GITHUB_ENV -Append
+          # /portable keeps the data folder inside the install directory
+          $experts = Join-Path $env:MT5_DIR 'MQL5\Experts'
+          New-Item -ItemType Directory -Force -Path $experts | Out-Null
+          New-Item -ItemType Directory -Force -Path (Join-Path $env:MT5_DIR 'MQL5\Files') | Out-Null
+          "EXPERTS_DIR=$experts" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Copy expert source
+        shell: pwsh
+        run: |
+          Copy-Item -Path "$env:EA_NAME.mq5" -Destination (Join-Path $env:EXPERTS_DIR "$env:EA_NAME.mq5") -Force
+          Get-ChildItem $env:EXPERTS_DIR | Select-Object Name, Length | Format-Table
+
+      - name: Compile expert (fail on any error)
+        shell: pwsh
+        run: |
+          $log = Join-Path $env:RUNNER_TEMP 'compile.log'
+          $src = Join-Path $env:EXPERTS_DIR "$env:EA_NAME.mq5"
+          Write-Host "Compiling $src"
+          $p = Start-Process -FilePath $env:METAEDITOR -ArgumentList "/portable","/compile:$src","/log:$log" -Wait -PassThru
+          Write-Host "MetaEditor exit code: $($p.ExitCode)"
+          if (-not (Test-Path $log)) { Write-Error 'Compile log was not produced.'; exit 1 }
+          $text = Get-Content -Path $log -Encoding Unicode -Raw
+          Write-Host "----- compile log -----"
+          Write-Host $text
+          Write-Host "-----------------------"
+          if ($text -match '(\d+)\s+errors?,\s*(\d+)\s+warnings?') {
+            if ([int]$Matches[1] -gt 0) { Write-Error "Compilation failed with $($Matches[1]) error(s)."; exit 1 }
+          } elseif ($text -match '(?im)^.*\berror\b.*$') {
+            Write-Error 'Compilation log contains errors.'
+            exit 1
+          }
+          if ($p.ExitCode -ne 0) { Write-Error "MetaEditor returned $($p.ExitCode)"; exit 1 }
+          $ex5 = Join-Path $env:EXPERTS_DIR "$env:EA_NAME.ex5"
+          if (-not (Test-Path $ex5)) { Write-Error 'EX5 was not produced.'; exit 1 }
+          Copy-Item $log (Join-Path $env:RUNNER_TEMP 'compile-artifact.log') -Force
+          Write-Host "Compiled OK: $ex5"
+
+      - name: Build tester.ini
+        shell: pwsh
+        env:
+          MT5_LOGIN: ${{ secrets.MT5_LOGIN }}
+          MT5_PASSWORD: ${{ secrets.MT5_PASSWORD }}
+          MT5_SERVER: ${{ secrets.MT5_SERVER }}
+          DAYS: ${{ inputs.days || '45' }}
+          MODEL: ${{ inputs.model || '4' }}
+          EXECMODE: ${{ inputs.execution_mode || '15' }}
+        run: |
+          $to   = (Get-Date).Date.AddDays(-1)
+          $from = $to.AddDays(-[int]$env:DAYS)
+          $ini = Join-Path $env:MT5_DIR 'tester.ini'
+          $report = Join-Path $env:MT5_DIR 'report'
+          $lines = @(
+            '[Common]',
+            "Login=$env:MT5_LOGIN",
+            "Password=$env:MT5_PASSWORD",
+            "Server=$env:MT5_SERVER",
+            'KeepPrivate=0',
+            '[Tester]',
+            "Expert=$env:EA_NAME.ex5",
+            'Symbol=XAUUSD',
+            'Period=M1',
+            "Model=$env:MODEL",
+            "ExecutionMode=$env:EXECMODE",
+            'Optimization=0',
+            'ForwardMode=0',
+            'Deposit=100',
+            'Currency=USD',
+            'Leverage=1000',
+            "FromDate=$($from.ToString('yyyy.MM.dd'))",
+            "ToDate=$($to.ToString('yyyy.MM.dd'))",
+            "Report=$report",
+            'ReplaceReport=1',
+            'Visual=0',
+            'ShutdownTerminal=1'
+          )
+          $lines | Set-Content -Path $ini -Encoding ASCII
+          Write-Host "----- tester.ini (password masked) -----"
+          Get-Content $ini | ForEach-Object { $_ -replace '^Password=.*', 'Password=***' }
+          "TESTER_INI=$ini" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "REPORT_BASE=$report" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Run strategy tester (stress mode)
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath $env:TERMINAL -ArgumentList '/portable', "/config:$env:TESTER_INI" -PassThru
+          $deadline = (Get-Date).AddMinutes(240)
+          while (-not $p.HasExited -and (Get-Date) -lt $deadline) {
+            Start-Sleep -Seconds 20
+            $p.Refresh()
+            $cpu = 0
+            try { $cpu = [int]((Get-Process -Id $p.Id).CPU) } catch { }
+            Write-Host ("[{0:HH:mm:ss}] terminal alive, cpu={1}s" -f (Get-Date), $cpu)
+          }
+          if (-not $p.HasExited) {
+            Write-Warning 'Tester exceeded the time budget; stopping terminal.'
+            Stop-Process -Id $p.Id -Force
+          } else {
+            Write-Host "Terminal exited with code $($p.ExitCode)"
+          }
+          Write-Host '----- report/csv files produced -----'
+          Get-ChildItem -Path $env:MT5_DIR -Include '*.htm','*.html','*.csv','*.xml' -Recurse -ErrorAction SilentlyContinue |
+            Select-Object FullName, Length | Format-Table -AutoSize
+
+      - name: Collect artifacts
+        if: always()
+        shell: pwsh
+        run: |
+          $out = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          $report = "$env:REPORT_BASE.htm"
+          if (Test-Path $report) {
+            Copy-Item $report (Join-Path $out 'backtest_report.htm') -Force
+            Write-Host 'Report collected.'
+          } else {
+            Write-Warning "Report not found at $report"
+          }
+          foreach ($dir in @((Join-Path $env:MT5_DIR 'Common\Files'), (Join-Path $env:MT5_DIR 'MQL5\Files'), (Join-Path $env:MT5_DIR 'Tester'))) {
+            if (Test-Path $dir) {
+              Get-ChildItem -Path $dir -Filter '*.csv' -Recurse -ErrorAction SilentlyContinue |
+                ForEach-Object { Copy-Item $_.FullName (Join-Path $out $_.Name) -Force }
+            }
+          }
+          $logs = Join-Path $out 'logs'
+          New-Item -ItemType Directory -Force -Path $logs | Out-Null
+          Get-ChildItem -Path $env:MT5_DIR -Include '*.log' -Recurse -ErrorAction SilentlyContinue |
+            ForEach-Object { Copy-Item $_.FullName (Join-Path $logs ($_.Directory.Name + '_' + $_.Name)) -Force -ErrorAction SilentlyContinue }
+          if (Test-Path (Join-Path $env:RUNNER_TEMP 'compile-artifact.log')) {
+            Copy-Item (Join-Path $env:RUNNER_TEMP 'compile-artifact.log') (Join-Path $out 'compile.log') -Force
+          }
+          Get-ChildItem -Path $out -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+
+      - name: Upload backtest artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backtest-${{ inputs.tag || github.run_number }}
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 30
