@@ -224,6 +224,16 @@ jobs:
           Write-Host "Using symbol: $chosen"
           "SYMBOL=$chosen" | Out-File -FilePath $env:GITHUB_ENV -Append
 
+      # The install cache carries the previous run's Common/Files and Tester
+      # output; appending to them silently mixes two runs in one report.
+      - name: Purge previous run state
+        shell: pwsh
+        run: |
+          foreach ($dir in @("$env:MT5_DIR\Common\Files", "$env:MT5_DIR\Tester", "$env:MT5_DIR\MQL5\Files")) {
+            if (Test-Path $dir) { Remove-Item -Recurse -Force $dir -ErrorAction SilentlyContinue }
+          }
+          New-Item -ItemType Directory -Force -Path "$env:MT5_DIR\Common\Files" | Out-Null
+
       - name: Build tester.ini
         shell: pwsh
         env:

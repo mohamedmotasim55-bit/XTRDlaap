@@ -312,7 +312,7 @@ input double InpSpreadExpansionMaxPts      = 15.0; // Allowed expansion above ba
 input double InpSpreadEdgeFraction         = 0.95;
 input int    InpMaxRequestsPerSecond       = 5;
 input double InpTokenRefillPerSecond      = 5.0;
-input double InpMaxSlippagePts             = 25.0;
+input double InpMaxSlippagePts             = 15.0;
 input double InpBadSlippagePts             = 12.0;
 input int    InpExecutionLatencyMs         = 50;
 input int    InpTelemetryWindow            = 16;
@@ -2498,10 +2498,9 @@ void RouteOneStrategy(const int strategy)
    if(lot<=0.0) { RejectSignal(REJ_LOT_ZERO); return; }
    if(!PortfolioRiskGate(s,lot)) { RejectSignal(g_gate_code); return; }
 
-   // In high-intensity momentum, market execution is intentional. In
-   // exhaustion, passive limit is intentional. Micro-reversion uses market
-   // only when the spread/edge relationship is healthy.
-   if(strategy==STRAT_EXHAUSTION)
+   // Reversion is a passive thesis: entering at market pays the spread and
+   // the 15 ms drift, measured at 45 pts per fill.
+   if(strategy==STRAT_EXHAUSTION || strategy==STRAT_MICRO_REVERSION)
       SendLimit(s,lot);
    else
       SendMarket(s,lot);
@@ -2520,7 +2519,8 @@ void ExecuteCandidate(const SignalInfo &s)
    double lot=RiskLot(s);
    if(lot<=0.0) { RejectSignal(REJ_LOT_ZERO); return; }
    if(!PortfolioRiskGate(s,lot)) { RejectSignal(g_gate_code); return; }
-   const bool sent=(s.strategy==STRAT_EXHAUSTION ? SendLimit(s,lot) : SendMarket(s,lot));
+   const bool passive=(s.strategy==STRAT_EXHAUSTION || s.strategy==STRAT_MICRO_REVERSION);
+   const bool sent=(passive ? SendLimit(s,lot) : SendMarket(s,lot));
    if(!sent) RejectSignal(g_gate_code);
 }
 

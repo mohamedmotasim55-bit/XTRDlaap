@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import csv
 import glob
+import io
 import json
 import os
 import re
@@ -282,16 +283,26 @@ def summarize_deals(deals: list[dict]) -> dict:
 def load_csv(path: str) -> list[dict]:
     if not path or not os.path.exists(path):
         return []
-    with open(path, newline="", encoding="utf-8", errors="replace") as fh:
-        sample = fh.read(4096)
-        fh.seek(0)
-        try:
-            dialect = csv.Sniffer().sniff(sample, delimiters=";,\t")
-        except csv.Error:
-            dialect = csv.excel
-            dialect.delimiter = ";" if ";" in sample else ","
-        return list(csv.DictReader(fh, dialect=dialect))
+    text = _read_text(path)
+    sample = text[:4096]
+    try:
+        dialect = csv.Sniffer().sniff(sample, delimiters=";,\t")
+    except csv.Error:
+        dialect = csv.excel
+        dialect.delimiter = ";" if ";" in sample else ","
+    return list(csv.DictReader(io.StringIO(text), dialect=dialect))
 
+
+
+def _read_text(path: str) -> str:
+    """MetaTrader writes CSV as ANSI or UTF-16 depending on the build."""
+    raw = open(path, "rb").read()
+    for enc in ("utf-8-sig", "utf-16", "utf-8", "latin-1"):
+        try:
+            return raw.decode(enc)
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+    return raw.decode("latin-1", errors="replace")
 
 
 def parse_summary_csv(path: str) -> dict:
