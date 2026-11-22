@@ -26,8 +26,8 @@
 //| Validate with real-tick backtests and forward demo execution.    |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "2.23"
-#property description "XTRD OMIGA - adaptive high-frequency gold microstructure scalping engine"
+#property version   "2.30"
+#property description "XTRD OMIGA - spread-aware gold microstructure engine (JustMarkets standard profile)"
 
 #define OMEGA_TICK_CAPACITY       1024
 #define OMEGA_REQ_CAPACITY        512
@@ -160,6 +160,11 @@ struct PositionControl
    double mfe_pts;
    double mae_pts;
    long   entry_msc;
+   double entry_price;
+   double sl_pts;
+   double tp_pts;
+   double entry_spread_pts;
+   int    strategy;
 };
 
 struct TelemetryEvent
@@ -173,6 +178,7 @@ struct TelemetryEvent
    double slippage_pts;
    long   latency_ms;
    double profit;
+   int    strategy;
 };
 
 
@@ -217,9 +223,9 @@ input double InpRangePersistenceMax         = 0.60;
 input group "ALPHA - MICRO DISPLACEMENT"
 input bool   InpEnableMicroReversion       = true;
 input double InpMicroIntensityMin          = 2.5;
-input double InpMicroDeviationMinPts       = 5.0;
+input double InpMicroDeviationMinPts       = 90.0; // Must exceed ~3x the 25-35 pt standard spread
 input double InpMicroPressureMax           = 12.0;
-input double InpMicroProbabilityMin        = 0.54;
+input double InpMicroProbabilityMin        = 0.56;
 input double InpMicroTargetATR             = 0.45;
 
 input group "ALPHA - VELOCITY BURST"
@@ -234,7 +240,7 @@ input bool   InpEnableExhaustion           = true;
 input double InpExhaustionATRMultiple      = 2.50;
 input double InpExhaustionVelocityRatio    = 0.25;
 input double InpExhaustionPressureRatio    = 0.10;
-input double InpExhaustionProbabilityMin   = 0.54;
+input double InpExhaustionProbabilityMin   = 0.56;
 input double InpExhaustionIntensityMin     = 2.0;
 
 input group "BAYESIAN / CONDITIONAL GATES"
@@ -245,25 +251,25 @@ input double InpBayesWeightPressure        = 0.18;
 input double InpBayesWeightPersistence     = 0.16;
 input double InpBayesWeightIntensity       = 0.10;
 input double InpBayesWeightDisplacement    = 0.10;
-input double InpMinEdgePts                 = 3.0;
-input double InpEdgeToSpreadMin            = 1.10;
+input double InpMinEdgePts                 = 25.0; // Expected capture (pts) that must be left after costs
+input double InpEdgeToSpreadMin            = 1.50; // Edge must be >= 1.5x the live spread
 
 input group "SPREAD / EXECUTION"
-input double InpMaxSpreadPts               = 80.0;
+input double InpMaxSpreadPts               = 45.0; // Hard spread ceiling for a 25-35 pt standard account
 input double InpBaselineSpreadPts          = 25.0;
-input double InpSpreadExpansionMaxPts      = 30.0; // Institutional Spread-Expansion Shield: rejects entries if spread > 35 pts
+input double InpSpreadExpansionMaxPts      = 15.0; // Allowed expansion above baseline (rejects spread > baseline+15)
 input double InpSpreadEdgeFraction         = 0.95;
 input int    InpMaxRequestsPerSecond       = 5;
 input double InpTokenRefillPerSecond      = 5.0;
-input double InpMaxSlippagePts             = 40.0;
-input double InpBadSlippagePts             = 30.0;
+input double InpMaxSlippagePts             = 25.0;
+input double InpBadSlippagePts             = 12.0;
 input int    InpExecutionLatencyMs         = 50;
 input int    InpTelemetryWindow            = 16;
 input bool   InpAdaptiveExecution           = true;
 input int    InpMarketRetryMs              = 250;
 input int    InpLimitExpirySec             = 5;
 input int    InpMaxPendingOrders            = 8;
-input int    InpLimitDistancePts            = 8;
+input int    InpLimitDistancePts            = 12;
 input double InpLimitRepriceTriggerPts     = 3.0;
 input int    InpMaxRepricesPerOrder        = 3;
 input int    InpRepriceCooldownMs           = 250;
@@ -272,13 +278,13 @@ input bool   InpUseOrderCheck              = true;
 input bool   InpUseExecutionStateMachine   = true;
 
 input group "RISK / COMPOUNDING"
-input double InpInitialRiskPct             = 2.00;
-input double InpMaxAccountRiskPct          = 5.00;
-input double InpHardDrawdownPct            = 20.0;
+input double InpInitialRiskPct             = 1.50;
+input double InpMaxAccountRiskPct          = 3.00;
+input double InpHardDrawdownPct            = 15.0;
 input double InpDrawdownSoftZonePct        = 0.70;
-input double InpMarginUtilizationMax       = 0.85;
-input double InpFreeMarginFloorPct         = 10.0;
-input double InpPortfolioRiskCapPct        = 10.0;
+input double InpMarginUtilizationMax       = 0.50;
+input double InpFreeMarginFloorPct         = 30.0;
+input double InpPortfolioRiskCapPct        = 6.0;
 input double InpLotCap                     = 1.00;
 input double InpMinLotOverride             = 0.01;
 input double InpVolatilityReferenceATR     = 100.0;
@@ -290,7 +296,7 @@ input double InpKellyBoostCap              = 1.25;
 input bool   InpEnableAdaptiveAggression   = true;
 input double InpAggressionMin              = 0.35;
 input double InpAggressionMax              = 1.25;
-input double InpDailyLossLimitPct          = 8.0;
+input double InpDailyLossLimitPct          = 5.0;
 input int    InpStatsWarmupDeals           = 50;
 input bool   InpUseEmpiricalCVaR            = true;
 input double InpCVaRAlpha                   = 0.10;
@@ -298,38 +304,42 @@ input double InpCVaRSoftPct                = 4.0;
 input double InpCVaRHardPct                = 8.0;
 
 input group "PORTFOLIO / THESIS ISOLATION"
-input int    InpMaxConcurrentPositions     = 15;
-input int    InpMaxSameDirectionPositions  = 6;
-input double InpMaxPortfolioLots           = 1.00;
-input double InpMaxPortfolioDeltaLots      = 2.00;
+input int    InpMaxConcurrentPositions     = 4;
+input int    InpMaxSameDirectionPositions  = 2;
+input double InpMaxPortfolioLots           = 0.05;
+input double InpMaxPortfolioDeltaLots      = 0.06;
 input bool   InpAllowMomentumAndReversion  = true;
 input bool   InpRejectDuplicatePending     = true;
 input int    InpDuplicateWindowMs          = 150;
 input int    InpStrategyCooldownMs         = 20;
 
 input group "STOPS / POSITION MANAGEMENT"
-input double InpSL_ATR_Multiplier           = 0.80;
-input double InpTP_ATR_Multiplier           = 1.20;
-input double InpMinSLPts                   = 32.0;
-input double InpMaxSLPts                   = 1200.0;
+input ENUM_TIMEFRAMES InpATRTimeframe      = PERIOD_M5; // ATR/geometry timeframe (M1 ATR is smaller than the spread)
+input double InpSL_ATR_Multiplier           = 0.55;
+input double InpTP_ATR_Multiplier           = 1.10;
+input double InpSLSpreadMultiple            = 6.0;  // SL floor = 6x live spread
+input double InpTPSpreadMultiple            = 9.0;  // TP floor = 9x live spread
+input double InpMinATRSpreadMultiple        = 3.0;  // Skip entries when ATR < 3x spread
+input double InpMinSLPts                   = 150.0;
+input double InpMaxSLPts                   = 900.0;
 input double InpBEExtraPts                 = 2.0;
 input bool   InpUseMicroBreakEven           = true;
-input double InpBEStage1TriggerPts          = 5.5;  // Dual-Stage Stage 1 Trigger: +6.2 pts locks +1.8 pts
-input double InpBEStage1LockPts             = 1.8;
-input double InpBEStage2TriggerPts          = 10.0; // Dual-Stage Stage 2 Trigger: +11.0 pts locks +4.5 pts
-input double InpBEStage2LockPts             = 4.5;
+input double InpBEStage1TriggerPts          = 60.0; // Stage 1 trigger floor (2.2x spread)
+input double InpBEStage1LockPts             = 18.0; // Stage 1 lock floor (0.6x spread)
+input double InpBEStage2TriggerPts          = 120.0; // Stage 2 trigger floor (4x spread)
+input double InpBEStage2LockPts             = 55.0; // Stage 2 lock floor (1.8x spread)
 input bool   InpUseSpreadMomentumGate       = true; // Rejects entries if spread is actively expanding
-input double InpSpreadMomentumThresholdPts  = 2.0;
+input double InpSpreadMomentumThresholdPts  = 3.0;
 input bool   InpUseVelocityTrailing         = true;
 input double InpTrailVelocityStrong         = 100.0;
 input double InpTrailVelocityWeak           = 20.0;
-input double InpTrailStrongATR              = 0.80;
-input double InpTrailWeakATR                = 0.30;
-input int    InpMaxTradeAgeSec              = 240;
+input double InpTrailStrongATR              = 1.00;
+input double InpTrailWeakATR                = 0.60;
+input int    InpMaxTradeAgeSec              = 900;
 input double InpStallVelocityPtsSec         = 3.0;
-input double InpStallProfitFloorPts         = 0.0;
+input double InpStallProfitFloorPts         = -30.0; // Only cut stalls that are worse than -1 spread
 input bool   InpCloseStalledTrades          = true;
-input bool   InpEnablePartialClose           = true;
+input bool   InpEnablePartialClose           = false;
 input double InpPartialCloseTrigger          = 0.50;
 input double InpPartialClosePercent          = 0.60;
 input bool   InpEnableMFE_MAE                = true;
@@ -371,6 +381,7 @@ input bool   InpPersistState                = true;
 input bool   InpPersistTelemetry            = true;
 input string InpStateFile                   = "X13_Omega_State.csv";
 input string InpTelemetryFile               = "X13_Omega_Telemetry.csv";
+input string InpLedgerFile                  = "X13_Omega_Ledger.csv";
 input int    InpStateSaveIntervalSec        = 30;
 input int    InpTelemetryFlushIntervalMs    = 1000;
 input bool   InpUseLiveTickRecovery         = true;
@@ -868,17 +879,40 @@ bool SpreadGate(const double edge_pts,const double spread_pts)
 {
    if(spread_pts==DBL_MAX || spread_pts<=0.0) return false;
    if(spread_pts>InpMaxSpreadPts) return false;
-   // Institutional Spread-Expansion Shield: avoid entering during liquidity blowouts
-   if(spread_pts>InpSpreadExpansionMaxPts) return false;
+   // Spread-Expansion Shield: the cap is relative to the account baseline, so a
+   // 25-35 pt standard account is not blocked by a fixed absolute threshold.
+   if(spread_pts>InpBaselineSpreadPts+InpSpreadExpansionMaxPts) return false;
    // Spread-Momentum Gate: reject entry if spread is actively widening
    if(InpUseSpreadMomentumGate && SpreadMomentumPts(5)>InpSpreadMomentumThresholdPts) return false;
    if(edge_pts<=0.0) return false;
-   // Calibrated for JustMarkets Gold: edge must exceed spread ratio or be economically viable for scalping
-   if(edge_pts<spread_pts*InpEdgeToSpreadMin*0.5) return false;
+   // On a 25-35 pt standard spread the expected capture must clearly dominate cost.
+   if(edge_pts<spread_pts*InpEdgeToSpreadMin) return false;
    return true;
 }
 
 //----------------------------- Signal Builder ---------------------//
+// Trade geometry is expressed in multiples of the *live* spread, because on a
+// standard 25-35 pt gold account the spread is the dominant cost term: a target
+// of 45 pts against a 30 pt spread needs an ~80% hit rate to break even.
+double GeometrySpreadPts(const double live_spread)
+{
+   if(live_spread==DBL_MAX || live_spread<=0.0) return MathMax(1.0,InpBaselineSpreadPts);
+   return MathMax(live_spread,MathMax(1.0,InpBaselineSpreadPts*0.8));
+}
+
+double StopLossPts(const double atr,const double spread)
+{
+   const double s=GeometrySpreadPts(spread);
+   return ClampD(MathMax(atr*InpSL_ATR_Multiplier,s*InpSLSpreadMultiple),InpMinSLPts,InpMaxSLPts);
+}
+
+double TakeProfitPts(const double atr,const double sl_pts,const double spread)
+{
+   const double s=GeometrySpreadPts(spread);
+   const double tp=MathMax(atr*InpTP_ATR_Multiplier,s*InpTPSpreadMultiple);
+   return ClampD(MathMax(tp,sl_pts*1.25),InpMinSLPts,InpMaxSLPts*2.0);
+}
+
 bool BuildSignal(const int strategy,SignalInfo &s)
 {
    ZeroMemory(s);
@@ -889,6 +923,9 @@ bool BuildSignal(const int strategy,SignalInfo &s)
    const double atr=ATRPoints();
    const double spread=CurrentSpreadPts();
    if(atr<=0.0 || spread==DBL_MAX) return false;
+
+   // Volatility floor: in a dead market the target cannot clear the spread.
+   if(atr<GeometrySpreadPts(spread)*InpMinATRSpreadMultiple) return false;
 
    const double v=g_last_velocity;
    const double vc=g_last_velocity_context;
@@ -917,8 +954,10 @@ bool BuildSignal(const int strategy,SignalInfo &s)
    s.persistence=pers;
    s.displacement_pts=disp;
    s.spread_pts=spread;
+   s.sl_pts=StopLossPts(atr,spread);
+   s.tp_pts=TakeProfitPts(atr,s.sl_pts,spread);
 
-   double edge=0.0;
+   double probability=0.0;
 
    // 1) Micro displacement reversion: aggressive market reversion when
    // spread is compressed and the displacement is statistically extreme.
@@ -926,20 +965,19 @@ bool BuildSignal(const int strategy,SignalInfo &s)
    {
       if(intensity<InpMicroIntensityMin) return false;
       if(MathAbs(disp)<InpMicroDeviationMinPts) return false;
-      if(spread>InpMaxSpreadPts*0.60) return false;
+      // Reversion only pays when the spread is at or below its own baseline.
+      if(spread>InpBaselineSpreadPts*1.20) return false;
       if(MathAbs(pr)>InpMicroPressureMax) return false;
 
       if(disp>0.0 && psell>=InpMicroProbabilityMin)
       {
          s.direction=-1;
-         s.probability=psell;
-         edge=(psell-0.5)*2.0*atr*InpMicroTargetATR;
+         probability=psell;
       }
       else if(disp<0.0 && pbuy>=InpMicroProbabilityMin)
       {
          s.direction=1;
-         s.probability=pbuy;
-         edge=(pbuy-0.5)*2.0*atr*InpMicroTargetATR;
+         probability=pbuy;
       }
       else return false;
 
@@ -958,14 +996,12 @@ bool BuildSignal(const int strategy,SignalInfo &s)
       if(v>0.0 && pbuy>=InpMomentumProbabilityMin)
       {
          s.direction=1;
-         s.probability=pbuy;
-         edge=(pbuy-0.5)*2.0*atr*InpMomentumTargetATR;
+         probability=pbuy;
       }
       else if(v<0.0 && psell>=InpMomentumProbabilityMin)
       {
          s.direction=-1;
-         s.probability=psell;
-         edge=(psell-0.5)*2.0*atr*InpMomentumTargetATR;
+         probability=psell;
       }
       else return false;
 
@@ -984,26 +1020,25 @@ bool BuildSignal(const int strategy,SignalInfo &s)
       if(disp>0.0 && psell>=InpExhaustionProbabilityMin)
       {
          s.direction=-1;
-         s.probability=psell;
-         edge=(psell-0.5)*2.0*atr*0.60;
+         probability=psell;
       }
       else if(disp<0.0 && pbuy>=InpExhaustionProbabilityMin)
       {
          s.direction=1;
-         s.probability=pbuy;
-         edge=(pbuy-0.5)*2.0*atr*0.60;
+         probability=pbuy;
       }
       else return false;
    }
    else return false;
 
+   // Edge is the probability-weighted share of the *actual* target, in points.
+   s.probability=probability;
+   const double edge=(probability-0.5)*2.0*s.tp_pts;
    if(edge<InpMinEdgePts) return false;
    if(!SpreadGate(edge,spread)) return false;
 
    s.edge_pts=edge;
    s.confidence=ClampD((s.probability-0.5)*2.0,0.0,1.0);
-   s.sl_pts=ClampD(atr*InpSL_ATR_Multiplier,InpMinSLPts,InpMaxSLPts);
-   s.tp_pts=ClampD(MathMax(InpMinSLPts,atr*InpTP_ATR_Multiplier),InpMinSLPts,InpMaxSLPts*2.0);
    return true;
 }
 
@@ -1225,9 +1260,15 @@ double RiskLot(const SignalInfo &s)
    // after this calculation, so this is only the local thesis budget.
    const double cash=equity*risk_pct/100.0;
    double lot=cash/loss_lot;
-   // Guaranteed micro-lot floor for small accounts (0 - 0)
-   if(equity<=50.0 && free_margin>=1.0)
-      lot=MathMax(0.01,lot);
+   // Small-account floor: with a 180 pt stop the 0.01 minimum lot risks ~1.8% of a
+   // 100 USD account. Take the floor only while it stays inside the risk cap,
+   // otherwise the EA would silently never trade a small account.
+   const double minv=MathMax(InpMinLotOverride,MathMax(SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN),0.01));
+   if(lot<minv && free_margin>=1.0)
+   {
+      const double floor_risk=loss_lot*minv/MathMax(equity,OMEGA_EPS)*100.0;
+      if(floor_risk<=MathMax(InpMaxAccountRiskPct,InpInitialRiskPct*2.0)) lot=minv;
+   }
    return NormalizeVolume(lot);
 }
 
@@ -1798,6 +1839,14 @@ void ManagePositions()
    MqlTick t;
    if(!SymbolInfoTick(_Symbol,t)) return;
 
+   const double sfloor=GeometrySpreadPts((t.ask-t.bid)/MathMax(point,OMEGA_EPS));
+   // Break-even ladders are quoted in spread multiples: locking 1.8 pts against
+   // a 30 pt round-trip cost guarantees a loss on every "protected" trade.
+   const double be1_trig=MathMax(InpBEStage1TriggerPts,sfloor*2.2);
+   const double be1_lock=MathMax(InpBEStage1LockPts,sfloor*0.60);
+   const double be2_trig=MathMax(InpBEStage2TriggerPts,sfloor*4.0);
+   const double be2_lock=MathMax(InpBEStage2LockPts,sfloor*1.80);
+
    const double velocity=MathAbs(g_last_velocity);
    double trail_pts=atr*InpTrailWeakATR;
    if(velocity>=InpTrailVelocityStrong)
@@ -1807,7 +1856,7 @@ void ManagePositions()
       const double q=ClampD((velocity-InpTrailVelocityWeak)/MathMax(1.0,InpTrailVelocityStrong-InpTrailVelocityWeak),0.0,1.0);
       trail_pts=atr*(InpTrailWeakATR+q*(InpTrailStrongATR-InpTrailWeakATR));
    }
-   trail_pts=MathMax(InpMinSLPts,trail_pts);
+   trail_pts=MathMax(trail_pts,sfloor*2.0);
 
    for(int i=PositionsTotal()-1;i>=0;i--)
    {
@@ -1860,18 +1909,18 @@ void ManagePositions()
          continue;
       }
 
-      // Dual-Stage Micro-BE: Stage 1 at +6.2 pts, Stage 2 at +11.0 pts
+      // Dual-Stage Micro-BE, both stages quoted in spread multiples
       if(InpUseMicroBreakEven)
       {
-         if(profit_pts>=InpBEStage2TriggerPts)
+         if(profit_pts>=be2_trig)
          {
-            const double be2=(type==POSITION_TYPE_BUY ? open+InpBEStage2LockPts*point : open-InpBEStage2LockPts*point);
+            const double be2=(type==POSITION_TYPE_BUY ? open+be2_lock*point : open-be2_lock*point);
             const bool improve2=(type==POSITION_TYPE_BUY ? (sl==0.0 || be2>sl) : (sl==0.0 || be2<sl));
             if(improve2) ModifyPositionSLTP(ticket,be2,tp);
          }
-         else if(profit_pts>=InpBEStage1TriggerPts)
+         else if(profit_pts>=be1_trig)
          {
-            const double be1=(type==POSITION_TYPE_BUY ? open+InpBEStage1LockPts*point : open-InpBEStage1LockPts*point);
+            const double be1=(type==POSITION_TYPE_BUY ? open+be1_lock*point : open-be1_lock*point);
             const bool improve1=(type==POSITION_TYPE_BUY ? (sl==0.0 || be1>sl) : (sl==0.0 || be1<sl));
             if(improve1) ModifyPositionSLTP(ticket,be1,tp);
          }
@@ -1944,6 +1993,25 @@ int EnsurePositionControl(const ulong ticket)
          g_pos_ctrl[i].mfe_pts=0.0;
          g_pos_ctrl[i].mae_pts=0.0;
          g_pos_ctrl[i].entry_msc=NowMilliseconds();
+         g_pos_ctrl[i].entry_price=0.0;
+         g_pos_ctrl[i].sl_pts=0.0;
+         g_pos_ctrl[i].tp_pts=0.0;
+         g_pos_ctrl[i].entry_spread_pts=CurrentSpreadPts();
+         g_pos_ctrl[i].strategy=0;
+         if(PositionSelectByTicket(ticket))
+         {
+            const double point=PointValue();
+            const double open=PositionGetDouble(POSITION_PRICE_OPEN);
+            const double sl=PositionGetDouble(POSITION_SL);
+            const double tp=PositionGetDouble(POSITION_TP);
+            g_pos_ctrl[i].entry_price=open;
+            g_pos_ctrl[i].strategy=ClampI((int)(PositionGetInteger(POSITION_MAGIC)-(long)InpBaseMagic),1,3);
+            if(point>0.0 && open>0.0)
+            {
+               if(sl>0.0) g_pos_ctrl[i].sl_pts=MathAbs(open-sl)/point;
+               if(tp>0.0) g_pos_ctrl[i].tp_pts=MathAbs(tp-open)/point;
+            }
+         }
          return i;
       }
    }
@@ -2200,7 +2268,7 @@ double AvgLatency()
 
 void QueueTelemetry(const string event_name,const ulong ticket,const int direction,
                     const double volume,const double price,const double slip,
-                    const long latency,const double profit)
+                    const long latency,const double profit,const int strategy=0)
 {
    if(!InpPersistTelemetry) return;
    int use=0;
@@ -2224,6 +2292,31 @@ void QueueTelemetry(const string event_name,const ulong ticket,const int directi
    g_event_queue[use].slippage_pts=slip;
    g_event_queue[use].latency_ms=latency;
    g_event_queue[use].profit=profit;
+   g_event_queue[use].strategy=strategy;
+}
+
+// Per-trade ledger: the HTML report cannot attribute closed deals to a strategy
+// once SL/TP closes them, so the EA writes the attribution itself.
+void AppendTradeLedger(const int strategy,const int direction,const double volume,
+                       const double entry_price,const double exit_price,
+                       const double sl_pts,const double tp_pts,const double entry_spread_pts,
+                       const double profit,const double mfe_pts,const double mae_pts,
+                       const long age_sec,const string exit_reason)
+{
+   if(!InpPersistTelemetry) return;
+   int h=FileOpen(AccountScopedFile(InpLedgerFile),FILE_READ|FILE_WRITE|FILE_CSV|FILE_COMMON|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
+   if(h==INVALID_HANDLE) return;
+   if(FileSize(h)==0)
+      FileWrite(h,"time_close","strategy","direction","volume","entry_price","exit_price",
+                "sl_pts","tp_pts","spread_at_entry_pts","profit","mfe_pts","mae_pts",
+                "age_sec","exit_reason","atr_pts","regime","session");
+   FileSeek(h,0,SEEK_END);
+   FileWrite(h,TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),StrategyName(strategy),direction,
+             DoubleToString(volume,4),DoubleToString(entry_price,_Digits),DoubleToString(exit_price,_Digits),
+             DoubleToString(sl_pts,1),DoubleToString(tp_pts,1),DoubleToString(entry_spread_pts,1),
+             DoubleToString(profit,2),DoubleToString(mfe_pts,1),DoubleToString(mae_pts,1),
+             (string)age_sec,exit_reason,DoubleToString(g_last_atr_pts,1),g_last_regime,g_last_session);
+   FileClose(h);
 }
 
 void FlushTelemetry()
@@ -2232,14 +2325,14 @@ void FlushTelemetry()
    int h=FileOpen(AccountScopedFile(InpTelemetryFile),FILE_READ|FILE_WRITE|FILE_CSV|FILE_COMMON|FILE_SHARE_READ|FILE_SHARE_WRITE,';');
    if(h==INVALID_HANDLE) return;
    if(FileSize(h)==0)
-      FileWrite(h,"time","event","ticket","direction","volume","price","slippage_pts","latency_ms","profit","regime","session","spread","velocity","acceleration","pressure","intensity","persistence","dd");
+      FileWrite(h,"time","event","ticket","direction","volume","price","slippage_pts","latency_ms","profit","strategy","regime","session","spread","velocity","acceleration","pressure","intensity","persistence","dd");
    FileSeek(h,0,SEEK_END);
    while(g_event_count>0)
    {
       TelemetryEvent e=g_event_queue[g_event_head];
       FileWrite(h,TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),e.event_name,(string)e.ticket,e.direction,
                 DoubleToString(e.volume,4),DoubleToString(e.price,_Digits),DoubleToString(e.slippage_pts,3),e.latency_ms,
-                DoubleToString(e.profit,2),g_last_regime,g_last_session,DoubleToString(g_last_spread_pts,2),
+                DoubleToString(e.profit,2),StrategyName(e.strategy),g_last_regime,g_last_session,DoubleToString(g_last_spread_pts,2),
                 DoubleToString(g_last_velocity,2),DoubleToString(g_last_acceleration,2),
                 DoubleToString(g_last_pressure,3),DoubleToString(g_last_intensity,3),
                 DoubleToString(g_last_persistence,3),DoubleToString(CurrentDrawdownPct(),2));
@@ -2314,8 +2407,8 @@ void RepairPositionStops(const ulong ticket)
    const double tp=PositionGetDouble(POSITION_TP);
    if(sl!=0.0 && tp!=0.0) return;
 
-   const double slpts=ClampD(atr*InpSL_ATR_Multiplier,InpMinSLPts,InpMaxSLPts);
-   const double tppts=ClampD(atr*InpTP_ATR_Multiplier,InpMinSLPts,InpMaxSLPts*2.0);
+   const double slpts=StopLossPts(atr,CurrentSpreadPts());
+   const double tppts=TakeProfitPts(atr,slpts,CurrentSpreadPts());
    double new_sl=sl;
    double new_tp=tp;
    if(type==POSITION_TYPE_BUY)
@@ -2470,7 +2563,7 @@ int OnInit()
       return INIT_FAILED;
    }
 
-   g_atr_handle=iATR(_Symbol,PERIOD_M1,14);
+   g_atr_handle=iATR(_Symbol,InpATRTimeframe,14);
    if(g_atr_handle==INVALID_HANDLE)
    {
       Print("X13 Omega: ATR handle creation failed.");
@@ -2562,7 +2655,8 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
          {
             QueueTelemetry("REQUEST_REJECT",0,g_requests[slot].direction,g_requests[slot].volume,
                            g_requests[slot].requested_price,0.0,
-                           (NowMicroseconds()-g_requests[slot].sent_us)/1000,0.0);
+                           (NowMicroseconds()-g_requests[slot].sent_us)/1000,0.0,
+                           g_requests[slot].strategy);
             ClearRequest(slot);
          }
       }
@@ -2608,18 +2702,34 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
    }
 
    const long deal_entry=HistoryDealGetInteger(deal,DEAL_ENTRY);
-   if(deal_entry==DEAL_ENTRY_OUT || deal_entry==DEAL_ENTRY_OUT_BY || deal_entry==DEAL_ENTRY_INOUT)
+   const bool is_exit=(deal_entry==DEAL_ENTRY_OUT || deal_entry==DEAL_ENTRY_OUT_BY || deal_entry==DEAL_ENTRY_INOUT);
+   if(is_exit)
    {
       const ulong pos_ticket=trans.position;
       const int pc=FindPositionControl(pos_ticket);
-      if(pc>=0) g_pos_ctrl[pc].close_pending=false;
+      double entry_price=0.0,sl_pts=0.0,tp_pts=0.0,entry_spread=0.0,mfe=0.0,mae=0.0;
+      long age=0;
+      int ctrl_strategy=strategy;
+      if(pc>=0)
+      {
+         entry_price=g_pos_ctrl[pc].entry_price;
+         sl_pts=g_pos_ctrl[pc].sl_pts;
+         tp_pts=g_pos_ctrl[pc].tp_pts;
+         entry_spread=g_pos_ctrl[pc].entry_spread_pts;
+         mfe=g_pos_ctrl[pc].mfe_pts;
+         mae=g_pos_ctrl[pc].mae_pts;
+         if(g_pos_ctrl[pc].strategy>=1) ctrl_strategy=g_pos_ctrl[pc].strategy;
+         if(g_pos_ctrl[pc].entry_msc>0)
+            age=(long)((NowMilliseconds()-g_pos_ctrl[pc].entry_msc)/1000);
+         g_pos_ctrl[pc].close_pending=false;
+      }
+      if(entry_price<=0.0 && slot>=0) entry_price=g_requests[slot].requested_price;
+      AppendTradeLedger(ctrl_strategy,direction,volume,entry_price,price,sl_pts,tp_pts,
+                         entry_spread,profit,mfe,mae,age,HistoryDealGetString(deal,DEAL_COMMENT));
+      AddDealSample(MathAbs(slip),profit,volume,latency,direction,ctrl_strategy);
    }
-   if(deal_entry==DEAL_ENTRY_OUT || deal_entry==DEAL_ENTRY_OUT_BY || deal_entry==DEAL_ENTRY_INOUT)
-   {
-      AddDealSample(MathAbs(slip),profit,volume,latency,direction,strategy);
-   }
-   QueueTelemetry("DEAL",deal,direction,volume,price,slip,latency,profit);
-   if(slot>=0 && (deal_entry==DEAL_ENTRY_OUT || deal_entry==DEAL_ENTRY_OUT_BY || deal_entry==DEAL_ENTRY_INOUT))
+   QueueTelemetry("DEAL",deal,direction,volume,price,slip,latency,profit,strategy);
+   if(slot>=0 && is_exit)
       ClearRequest(slot);
 }
 //+------------------------------------------------------------------+

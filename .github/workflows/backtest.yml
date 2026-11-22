@@ -114,6 +114,12 @@ jobs:
           Copy-Item -Path "$env:EA_NAME.mq5" -Destination (Join-Path $env:EXPERTS_DIR "$env:EA_NAME.mq5") -Force
           Get-ChildItem $env:EXPERTS_DIR | Select-Object Name, Length | Format-Table
 
+      - name: Static MQL5 checks
+        shell: pwsh
+        run: |
+          python tools/mql5_lint.py "$env:EA_NAME.mq5"
+          if ($LASTEXITCODE -ne 0) { Write-Error 'Static checks failed.'; exit 1 }
+
       - name: Compile expert (fail on any error)
         shell: pwsh
         run: |
@@ -218,7 +224,7 @@ jobs:
           } else {
             Write-Warning "Report not found at $report"
           }
-          foreach ($dir in @((Join-Path $env:MT5_DIR 'Common\Files'), (Join-Path $env:MT5_DIR 'MQL5\Files'), (Join-Path $env:MT5_DIR 'Tester'))) {
+          foreach ($dir in @((Join-Path $env:MT5_DIR 'Common\Files'), (Join-Path $env:MT5_DIR 'MQL5\Files'), (Join-Path $env:MT5_DIR 'Tester'), (Join-Path $env:APPDATA 'MetaQuotes\Terminal\Common\Files'))) {
             if (Test-Path $dir) {
               Get-ChildItem -Path $dir -Filter '*.csv' -Recurse -ErrorAction SilentlyContinue |
                 ForEach-Object { Copy-Item $_.FullName (Join-Path $out $_.Name) -Force }
@@ -232,6 +238,16 @@ jobs:
             Copy-Item (Join-Path $env:RUNNER_TEMP 'compile-artifact.log') (Join-Path $out 'compile.log') -Force
           }
           Get-ChildItem -Path $out -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+
+      - name: Analyse results
+        if: always()
+        shell: pwsh
+        run: |
+          if (Test-Path 'artifacts') {
+            python tools/analyze_backtest.py --iteration "${{ inputs.tag || github.run_number }}" --out artifacts/metrics.json
+          } else {
+            Write-Warning 'No artifacts directory to analyse.'
+          }
 
       - name: Upload backtest artifacts
         if: always()
