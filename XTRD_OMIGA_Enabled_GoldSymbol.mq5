@@ -368,7 +368,7 @@ input group "GATE CALIBRATION (percentile based)"
 input double InpIntensityGateAbs           = 1.10; // Absolute floor for the tick-intensity gate
 input double InpMinPersistenceFloor        = 0.55; // Floor for the persistence gate
 input double InpMinAccelerationFloor       = 0.30; // Floor for the acceleration gate
-input double InpMicroDisplacementATR       = 0.25; // Displacement gate floor in ATR units
+input double InpMicroDisplacementATR       = 0.15; // Displacement gate floor in ATR units
 input double InpRateEWMAAlpha              = 0.02; // Tick-rate baseline decay (1/s, ~50 s memory)
 
 input group "STOPS / POSITION MANAGEMENT"
@@ -386,6 +386,8 @@ input double InpBEStage1TriggerPts          = 60.0; // Stage 1 trigger floor (2.
 input double InpBEStage1LockPts             = 18.0; // Stage 1 lock floor (0.6x spread)
 input double InpBEStage2TriggerPts          = 120.0; // Stage 2 trigger floor (4x spread)
 input double InpBEStage2LockPts             = 55.0; // Stage 2 lock floor (1.8x spread)
+input double InpBEStage1StopFraction        = 0.50; // Stage 1 trigger as a fraction of the stop
+input double InpBEStage2StopFraction        = 0.75; // Stage 2 trigger as a fraction of the stop
 input bool   InpUseSpreadMomentumGate       = true; // Rejects entries if spread is actively expanding
 input double InpSpreadMomentumThresholdPts  = 3.0;
 input bool   InpUseVelocityTrailing         = true;
@@ -1053,7 +1055,7 @@ double GateIntensity()
 {
    const double abs_gate=MathMax(1.0,InpIntensityGateAbs);
    if(!StatsReady(g_rs_intensity)) return abs_gate;
-   return MathMax(abs_gate,g_rs_intensity.p70);
+   return MathMax(abs_gate,g_rs_intensity.p60);
 }
 
 double GatePersistence()
@@ -2087,6 +2089,65 @@ bool ClosePartialPosition(const ulong ticket,const double volume,const string re
    return true;
 }
 
+
+//----------------------------- Deal Sync --------------------------//
+// OnTradeTransaction is not reliably delivered for async requests in the
+// tester, which left the ledger and telemetry empty even with live trades.
+// The deal history is reconciled on a timer instead.
+ulong g_deal_seen[64];
+int   g_deal_seen_idx=0;
+long  g_deal_sync_msc=0;
+
+bool DealAlreadyProcessed(const ulong ticket)
+{
+   if(ticket==0) return true;
+   for(int i=0;i<64;i++) if(g_deal_seen[i]==ticket) return true;
+   return false;
+}
+
+void MarkDealProcessed(const ulong ticket)
+{
+   g_deal_seen[g_deal_seen_idx]=ticket;
+   g_deal_seen_idx=(g_deal_seen_idx+1)%64;
+}
+
+void ProcessDealTicket(const ulong deal)
+{
+   if(DealAlreadyProcessed(deal)) return;
+   MarkDealProcessed(deal);
+   if(HistoryDealGetString(deal,DEAL_SYMBOL)!=_Symbol) return;
+   const long magic=HistoryDealGetInteger(deal,DEAL_MAGIC);
+   if(magic<(long)InpBaseMagic || magic>(long)InpBaseMagic+OMEGA_MAGIC_RANGE) return;
+
+   const long entry=HistoryDealGetInteger(deal,DEAL_ENTRY);
+   const double profit=HistoryDealGetDouble(deal,DEAL_PROFIT)+
+                       HistoryDealGetDouble(deal,DEAL_SWAP)+
+                       HistoryDealGetDouble(deal,DEAL_COMMISSION);
+   const double volume=HistoryDealGetDouble(deal,DEAL_VOLUME);
+   const double price=HistoryDealGetDouble(deal,DEAL_PRICE);
+   const int strategy=ClampI((int)(magic-(long)InpBaseMagic),1,3);
+   const int direction=(HistoryDealGetInteger(deal,DEAL_TYPE)==DEAL_TYPE_BUY ? 1 : -1);
+
+   QueueTelemetry(entry==DEAL_ENTRY_IN ? "ENTRY" : "EXIT",deal,direction,volume,price,
+                  0.0,0,profit,strategy);
+   if(entry==DEAL_ENTRY_OUT || entry==DEAL_ENTRY_OUT_BY || entry==DEAL_ENTRY_INOUT)
+      AddDealSample(0.0,profit,volume,0,direction,strategy);
+}
+
+void SyncDeals(const bool force=false)
+{
+   const long now=NowMilliseconds();
+   if(!force && now-g_deal_sync_msc<30000) return;
+   g_deal_sync_msc=now;
+   if(!HistorySelect(TimeCurrent()-30*86400,TimeCurrent()+3600)) return;
+   const int total=HistoryDealsTotal();
+   for(int i=0;i<total;i++)
+   {
+      const ulong t=HistoryDealGetTicket(i);
+      if(t!=0) ProcessDealTicket(t);
+   }
+}
+
 //----------------------------- Position Management ----------------//
 void ManagePositions()
 {
@@ -2097,12 +2158,16 @@ void ManagePositions()
    if(!SymbolInfoTick(_Symbol,t)) return;
 
    const double sfloor=GeometrySpreadPts((t.ask-t.bid)/MathMax(point,OMEGA_EPS));
-   // Break-even ladders are quoted in spread multiples: locking 1.8 pts against
-   // a 30 pt round-trip cost guarantees a loss on every "protected" trade.
-   const double be1_trig=MathMax(InpBEStage1TriggerPts,sfloor*2.2);
-   const double be1_lock=MathMax(InpBEStage1LockPts,sfloor*0.60);
-   const double be2_trig=MathMax(InpBEStage2TriggerPts,sfloor*4.0);
-   const double be2_lock=MathMax(InpBEStage2LockPts,sfloor*1.80);
+   // Iteration 4 measured the defect: 3 winners closed at +12 pts against a
+   // 296 pt stop, because stage 1 moved the stop to break-even after only 19%
+   // of the stop distance. The ladder is now scaled to the stop distance, and
+   // every lock is above the round-trip cost so a "protected" exit is not a
+   // disguised loss.
+   const double sl_ref=StopLossPts(atr,sfloor);
+   const double be1_trig=MathMax(InpBEStage1TriggerPts,sl_ref*InpBEStage1StopFraction);
+   const double be1_lock=MathMax(InpBEStage1LockPts,sfloor*1.20);
+   const double be2_trig=MathMax(InpBEStage2TriggerPts,sl_ref*InpBEStage2StopFraction);
+   const double be2_lock=MathMax(InpBEStage2LockPts,sl_ref*0.30);
 
    const double velocity=MathAbs(g_last_velocity);
    double trail_pts=atr*InpTrailWeakATR;
@@ -2926,6 +2991,7 @@ void WriteTesterSummary()
 void OnDeinit(const int reason)
 {
    EventKillTimer();
+   SyncDeals(true);
    SaveState(true);
    FlushTelemetry();
    WriteTesterSummary();
@@ -2951,6 +3017,7 @@ void OnTick()
    }
 
    ManagePositions();
+   SyncDeals();
    RepriceLimits();
    PurgeOldRequests();
    RouteSignals();
