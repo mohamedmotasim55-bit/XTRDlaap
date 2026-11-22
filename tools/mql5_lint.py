@@ -231,16 +231,38 @@ def check_struct_members(src: str) -> list[str]:
         structs[m.group(1)] = set(
             re.findall(r"^\s*(?:[A-Za-z_]\w*)\s+(\w+)\s*(?:\[[^\]]*\])?\s*;", m.group(2), re.M)
         )
-    var_types = {}
+    # A variable name can be reused in several scopes with different struct
+    # types, so a field only counts as missing when no candidate declares it.
+    var_types: dict[str, set[str]] = {}
     for m in re.finditer(r"^\s*(\w+)\s+&?(\w+)\s*(?:\[[^\]]*\])?\s*(?:=|;)", src, re.M):
         if m.group(1) in structs:
-            var_types[m.group(2)] = m.group(1)
-    for var, stype in var_types.items():
+            var_types.setdefault(m.group(2), set()).add(m.group(1))
+    # Built-in MQL5 structs cannot be validated here; a name used with one of
+    # them is skipped rather than reported.
+    external = ("MqlTick", "MqlRates", "MqlTradeRequest", "MqlTradeResult",
+                "MqlTradeTransaction", "MqlDateTime", "MqlBookInfo",
+                "MqlCalendarValue", "MqlCalendarEvent", "MqlParam")
+    external_vars = set()
+    for name in external:
+        for m in re.finditer(r"\b" + name + r"\s*&?\s*(\w+)\s*(?=[,);])", src):
+            external_vars.add(m.group(1))
+
+    # function parameters and comma separated declarations, e.g. (RollingStat &s)
+    for name in structs:
+        for m in re.finditer(r"\b" + name + r"\s*&?\s*(\w+)\s*(?=[,)])", src):
+            var_types.setdefault(m.group(1), set()).add(name)
+    for var, stypes in var_types.items():
+        if var in external_vars:
+            continue
         for m in re.finditer(r"\b" + re.escape(var) + r"\.(\w+)", src):
             field = m.group(1)
-            if field not in structs[stype] and field not in {"Copy"}:
-                line = src[: m.start()].count("\n") + 1
-                findings.append(f"line {line}: {var}.{field} is not a field of struct {stype}")
+            if field in {"Copy"}:
+                continue
+            if any(field in structs[t] for t in stypes):
+                continue
+            stype = sorted(stypes)[0]
+            line = src[: m.start()].count("\n") + 1
+            findings.append(f"line {line}: {var}.{field} is not a field of struct {stype}")
     return findings
 
 

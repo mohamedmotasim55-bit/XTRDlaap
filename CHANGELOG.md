@@ -6,6 +6,45 @@ deposit 100 USD, leverage 1:1000. Stress test: real ticks, 15 ms execution delay
 Scoring: `score = net_profit * min(profit_factor, 3) - 0.5 * equity_dd_rel`.
 An iteration is reverted when its score is below the best previous score.
 
+## Iteration 0 - pipeline bring-up (no trades)
+
+**Backtest:** 2026.10.07 -> 2026.11.21, `XAUUSD.m`, M1, real ticks, 15 ms
+execution delay, 100 USD, stress spread 26 pts (matches the live quote).
+
+| metric | value |
+| --- | --- |
+| net profit | 0.00 |
+| trades | 0 |
+| profit factor | n/a |
+| max equity DD | 0.00% |
+| telemetry rows | 0 |
+
+### Findings
+
+1. **`XAUUSD` does not exist on this broker** - gold is `XAUUSD.m`
+   (`Metals M\XAUUSD.m`). The tester aborted with `symbol XAUUSD not exist`.
+   The workflow now reads the terminal symbol tree and picks the name.
+2. **The expert had never compiled** - `MqlTradeTransaction` has no
+   `request_id` field. Fixed, and the CI gate now trusts the compiler log plus
+   the produced `.ex5` (`metaeditor64.exe` returns 1 even on success).
+3. **The expert never traded.** 44.5M signal evaluations, 0 orders. The logged
+   state shows `intensity` 0.88-0.99 and `persist` 0.50-0.65, while the gates
+   demanded `intensity >= 2.5` (micro) / `>= 2.0` (momentum, exhaustion) and
+   `persist >= 0.80`. The constants were calibrated for a different tick
+   stream, so every strategy was unreachable.
+4. **The HTML report is not written in headless mode.** Added
+   `X13_Omega_Summary.csv` written by the EA from `TesterStatistics`, so the
+   metrics no longer depend on the terminal's report writer.
+
+### Changes
+
+- Percentile gates: intensity, persistence, acceleration and displacement are
+  compared against the live distribution of the instrument (rolling 512 s
+  window, 1 s sampling) with absolute floors, instead of fixed constants.
+- Rejection counters for all 12 gates, dumped to the summary CSV and to the
+  periodic log, so the next iteration is measurement driven.
+- Exhaustion and momentum no longer require an unreachable regime label.
+
 <!-- METRICS:START -->
 | iter | net USD | PF | trades | equity DD % | recovery | score | verdict |
 | --- | --- | --- | --- | --- | --- | --- | --- |

@@ -293,6 +293,24 @@ def load_csv(path: str) -> list[dict]:
         return list(csv.DictReader(fh, dialect=dialect))
 
 
+
+def parse_summary_csv(path: str) -> dict:
+    """Metrics written by the EA itself (TesterStatistics), report independent."""
+    kv = {}
+    for row in load_csv(path):
+        key = (row.get("metric") or "").strip()
+        val = (row.get("value") or "").strip()
+        if key and val:
+            kv[key] = val
+    out = {}
+    for key, val in kv.items():
+        try:
+            out[key] = float(val)
+        except ValueError:
+            out[key] = val
+    return out
+
+
 def summarize_telemetry(rows: list[dict]) -> dict:
     if not rows:
         return {}
@@ -470,6 +488,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--report", default=None, help="MT5 HTML report")
     ap.add_argument("--telemetry", nargs="*", default=[], help="telemetry CSV globs")
     ap.add_argument("--ledger", nargs="*", default=[], help="trade ledger CSV globs")
+    ap.add_argument("--summary", nargs="*", default=[], help="EA written tester summary CSV globs")
     ap.add_argument("--iteration", default="0")
     ap.add_argument("--out", default=None)
     ap.add_argument("--append-changelog", default=None)
@@ -496,12 +515,36 @@ def main(argv: list[str]) -> int:
         metrics["summary"] = {}
         metrics["error"] = "report not found"
 
+    summary_path = glob_first(args.summary or ["artifacts/*Summary*.csv", "artifacts/*summary*.csv"])
+    if summary_path:
+        metrics["ea_summary"] = parse_summary_csv(summary_path)
+        if not metrics["summary"]:
+            # The terminal does not always emit the HTML report headless; the
+            # EA-written statistics carry the same headline numbers.
+            metrics["summary"] = {
+                k: metrics["ea_summary"][k]
+                for k in ("profit", "profit_factor", "equity_dd_rel", "trades",
+                          "gross_profit", "gross_loss", "expected_payoff",
+                          "recovery_factor", "sharpe_ratio")
+                if k in metrics["ea_summary"]
+            }
+            metrics.update({k: v for k, v in metrics["summary"].items() if k not in metrics})
+            metrics.pop("error", None)
+
     telemetry_path = glob_first(args.telemetry or ["artifacts/*Telemetry*.csv", "artifacts/*telemetry*.csv"])
     metrics["telemetry"] = summarize_telemetry(load_csv(telemetry_path)) if telemetry_path else {}
 
     ledger_path = glob_first(args.ledger or ["artifacts/*Ledger*.csv", "artifacts/*ledger*.csv"])
     metrics["ledger"] = summarize_ledger(load_csv(ledger_path)) if ledger_path else {}
-    metrics["sources"] = {"report": report, "telemetry": telemetry_path, "ledger": ledger_path}
+    metrics["sources"] = {"report": report, "telemetry": telemetry_path,
+                          "ledger": ledger_path, "summary": summary_path}
+
+    # The HTML report and the EA summary use different key names.
+    for canonical, alias in (("net_profit", "profit"), ("total_trades", "trades")):
+        if metrics.get(canonical) is None and metrics.get(alias) is not None:
+            metrics[canonical] = metrics[alias]
+        if metrics.get(alias) is None and metrics.get(canonical) is not None:
+            metrics[alias] = metrics[canonical]
 
     metrics["findings"] = diagnose(metrics)
 

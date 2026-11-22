@@ -281,8 +281,9 @@ jobs:
           Get-ChildItem -Path $env:MT5_DIR -Include '*.htm','*.html','*.csv','*.xml' -Recurse -ErrorAction SilentlyContinue |
             Select-Object FullName, Length | Format-Table -AutoSize
 
-          # A green run without a report is a silent no-op; fail loudly instead.
-          if (-not (Test-Path "$env:REPORT_BASE.htm")) {
+          # A green run without any result file is a silent no-op; fail loudly.
+          $summaryCsv = Get-ChildItem -Path $env:MT5_DIR -Filter '*Summary*.csv' -Recurse -ErrorAction SilentlyContinue
+          if ((-not (Test-Path "$env:REPORT_BASE.htm")) -and (-not $summaryCsv)) {
             Write-Host '----- terminal log tail -----'
             Get-ChildItem (Join-Path $env:MT5_DIR 'logs') -Filter '*.log' -ErrorAction SilentlyContinue |
               ForEach-Object { Write-Host "=== $($_.Name) ==="; Get-Content $_.FullName -Tail 30 }

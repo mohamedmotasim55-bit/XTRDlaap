@@ -26,7 +26,7 @@
 //| Validate with real-tick backtests and forward demo execution.    |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "2.30"
+#property version   "2.31"
 #property description "XTRD OMIGA - spread-aware gold microstructure engine (JustMarkets standard profile)"
 
 #define OMEGA_TICK_CAPACITY       1024
@@ -39,6 +39,23 @@
 #define OMEGA_MAGIC_RANGE         16
 #define OMEGA_MS_PER_SEC           1000.0
 #define OMEGA_EPS                  1e-12
+#define OMEGA_STAT_CAP             512
+
+// Signal rejection codes, so the loop can measure which gate blocks trading
+// instead of guessing from a zero trade count.
+#define REJ_SESSION                0
+#define REJ_WARMUP                 1
+#define REJ_ATR                    2
+#define REJ_VOLFLOOR               3
+#define REJ_INTENSITY              4
+#define REJ_DISPLACEMENT           5
+#define REJ_PERSISTENCE            6
+#define REJ_ACCELERATION           7
+#define REJ_REGIME                 8
+#define REJ_PROBABILITY            9
+#define REJ_EDGE                  10
+#define REJ_SPREAD                11
+#define REJ_COUNT                 12
 
 //----------------------------- Enums -------------------------------//
 enum ENUM_OMEGA_STRATEGY
@@ -165,6 +182,21 @@ struct PositionControl
    double tp_pts;
    double entry_spread_pts;
    int    strategy;
+};
+
+// Rolling distribution of a market metric. Absolute thresholds cannot be
+// calibrated once for every broker/volatility regime, so the gates compare
+// against the live percentile instead of a constant.
+struct RollingStat
+{
+   double v[OMEGA_STAT_CAP];
+   int    idx;
+   int    cnt;
+   double p50;
+   double p60;
+   double p70;
+   double p85;
+   double p90;
 };
 
 struct TelemetryEvent
@@ -311,6 +343,12 @@ input bool   InpRejectDuplicatePending     = true;
 input int    InpDuplicateWindowMs          = 150;
 input int    InpStrategyCooldownMs         = 20;
 
+input group "GATE CALIBRATION (percentile based)"
+input double InpIntensityGateAbs           = 1.10; // Absolute floor for the tick-intensity gate
+input double InpMinPersistenceFloor        = 0.55; // Floor for the persistence gate
+input double InpMinAccelerationFloor       = 0.30; // Floor for the acceleration gate
+input double InpMicroDisplacementATR       = 0.25; // Displacement gate floor in ATR units
+
 input group "STOPS / POSITION MANAGEMENT"
 input ENUM_TIMEFRAMES InpATRTimeframe      = PERIOD_M5; // ATR/geometry timeframe (M1 ATR is smaller than the spread)
 input double InpSL_ATR_Multiplier           = 0.55;
@@ -433,6 +471,13 @@ long g_last_signal_fingerprint[4]={0,0,0,0};
  double g_last_spread_pts=0.0;
  double g_last_regime_score=0.0;
  int g_last_regime=REGIME_UNKNOWN;
+RollingStat g_rs_intensity;
+RollingStat g_rs_persist;
+RollingStat g_rs_absvel;
+RollingStat g_rs_absacc;
+RollingStat g_rs_absdisp;
+long g_stats_last_msc=0;
+long g_rej[REJ_COUNT];
  int g_last_session=SESSION_OFF;
 
  double g_peak_equity=0.0;
@@ -888,6 +933,98 @@ bool SpreadGate(const double edge_pts,const double spread_pts)
    return true;
 }
 
+
+//----------------------------- Rolling Distribution -------------//
+void RS_Reset(RollingStat &s)
+{
+   s.idx=0;
+   s.cnt=0;
+   s.p50=0.0; s.p60=0.0; s.p70=0.0; s.p85=0.0; s.p90=0.0;
+   ArrayInitialize(s.v,0.0);
+}
+
+void RS_Push(RollingStat &s,const double x)
+{
+   if(!MathIsValidNumber(x)) return;
+   s.v[s.idx]=x;
+   s.idx=(s.idx+1)%OMEGA_STAT_CAP;
+   if(s.cnt<OMEGA_STAT_CAP) s.cnt++;
+}
+
+double RS_Quantile(const RollingStat &s,const double q)
+{
+   if(s.cnt<=0) return 0.0;
+   double tmp[];
+   ArrayResize(tmp,s.cnt);
+   for(int i=0;i<s.cnt;i++) tmp[i]=s.v[i];
+   ArraySort(tmp);
+   const int idx=ClampI((int)MathFloor(q*(s.cnt-1)+0.5),0,s.cnt-1);
+   return tmp[idx];
+}
+
+void RS_UpdatePercentiles(RollingStat &s)
+{
+   if(s.cnt<=0) return;
+   s.p50=RS_Quantile(s,0.50);
+   s.p60=RS_Quantile(s,0.60);
+   s.p70=RS_Quantile(s,0.70);
+   s.p85=RS_Quantile(s,0.85);
+   s.p90=RS_Quantile(s,0.90);
+}
+
+void SampleMarketStats(const long now_msc)
+{
+   if(now_msc-g_stats_last_msc<1000) return;
+   g_stats_last_msc=now_msc;
+   RS_Push(g_rs_intensity,g_last_intensity);
+   RS_Push(g_rs_persist,g_last_persistence);
+   RS_Push(g_rs_absvel,MathAbs(g_last_velocity));
+   RS_Push(g_rs_absacc,MathAbs(g_last_acceleration));
+   RS_Push(g_rs_absdisp,MathAbs(g_last_displacement));
+   RS_UpdatePercentiles(g_rs_intensity);
+   RS_UpdatePercentiles(g_rs_persist);
+   RS_UpdatePercentiles(g_rs_absvel);
+   RS_UpdatePercentiles(g_rs_absacc);
+   RS_UpdatePercentiles(g_rs_absdisp);
+}
+
+// Percentile gates fall back to the absolute inputs until the sample is deep
+// enough to describe the instrument.
+bool StatsReady(const RollingStat &s) { return s.cnt>=60; }
+
+double GateIntensity()
+{
+   const double abs_gate=MathMax(1.0,InpIntensityGateAbs);
+   if(!StatsReady(g_rs_intensity)) return abs_gate;
+   return MathMax(abs_gate,g_rs_intensity.p70);
+}
+
+double GatePersistence()
+{
+   if(!StatsReady(g_rs_persist)) return InpMomentumPersistenceMin;
+   return MathMax(InpMinPersistenceFloor,g_rs_persist.p70);
+}
+
+double GateAcceleration()
+{
+   if(!StatsReady(g_rs_absacc)) return InpMomentumAccelerationMin;
+   return MathMax(InpMinAccelerationFloor,g_rs_absacc.p50);
+}
+
+double GateDisplacement(const double atr)
+{
+   double gate=MathMax(InpMicroDeviationMinPts,atr*InpMicroDisplacementATR);
+   if(StatsReady(g_rs_absdisp)) gate=MathMax(gate,g_rs_absdisp.p60);
+   return gate;
+}
+
+// Every gate reports why it blocked, so the next iteration is data driven.
+bool RejectSignal(const int code)
+{
+   if(code>=0 && code<REJ_COUNT) g_rej[code]++;
+   return false;
+}
+
 //----------------------------- Signal Builder ---------------------//
 // Trade geometry is expressed in multiples of the *live* spread, because on a
 // standard 25-35 pt gold account the spread is the dominant cost term: a target
@@ -915,27 +1052,34 @@ bool BuildSignal(const int strategy,SignalInfo &s)
 {
    ZeroMemory(s);
    const int session=CurrentSession();
-   if(!SessionAllowsStrategy(strategy,session)) return false;
-   if(g_count<InpMinTicksBeforeSignal) return false;
+   if(!SessionAllowsStrategy(strategy,session)) return RejectSignal(REJ_SESSION);
+   if(g_count<InpMinTicksBeforeSignal) return RejectSignal(REJ_WARMUP);
 
    const double atr=ATRPoints();
    const double spread=CurrentSpreadPts();
-   if(atr<=0.0 || spread==DBL_MAX) return false;
+   if(atr<=0.0 || spread==DBL_MAX) return RejectSignal(REJ_ATR);
 
    // Volatility floor: in a dead market the target cannot clear the spread.
-   if(atr<GeometrySpreadPts(spread)*InpMinATRSpreadMultiple) return false;
+   if(atr<GeometrySpreadPts(spread)*InpMinATRSpreadMultiple) return RejectSignal(REJ_VOLFLOOR);
 
    const double v=g_last_velocity;
    const double vc=g_last_velocity_context;
    const double a=g_last_acceleration;
 
    // Institutional Flash-Crash Chaos Shield: halt new entries during unphysical velocity spikes
-   if(MathAbs(v)>500.0) return false;
+   if(MathAbs(v)>500.0) return RejectSignal(REJ_ACCELERATION);
    const double pr=g_last_pressure;
    const double pers=g_last_persistence;
    const double intensity=g_last_intensity;
    const double disp=g_last_displacement;
    const int regime=g_last_regime;
+
+   // Gates compare against the live distribution of this instrument, not against
+   // constants calibrated for another broker's tick stream.
+   const double inten_gate=GateIntensity();
+   const double pers_gate=GatePersistence();
+   const double acc_gate=GateAcceleration();
+   const double disp_gate=GateDisplacement(atr);
 
    double pbuy=ConditionalScore(1,v,a,pr,g_last_dir_persistence_buy,intensity,disp,atr);
    double psell=ConditionalScore(-1,v,a,pr,g_last_dir_persistence_sell,intensity,disp,atr);
@@ -957,15 +1101,14 @@ bool BuildSignal(const int strategy,SignalInfo &s)
 
    double probability=0.0;
 
-   // 1) Micro displacement reversion: aggressive market reversion when
-   // spread is compressed and the displacement is statistically extreme.
+   // 1) Micro displacement reversion
    if(strategy==STRAT_MICRO_REVERSION && InpEnableMicroReversion)
    {
-      if(intensity<InpMicroIntensityMin) return false;
-      if(MathAbs(disp)<InpMicroDeviationMinPts) return false;
+      if(intensity<inten_gate) return RejectSignal(REJ_INTENSITY);
+      if(MathAbs(disp)<disp_gate) return RejectSignal(REJ_DISPLACEMENT);
       // Reversion only pays when the spread is at or below its own baseline.
-      if(spread>InpBaselineSpreadPts*1.20) return false;
-      if(MathAbs(pr)>InpMicroPressureMax) return false;
+      if(spread>InpBaselineSpreadPts*1.20) return RejectSignal(REJ_SPREAD);
+      if(MathAbs(pr)>InpMicroPressureMax) return RejectSignal(REJ_DISPLACEMENT);
 
       if(disp>0.0 && psell>=InpMicroProbabilityMin)
       {
@@ -977,19 +1120,19 @@ bool BuildSignal(const int strategy,SignalInfo &s)
          s.direction=1;
          probability=pbuy;
       }
-      else return false;
+      else return RejectSignal(REJ_PROBABILITY);
 
-      // Do not enter reversion if directional momentum is still accelerating.
-      if(MathAbs(v)>MathMax(InpMomentumVelocityMin,atr*1.5) && MathAbs(a)>InpMomentumAccelerationMin)
-         return false;
+      // Do not fade a move that is still accelerating.
+      if(MathAbs(v)>MathMax(InpMomentumVelocityMin,atr*1.5) && MathAbs(a)>acc_gate)
+         return RejectSignal(REJ_ACCELERATION);
    }
-   // 2) Momentum continuation: route immediately to market execution.
+   // 2) Momentum continuation
    else if(strategy==STRAT_MOMENTUM && InpEnableMomentum)
    {
-      if(intensity<InpMomentumIntensityMin) return false;
-      if(pers<InpMomentumPersistenceMin) return false;
-      if(MathAbs(a)<InpMomentumAccelerationMin) return false;
-      if(regime!=REGIME_MOMENTUM && regime!=REGIME_CHAOS) return false;
+      if(intensity<inten_gate) return RejectSignal(REJ_INTENSITY);
+      if(pers<pers_gate) return RejectSignal(REJ_PERSISTENCE);
+      if(MathAbs(a)<acc_gate) return RejectSignal(REJ_ACCELERATION);
+      if(regime==REGIME_QUIET) return RejectSignal(REJ_REGIME);
 
       if(v>0.0 && pbuy>=InpMomentumProbabilityMin)
       {
@@ -1001,19 +1144,19 @@ bool BuildSignal(const int strategy,SignalInfo &s)
          s.direction=-1;
          probability=psell;
       }
-      else return false;
+      else return RejectSignal(REJ_PROBABILITY);
 
       // Context velocity must not violently oppose the fast stream.
-      if(s.direction>0 && vc< -MathMax(1.0,InpMomentumVelocityMin*0.50)) return false;
-      if(s.direction<0 && vc>  MathMax(1.0,InpMomentumVelocityMin*0.50)) return false;
+      if(s.direction>0 && vc< -MathMax(1.0,InpMomentumVelocityMin*0.50)) return RejectSignal(REJ_ACCELERATION);
+      if(s.direction<0 && vc>  MathMax(1.0,InpMomentumVelocityMin*0.50)) return RejectSignal(REJ_ACCELERATION);
    }
-   // 3) Exhaustion: passive limit capture of a failed extreme.
+   // 3) Exhaustion reversion
    else if(strategy==STRAT_EXHAUSTION && InpEnableExhaustion)
    {
-      if(intensity<InpExhaustionIntensityMin) return false;
-      if(MathAbs(disp)<atr*InpExhaustionATRMultiple) return false;
-      if(MathAbs(v)>MathMax(1.0,atr)*InpExhaustionVelocityRatio) return false;
-      if(MathAbs(pr)>MathMax(1.0,atr)*InpExhaustionPressureRatio) return false;
+      if(intensity<inten_gate) return RejectSignal(REJ_INTENSITY);
+      if(MathAbs(disp)<MathMax(atr*InpExhaustionATRMultiple,disp_gate)) return RejectSignal(REJ_DISPLACEMENT);
+      if(MathAbs(v)>MathMax(1.0,atr)*InpExhaustionVelocityRatio) return RejectSignal(REJ_PERSISTENCE);
+      if(MathAbs(pr)>MathMax(1.0,atr)*InpExhaustionPressureRatio) return RejectSignal(REJ_DISPLACEMENT);
 
       if(disp>0.0 && psell>=InpExhaustionProbabilityMin)
       {
@@ -1025,15 +1168,15 @@ bool BuildSignal(const int strategy,SignalInfo &s)
          s.direction=1;
          probability=pbuy;
       }
-      else return false;
+      else return RejectSignal(REJ_PROBABILITY);
    }
-   else return false;
+   else return RejectSignal(REJ_REGIME);
 
    // Edge is the probability-weighted share of the *actual* target, in points.
    s.probability=probability;
    const double edge=(probability-0.5)*2.0*s.tp_pts;
-   if(edge<InpMinEdgePts) return false;
-   if(!SpreadGate(edge,spread)) return false;
+   if(edge<InpMinEdgePts) return RejectSignal(REJ_EDGE);
+   if(!SpreadGate(edge,spread)) return RejectSignal(REJ_SPREAD);
 
    s.edge_pts=edge;
    s.confidence=ClampD((s.probability-0.5)*2.0,0.0,1.0);
@@ -2336,6 +2479,10 @@ void FlushTelemetry()
                 DoubleToString(g_last_velocity,2),DoubleToString(g_last_acceleration,2),
                 DoubleToString(g_last_pressure,3),DoubleToString(g_last_intensity,3),
                 DoubleToString(g_last_persistence,3),DoubleToString(CurrentDrawdownPct(),2));
+      PrintFormat("OMEGA GATES | inten_gate=%.2f pers_gate=%.2f acc_gate=%.2f disp_gate=%.0f | rej inten=%I64d disp=%I64d pers=%I64d acc=%I64d prob=%I64d edge=%I64d spread=%I64d",
+                  GateIntensity(),GatePersistence(),GateAcceleration(),GateDisplacement(g_last_atr_pts),
+                  g_rej[REJ_INTENSITY],g_rej[REJ_DISPLACEMENT],g_rej[REJ_PERSISTENCE],
+                  g_rej[REJ_ACCELERATION],g_rej[REJ_PROBABILITY],g_rej[REJ_EDGE],g_rej[REJ_SPREAD]);
       ZeroMemory(g_event_queue[g_event_head]);
       g_event_head=(g_event_head+1)%OMEGA_EVENT_CAP;
       g_event_count--;
@@ -2482,6 +2629,7 @@ void UpdateStateFromTick(const MqlTick &t)
    g_last_regime=DetectRegime(g_last_velocity,g_last_acceleration,g_last_persistence,
                               g_last_intensity,g_last_atr_pts,g_last_displacement);
    g_last_session=CurrentSession();
+   SampleMarketStats((long)t.time_msc);
 }
 
 void UpdateMarketState(const MqlTick &t)
@@ -2563,6 +2711,13 @@ int OnInit()
       return INIT_FAILED;
    }
 
+   RS_Reset(g_rs_intensity);
+   RS_Reset(g_rs_persist);
+   RS_Reset(g_rs_absvel);
+   RS_Reset(g_rs_absacc);
+   RS_Reset(g_rs_absdisp);
+   ArrayInitialize(g_rej,0);
+
    g_atr_handle=iATR(_Symbol,InpATRTimeframe,14);
    if(g_atr_handle==INVALID_HANDLE)
    {
@@ -2585,11 +2740,71 @@ int OnInit()
    return INIT_SUCCEEDED;
 }
 
+
+//----------------------------- Tester Summary ---------------------//
+// The HTML report is generated by the terminal and is not always written in
+// headless mode, so the EA records the tester statistics itself.
+void WriteTesterSummary()
+{
+   if(!MQLInfoInteger(MQL_TESTER)) return;
+   const string fname=AccountScopedFile("X13_Omega_Summary.csv");
+   int h=FileOpen(fname,FILE_WRITE|FILE_CSV|FILE_COMMON,';');
+   if(h==INVALID_HANDLE)
+   {
+      PrintFormat("X13 Omega: cannot write %s (err %d)",fname,GetLastError());
+      return;
+   }
+   FileWrite(h,"metric","value");
+   FileWrite(h,"initial_deposit",DoubleToString(TesterStatistics(STAT_INITIAL_DEPOSIT),2));
+   FileWrite(h,"profit",DoubleToString(TesterStatistics(STAT_PROFIT),2));
+   FileWrite(h,"gross_profit",DoubleToString(TesterStatistics(STAT_GROSS_PROFIT),2));
+   FileWrite(h,"gross_loss",DoubleToString(TesterStatistics(STAT_GROSS_LOSS),2));
+   FileWrite(h,"profit_factor",DoubleToString(TesterStatistics(STAT_PROFIT_FACTOR),4));
+   FileWrite(h,"expected_payoff",DoubleToString(TesterStatistics(STAT_EXPECTED_PAYOFF),4));
+   FileWrite(h,"recovery_factor",DoubleToString(TesterStatistics(STAT_RECOVERY_FACTOR),4));
+   FileWrite(h,"sharpe_ratio",DoubleToString(TesterStatistics(STAT_SHARPE_RATIO),4));
+   FileWrite(h,"equity_dd_rel",DoubleToString(TesterStatistics(STAT_EQUITY_DDREL_PERCENT),2));
+   FileWrite(h,"equity_dd_abs",DoubleToString(TesterStatistics(STAT_EQUITY_DD),2));
+   FileWrite(h,"balance_dd_rel",DoubleToString(TesterStatistics(STAT_BALANCE_DDREL_PERCENT),2));
+   FileWrite(h,"trades",DoubleToString(TesterStatistics(STAT_TRADES),0));
+   FileWrite(h,"profit_trades",DoubleToString(TesterStatistics(STAT_PROFIT_TRADES),0));
+   FileWrite(h,"loss_trades",DoubleToString(TesterStatistics(STAT_LOSS_TRADES),0));
+   FileWrite(h,"short_trades",DoubleToString(TesterStatistics(STAT_SHORT_TRADES),0));
+   FileWrite(h,"long_trades",DoubleToString(TesterStatistics(STAT_LONG_TRADES),0));
+   FileWrite(h,"avg_profit_trade",DoubleToString(TesterStatistics(STAT_AVG_PROFIT_TRADE),4));
+   FileWrite(h,"avg_loss_trade",DoubleToString(TesterStatistics(STAT_AVG_LOSS_TRADE),4));
+   FileWrite(h,"max_profit_trade",DoubleToString(TesterStatistics(STAT_MAX_PROFIT_TRADE),2));
+   FileWrite(h,"max_loss_trade",DoubleToString(TesterStatistics(STAT_MAX_LOSS_TRADE),2));
+   FileWrite(h,"rej_session",(string)g_rej[REJ_SESSION]);
+   FileWrite(h,"rej_warmup",(string)g_rej[REJ_WARMUP]);
+   FileWrite(h,"rej_atr",(string)g_rej[REJ_ATR]);
+   FileWrite(h,"rej_volfloor",(string)g_rej[REJ_VOLFLOOR]);
+   FileWrite(h,"rej_intensity",(string)g_rej[REJ_INTENSITY]);
+   FileWrite(h,"rej_displacement",(string)g_rej[REJ_DISPLACEMENT]);
+   FileWrite(h,"rej_persistence",(string)g_rej[REJ_PERSISTENCE]);
+   FileWrite(h,"rej_acceleration",(string)g_rej[REJ_ACCELERATION]);
+   FileWrite(h,"rej_regime",(string)g_rej[REJ_REGIME]);
+   FileWrite(h,"rej_probability",(string)g_rej[REJ_PROBABILITY]);
+   FileWrite(h,"rej_edge",(string)g_rej[REJ_EDGE]);
+   FileWrite(h,"rej_spread",(string)g_rej[REJ_SPREAD]);
+   FileWrite(h,"gate_intensity",DoubleToString(GateIntensity(),3));
+   FileWrite(h,"gate_persistence",DoubleToString(GatePersistence(),3));
+   FileWrite(h,"gate_acceleration",DoubleToString(GateAcceleration(),3));
+   FileWrite(h,"gate_displacement",DoubleToString(GateDisplacement(g_last_atr_pts),1));
+   FileWrite(h,"p70_intensity",DoubleToString(g_rs_intensity.p70,3));
+   FileWrite(h,"p70_persist",DoubleToString(g_rs_persist.p70,3));
+   FileWrite(h,"p50_absacc",DoubleToString(g_rs_absacc.p50,3));
+   FileWrite(h,"p60_absdisp",DoubleToString(g_rs_absdisp.p60,1));
+   FileClose(h);
+   PrintFormat("X13 Omega: tester summary written to %s",fname);
+}
+
 void OnDeinit(const int reason)
 {
    EventKillTimer();
    SaveState(true);
    FlushTelemetry();
+   WriteTesterSummary();
    if(g_atr_handle!=INVALID_HANDLE) IndicatorRelease(g_atr_handle);
    PrintFormat("X13 Omega stopped. deals=%d DD=%.2f%% avg_slip=%.2f avg_latency=%.1fms profit=%.2f",
                g_total_deals,CurrentDrawdownPct(),AvgSlippage(),AvgLatency(),g_total_profit+g_total_loss);
