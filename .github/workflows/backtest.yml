@@ -69,7 +69,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: C:\mt5
-          key: mt5-justmarkets-${{ hashFiles('.github/workflows/backtest.yml') }}
+          key: mt5-justmarkets-v1
 
       - name: Install JustMarkets MT5 (silent)
         if: steps.mt5cache.outputs.cache-hit != 'true'
@@ -164,7 +164,7 @@ jobs:
         run: |
           $scan = Join-Path $env:EXPERTS_DIR 'SymbolScan.mq5'
           Copy-Item 'tools/SymbolScan.mq5' $scan -Force
-          & $env:METAEDITOR /portable "/compile:$scan" "/log:$env:RUNNER_TEMP\scan-compile.log" | Out-Null
+          Start-Process -FilePath $env:METAEDITOR -ArgumentList '/portable',"/compile:$scan","/log:$env:RUNNER_TEMP\scan-compile.log" -Wait | Out-Null
           Start-Sleep -Seconds 2
           $ini = Join-Path $env:MT5_DIR 'scan.ini'
           @(
@@ -280,6 +280,15 @@ jobs:
           Write-Host '----- report/csv files produced -----'
           Get-ChildItem -Path $env:MT5_DIR -Include '*.htm','*.html','*.csv','*.xml' -Recurse -ErrorAction SilentlyContinue |
             Select-Object FullName, Length | Format-Table -AutoSize
+
+          # A green run without a report is a silent no-op; fail loudly instead.
+          if (-not (Test-Path "$env:REPORT_BASE.htm")) {
+            Write-Host '----- terminal log tail -----'
+            Get-ChildItem (Join-Path $env:MT5_DIR 'logs') -Filter '*.log' -ErrorAction SilentlyContinue |
+              ForEach-Object { Write-Host "=== $($_.Name) ==="; Get-Content $_.FullName -Tail 30 }
+            Write-Error "Tester produced no report at $env:REPORT_BASE.htm"
+            exit 1
+          }
 
       - name: Collect artifacts
         if: always()

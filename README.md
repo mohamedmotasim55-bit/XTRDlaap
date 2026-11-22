@@ -1,8 +1,13 @@
 # XTRDlaap
 
-`XTRD_OMIGA_Enabled_GoldSymbol.mq5` — OMIGA gold microstructure engine, tuned for a
+`XTRD_OMIGA_Enabled_GoldSymbol.mq5` — OMIGA gold microstructure engine, tuned for
 **JustMarkets Standard XAUUSD** account (spread 25-35 points, no commission,
 100 USD deposit, 1:1000 leverage).
+
+The broker lists gold as **`XAUUSD.m`** (path `Metals M\XAUUSD.m`, live spread
+26 points at the time of writing). The workflow auto-detects the name from the
+terminal symbol tree, so a rename on the broker side does not break the pipeline;
+`symbol` on `workflow_dispatch` overrides it.
 
 - Diagnosis of the structural defects: [`docs/DIAGNOSIS.md`](docs/DIAGNOSIS.md)
 - Per-iteration metrics: [`CHANGELOG.md`](CHANGELOG.md)
