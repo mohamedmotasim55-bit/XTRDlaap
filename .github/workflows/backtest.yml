@@ -15,6 +15,9 @@ on:
       tag:
         description: "Iteration tag used to name artifacts"
         default: "manual"
+      symbol:
+        description: "Override the auto-detected gold symbol (empty = auto-detect)"
+        default: ""
   push:
     branches:
       - main
@@ -151,6 +154,67 @@ jobs:
           Copy-Item $log (Join-Path $env:RUNNER_TEMP 'compile-artifact.log') -Force
           Write-Host "Compiled OK: $ex5 ($((Get-Item $ex5).Length) bytes)"
 
+      - name: Resolve gold symbol
+        shell: pwsh
+        env:
+          MT5_LOGIN: ${{ secrets.MT5_LOGIN }}
+          MT5_PASSWORD: ${{ secrets.MT5_PASSWORD }}
+          MT5_SERVER: ${{ secrets.MT5_SERVER }}
+          SYMBOL_OVERRIDE: ${{ inputs.symbol }}
+        run: |
+          $scan = Join-Path $env:EXPERTS_DIR 'SymbolScan.mq5'
+          Copy-Item 'tools/SymbolScan.mq5' $scan -Force
+          & $env:METAEDITOR /portable "/compile:$scan" "/log:$env:RUNNER_TEMP\scan-compile.log" | Out-Null
+          Start-Sleep -Seconds 2
+          $ini = Join-Path $env:MT5_DIR 'scan.ini'
+          @(
+            '[Common]',
+            "Login=$env:MT5_LOGIN",
+            "Password=$env:MT5_PASSWORD",
+            "Server=$env:MT5_SERVER",
+            'KeepPrivate=0',
+            '[StartUp]',
+            'Expert=SymbolScan.ex5'
+          ) | Set-Content -Path $ini -Encoding ASCII
+
+          Start-Process -FilePath $env:TERMINAL -ArgumentList '/portable',"/config:$ini" | Out-Null
+          $csv = $null
+          foreach ($cand in @((Join-Path $env:MT5_DIR 'Common\Files\symbols.csv'),
+                              (Join-Path $env:APPDATA 'MetaQuotes\Terminal\Common\Files\symbols.csv'))) {
+            for ($i = 0; $i -lt 40; $i++) {
+              if ((Test-Path $cand) -and ((Get-Item $cand).Length -gt 0)) { $csv = $cand; break }
+              Start-Sleep -Seconds 3
+            }
+            if ($csv) { break }
+          }
+          Get-Process terminal64 -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+
+          $logs = Get-ChildItem (Join-Path $env:MT5_DIR 'logs') -Filter '*.log' -ErrorAction SilentlyContinue
+          foreach ($l in $logs) { Write-Host "=== $($l.Name) ==="; Get-Content $l.FullName -Tail 40 }
+
+          if (-not $csv) {
+            Write-Error 'Symbol scan produced no CSV: the terminal did not log in or never synced symbols.'
+            exit 1
+          }
+          Copy-Item $csv (Join-Path $env:RUNNER_TEMP 'symbols.csv') -Force
+          $rows = Import-Csv -Path $csv -Delimiter ';'
+          Write-Host "terminal knows $($rows.Count) symbols"
+
+          $chosen = $env:SYMBOL_OVERRIDE
+          if (-not $chosen) {
+            $gold = $rows | Where-Object { $_.name -match 'XAU' -or $_.path -match 'Gold|Metals' -or $_.description -match 'Gold' }
+            $gold | Select-Object -First 25 name, description, path, spread_pts | Format-Table -AutoSize | Out-String | Write-Host
+            $pick = $gold | Where-Object { $_.name -match '^XAUUSD' } | Sort-Object { $_.name.Length } | Select-Object -First 1
+            if (-not $pick) { $pick = $gold | Select-Object -First 1 }
+            if ($pick) { $chosen = $pick.name }
+          }
+          if (-not $chosen) {
+            Write-Error 'No gold symbol found in the terminal symbol tree.'
+            exit 1
+          }
+          Write-Host "Using symbol: $chosen"
+          "SYMBOL=$chosen" | Out-File -FilePath $env:GITHUB_ENV -Append
+
       - name: Build tester.ini
         shell: pwsh
         env:
@@ -173,7 +237,7 @@ jobs:
             'KeepPrivate=0',
             '[Tester]',
             "Expert=$env:EA_NAME.ex5",
-            'Symbol=XAUUSD',
+            "Symbol=$env:SYMBOL",
             'Period=M1',
             "Model=$env:MODEL",
             "ExecutionMode=$env:EXECMODE",
@@ -236,6 +300,8 @@ jobs:
                 ForEach-Object { Copy-Item $_.FullName (Join-Path $out $_.Name) -Force }
             }
           }
+          $scan = Join-Path $env:RUNNER_TEMP 'symbols.csv'
+          if (Test-Path $scan) { Copy-Item $scan (Join-Path $out 'symbols.csv') -Force }
           $logs = Join-Path $out 'logs'
           New-Item -ItemType Directory -Force -Path $logs | Out-Null
           Get-ChildItem -Path $env:MT5_DIR -Include '*.log' -Recurse -ErrorAction SilentlyContinue |
