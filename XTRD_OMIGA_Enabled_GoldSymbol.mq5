@@ -226,13 +226,11 @@ input double InpMicroIntensityMin          = 2.5;
 input double InpMicroDeviationMinPts       = 90.0; // Must exceed ~3x the 25-35 pt standard spread
 input double InpMicroPressureMax           = 12.0;
 input double InpMicroProbabilityMin        = 0.56;
-input double InpMicroTargetATR             = 0.45;
 
 input group "ALPHA - VELOCITY BURST"
 input bool   InpEnableMomentum             = true;
 input double InpMomentumIntensityMin       = 2.0;
 input double InpMomentumProbabilityMin     = 0.60;
-input double InpMomentumTargetATR          = 0.90;
 input double InpMomentumMaxSpreadFactor    = 1.00;
 
 input group "ALPHA - EXHAUSTION"
@@ -1997,6 +1995,7 @@ int EnsurePositionControl(const ulong ticket)
          g_pos_ctrl[i].sl_pts=0.0;
          g_pos_ctrl[i].tp_pts=0.0;
          g_pos_ctrl[i].entry_spread_pts=CurrentSpreadPts();
+         if(g_pos_ctrl[i].entry_spread_pts==DBL_MAX) g_pos_ctrl[i].entry_spread_pts=0.0;
          g_pos_ctrl[i].strategy=0;
          if(PositionSelectByTicket(ticket))
          {
