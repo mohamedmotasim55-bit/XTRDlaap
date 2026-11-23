@@ -89,7 +89,7 @@ MQL5_BUILTINS = {
     "MathMax", "MathMin", "MathAbs", "Rand", "srand", "MathLog10",
 }
 
-TYPE_RE = re.compile(r"^\s*(?:static\s+|const\s+)?(" + "|".join(sorted(TYPE_KEYWORDS)) + r")\s+(\w+)\s*\(", re.M)
+TYPE_RE = re.compile(r"^\s*(?:static\s+|const\s+)?(" + "|".join(sorted(TYPE_KEYWORDS)) + r"|[A-Z]\w*)\s+(\w+)\s*\(", re.M)
 
 
 def strip_code(src: str) -> str:
