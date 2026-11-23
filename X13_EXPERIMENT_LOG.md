@@ -187,3 +187,84 @@ Starting at $1,000 with 6% risk and +53.8%/month measured:
 | 3 | $3,640 |
 
 Three months to the $3,000 target, assuming the edge persists.
+
+---
+
+# Phase 3 — Scalping war loop
+
+## Experiment S1: tick-activity scalper (`X13_SCALP.mq5`)
+
+Signal: volume-per-point burst (tick volume / bar range) above 2x the 50-bar
+baseline, body above 0.4 ATR. Exit: SL 90, TP 150, break-even at 60,
+trail 60 from 100, time exit 30 bars. One position, min lot, real ticks.
+
+### Why this family
+
+`tools/scalp_lab.py` measured **gross** expectancy (before spread) for every
+M1 family over 23 months:
+
+| Family | TP40 | TP80 | TP150 | TP300 |
+|---|---|---|---|---|
+| micro_burst | −10.8 | −8.4 | −5.1 | −0.6 |
+| **tick_activity** | −5.2 | **+0.6** | **+3.1** | **+6.6** |
+| micro_break5 | −10.9 | −8.7 | −6.3 | −5.1 |
+| micro_pullback | −9.6 | −6.8 | −4.0 | −3.1 |
+| micro_reversion | −10.4 | −6.9 | −2.6 | **+1.1** |
+| exhaustion | −12.0 | −9.3 | −8.1 | −8.5 |
+| vol_expand | −14.6 | −14.4 | −12.7 | −9.6 |
+
+Mean spread over the sample: **22.3 points**. Only tick_activity produces a
+positive gross edge, and its best value (+6.6) is 15.7 points below the cost.
+
+### Three-month validation (real ticks, $10, JustMarkets)
+
+| Month | Trades | Win% | PF | Net | Final |
+|---|---|---|---|---|---|
+| 2026-10 | 20 | 55.0 | 1.85 | **+63.7%** | $16.37 |
+| 2026-09 | 26 | 23.1 | 0.56 | **−62.6%** | $3.74 |
+| 2026-06 | 12 | 16.7 | 0.36 | **−57.0%** | $4.34 |
+
+October detail: 11W / 9L, avg win $1.26, avg loss $0.83, expectancy $0.32,
+max drawdown $2.53 (25.3%).
+
+### Significance test
+
+October expectancy $0.318 with standard deviation $1.15 over 20 trades:
+t = 1.24. The 5% threshold for n=20 is 2.09. **October is statistically
+indistinguishable from zero.** Combined across the three months, 58 trades
+average −$0.096 per trade.
+
+### Verdict: REJECTED
+
+Failure category: signal edge below transaction cost. Not an exit-logic
+problem, not a sizing problem, not a session problem. The gross edge is
+smaller than the spread, so every trade starts behind.
+
+## Structural conclusion
+
+| Quantity | Value |
+|---|---|
+| Mean spread | 22.3 pts |
+| Best measured gross edge (M1, any family) | +6.6 pts |
+| Required gross edge to break even | > 22.3 pts |
+| Deficit | 15.7 pts per trade |
+
+At 0.01 lot the cost is fixed at 2.2% of a $10 account per round turn. No
+sizing, trailing or concurrency design changes that number.
+
+## What is proven to work
+
+Only one configuration has survived out-of-sample testing: H4 breakout and
+pullback with ATR stops (+53.8% on $1,000, PF 5.73, 6% drawdown). It is
+excluded by the current brief, which requires intraday scalping. If the
+constraint is relaxed, that engine is ready in `X13_GLOBAL_TREND.mq5`.
+
+## What would make scalping viable
+
+| Change | Effect on cost |
+|---|---|
+| Raw account, 8-10 pt spread | 22.3 → 9 pts, deficit closes |
+| Cent account (0.001 lot) | risk per trade 9% → 0.9% |
+| Zero-spread account | edge +6.6 becomes profitable |
+
+These are account-type decisions, not code decisions.
