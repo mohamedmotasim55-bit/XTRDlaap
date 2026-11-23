@@ -30,6 +30,9 @@ on:
       max_positions:
         description: "Override InpMaxConcurrentPositions (empty = EA default)"
         default: ""
+      extra_inputs:
+        description: "Extra EA inputs, comma separated key=value"
+        default: ""
   push:
     branches:
       - main
@@ -51,6 +54,7 @@ env:
   EA_NAME: ${{ github.event.inputs.ea || 'XTRD_OMIGA_Enabled_GoldSymbol' }}
   INPUT_RISK: ${{ github.event.inputs.risk_pct }}
   INPUT_POS: ${{ github.event.inputs.max_positions }}
+  INPUT_EXTRA: ${{ github.event.inputs.extra_inputs }}
   MT5_DIR: C:\mt5
 
 jobs:
@@ -289,10 +293,11 @@ jobs:
             'Visual=0',
             'ShutdownTerminal=1'
           )
-          if ($env:INPUT_RISK -ne '' -or $env:INPUT_POS -ne '') {
+          if ($env:INPUT_RISK -ne '' -or $env:INPUT_POS -ne '' -or $env:INPUT_EXTRA -ne '') {
             $lines += '[TesterInputs]'
             if ($env:INPUT_RISK -ne '') { $lines += "InpMaxAccountRiskPct=$env:INPUT_RISK" }
             if ($env:INPUT_POS -ne '') { $lines += "InpMaxConcurrentPositions=$env:INPUT_POS" }
+            if ($env:INPUT_EXTRA -ne '') { $env:INPUT_EXTRA.Split(',') | ForEach-Object { if ($_.Trim() -ne '') { $lines += $_.Trim() } } }
           }
           $lines | Set-Content -Path $ini -Encoding ASCII
           Write-Host "----- tester.ini (password masked) -----"
