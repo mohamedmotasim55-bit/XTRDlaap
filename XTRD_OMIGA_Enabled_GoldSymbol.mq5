@@ -304,6 +304,8 @@ input double InpBayesWeightPersistence     = 0.16;
 input double InpBayesWeightIntensity       = 0.10;
 input double InpBayesWeightDisplacement    = 0.10;
 input double InpMinEdgePts                 = 25.0; // Expected capture (pts) that must be left after costs
+input double InpGatePercentile             = 0.30; // Signal gates accept this quantile (lower = more trades)
+input double InpProbabilityPercentile      = 0.30; // Confidence gate quantile (lower = more trades)
 input double InpEdgeToSpreadMin            = 1.15; // Edge must beat the round-trip cost by 15%
 
 input group "SPREAD / EXECUTION"
@@ -363,7 +365,7 @@ input double InpMaxPortfolioDeltaLots      = 0.35;
 input bool   InpAllowMomentumAndReversion  = true;
 input bool   InpRejectDuplicatePending     = true;
 input int    InpDuplicateWindowMs          = 150;
-input int    InpStrategyCooldownMs         = 1500;
+input int    InpStrategyCooldownMs         = 200;
 
 input group "GATE CALIBRATION (percentile based)"
 input double InpIntensityGateAbs           = 1.10; // Absolute floor for the tick-intensity gate
@@ -384,11 +386,11 @@ input double InpMaxSLPts                   = 900.0;
 input double InpBEExtraPts                 = 2.0;
 input bool   InpUseMicroBreakEven           = true;
 input double InpBEStage1TriggerPts          = 60.0; // Stage 1 trigger floor (2.2x spread)
-input double InpBEStage1LockPts             = 18.0; // Stage 1 lock floor (0.6x spread)
+input double InpBEStage1LockPts             = 40.0; // Stage 1 lock floor (0.6x spread)
 input double InpBEStage2TriggerPts          = 120.0; // Stage 2 trigger floor (4x spread)
-input double InpBEStage2LockPts             = 55.0; // Stage 2 lock floor (1.8x spread)
-input double InpBEStage1StopFraction        = 0.50; // Stage 1 trigger as a fraction of the stop
-input double InpBEStage2StopFraction        = 0.75; // Stage 2 trigger as a fraction of the stop
+input double InpBEStage2LockPts             = 125.0; // Stage 2 lock floor (1.8x spread)
+input double InpBEStage1StopFraction        = 1.00; // Stage 1 trigger as a fraction of the stop
+input double InpBEStage2StopFraction        = 1.30; // Stage 2 trigger as a fraction of the stop
 input bool   InpUseSpreadMomentumGate       = true; // Rejects entries if spread is actively expanding
 input double InpSpreadMomentumThresholdPts  = 3.0;
 input bool   InpUseVelocityTrailing         = true;
@@ -1060,13 +1062,13 @@ double GateIntensity()
 {
    const double abs_gate=MathMax(1.0,InpIntensityGateAbs);
    if(!StatsReady(g_rs_intensity)) return abs_gate;
-   return MathMax(abs_gate,g_rs_intensity.p60);
+   return MathMax(abs_gate,RS_Quantile(g_rs_intensity,InpGatePercentile));
 }
 
 double GatePersistence()
 {
    if(!StatsReady(g_rs_persist)) return InpMomentumPersistenceMin;
-   return MathMax(InpMinPersistenceFloor,g_rs_persist.p70);
+   return MathMax(InpMinPersistenceFloor,RS_Quantile(g_rs_persist,InpGatePercentile));
 }
 
 double GateAcceleration()
@@ -1078,7 +1080,7 @@ double GateAcceleration()
 double GateDisplacement(const double atr)
 {
    double gate=MathMax(InpMicroDeviationMinPts,atr*InpMicroDisplacementATR);
-   if(StatsReady(g_rs_absdisp)) gate=MathMax(gate,g_rs_absdisp.p60);
+   if(StatsReady(g_rs_absdisp)) gate=MathMax(gate,RS_Quantile(g_rs_absdisp,InpGatePercentile));
    return gate;
 }
 
@@ -1137,7 +1139,7 @@ double ProbabilityFloor(const double abs_floor)
    // Deliberately allowed to fall below the legacy constant: on this
    // instrument the model's own confidence tops out near 0.55, so a fixed
    // 0.56 floor would be an unreachable wall rather than a filter.
-   return ClampD(g_rs_confidence.p40,0.42,0.95);
+   return ClampD(RS_Quantile(g_rs_confidence,InpProbabilityPercentile),0.42,0.95);
 }
 
 bool BuildSignal(const int strategy,SignalInfo &s)
