@@ -288,13 +288,12 @@ jobs:
             'ReplaceReport=1',
             'Visual=0',
             'ShutdownTerminal=1'
-          $lines += ''
+          )
           if ($env:INPUT_RISK -ne '' -or $env:INPUT_POS -ne '') {
             $lines += '[TesterInputs]'
             if ($env:INPUT_RISK -ne '') { $lines += "InpMaxAccountRiskPct=$env:INPUT_RISK" }
             if ($env:INPUT_POS -ne '') { $lines += "InpMaxConcurrentPositions=$env:INPUT_POS" }
           }
-          )
           $lines | Set-Content -Path $ini -Encoding ASCII
           Write-Host "----- tester.ini (password masked) -----"
           Get-Content $ini | ForEach-Object { $_ -replace '^Password=.*', 'Password=***' }
