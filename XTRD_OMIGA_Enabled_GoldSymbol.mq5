@@ -1062,17 +1062,41 @@ void SampleMarketStats(const long now_msc)
 // enough to describe the instrument.
 bool StatsReady(const RollingStat &s) { return s.cnt>=60; }
 
+// RS_Quantile copies and sorts the whole sample and the gates are read on
+// every tick of a 16.8M tick month, which was the dominant cost of a run.
+// One second of staleness changes no decision.
+long   g_gate_cache_ms=0;
+double g_cache_intensity=0.0;
+double g_cache_persist=0.0;
+double g_cache_disp=0.0;
+double g_cache_prob=0.0;
+bool   g_gate_cache_ready=false;
+
+void RefreshGateCache()
+{
+   const long now=NowMilliseconds();
+   if(g_gate_cache_ready && now-g_gate_cache_ms<1000) return;
+   g_gate_cache_ms=now;
+   g_gate_cache_ready=true;
+   g_cache_intensity=StatsReady(g_rs_intensity)?RS_Quantile(g_rs_intensity,InpGatePercentile):0.0;
+   g_cache_persist=StatsReady(g_rs_persist)?RS_Quantile(g_rs_persist,InpGatePercentile):0.0;
+   g_cache_disp=StatsReady(g_rs_absdisp)?RS_Quantile(g_rs_absdisp,InpGatePercentile):0.0;
+   g_cache_prob=StatsReady(g_rs_confidence)?RS_Quantile(g_rs_confidence,InpProbabilityPercentile):0.0;
+}
+
 double GateIntensity()
 {
    const double abs_gate=MathMax(1.0,InpIntensityGateAbs);
+   RefreshGateCache();
    if(!StatsReady(g_rs_intensity)) return abs_gate;
-   return MathMax(abs_gate,RS_Quantile(g_rs_intensity,InpGatePercentile));
+   return MathMax(abs_gate,g_cache_intensity);
 }
 
 double GatePersistence()
 {
+   RefreshGateCache();
    if(!StatsReady(g_rs_persist)) return InpMomentumPersistenceMin;
-   return MathMax(InpMinPersistenceFloor,RS_Quantile(g_rs_persist,InpGatePercentile));
+   return MathMax(InpMinPersistenceFloor,g_cache_persist);
 }
 
 double GateAcceleration()
@@ -1084,7 +1108,8 @@ double GateAcceleration()
 double GateDisplacement(const double atr)
 {
    double gate=MathMax(InpMicroDeviationMinPts,atr*InpMicroDisplacementATR);
-   if(StatsReady(g_rs_absdisp)) gate=MathMax(gate,RS_Quantile(g_rs_absdisp,InpGatePercentile));
+   RefreshGateCache();
+   if(StatsReady(g_rs_absdisp)) gate=MathMax(gate,g_cache_disp);
    return gate;
 }
 
@@ -1143,7 +1168,9 @@ double ProbabilityFloor(const double abs_floor)
    // Deliberately allowed to fall below the legacy constant: on this
    // instrument the model's own confidence tops out near 0.55, so a fixed
    // 0.56 floor would be an unreachable wall rather than a filter.
-   return ClampD(RS_Quantile(g_rs_confidence,InpProbabilityPercentile),0.42,0.95);
+   RefreshGateCache();
+   if(!StatsReady(g_rs_confidence)) return 0.50;
+   return ClampD(g_cache_prob,0.42,0.95);
 }
 
 bool BuildSignal(const int strategy,SignalInfo &s)
