@@ -76,7 +76,8 @@
 #define REJ_SEND_VALIDATE         30
 #define REJ_SEND_TOKEN            31
 #define REJ_SEND_ORDER            32
-#define REJ_COUNT                 33
+#define REJ_EDGE_PROOF            33
+#define REJ_COUNT                 34
 
 //----------------------------- Enums -------------------------------//
 enum ENUM_OMEGA_STRATEGY
@@ -402,6 +403,9 @@ input int    InpMaxTradeAgeSec              = 240;
 input double InpStallVelocityPtsSec         = 3.0;
 input double InpStallProfitFloorPts         = -30.0; // Only cut stalls that are worse than -1 spread
 input bool   InpCloseStalledTrades          = true;
+input bool   InpRequireEmpiricalEdge        = true; // Only trade a strategy that has proven a positive expectancy
+input int    InpEdgeProofMinTrades          = 40;   // Closed trades before the proof gate applies
+input double InpEdgeProofMargin             = 0.03; // Required win rate margin above break-even
 input bool   InpEnablePartialClose           = false;
 input double InpPartialCloseTrigger          = 0.50;
 input double InpPartialClosePercent          = 0.60;
@@ -525,7 +529,7 @@ string g_rej_names[REJ_COUNT]=
    "mql_disabled","acct_disabled","rollover","dd_hard","daily_dd","maxpos",
    "samedir","lots_cap","delta_cap","margin_cap","portfolio_risk","cooldown",
    "lot_zero","send_cannot","send_margin","send_stops","send_slot",
-   "send_validate","send_token","send_order"
+   "send_validate","send_token","send_order","edge_proof"
 };
  int g_last_session=SESSION_OFF;
 
@@ -2129,6 +2133,38 @@ bool ClosePartialPosition(const ulong ticket,const double volume,const string re
 ulong g_last_deal_ticket=0;
 long  g_deal_sync_msc=0;
 
+// The self-reported confidence is not a calibrated probability: it reads about
+// 0.82 while the realised hit rate is 0.29-0.45, so gating on it gates on
+// fiction. A strategy has to demonstrate a positive expectancy on its own
+// closed trades before it may open another one.
+int    g_strat_trades[4];
+int    g_strat_wins[4];
+double g_strat_win_sum[4];
+double g_strat_loss_sum[4];
+
+void RecordStratOutcome(const int strat,const double profit)
+{
+   if(strat<1 || strat>3) return;
+   g_strat_trades[strat]++;
+   if(profit>0.0) { g_strat_wins[strat]++; g_strat_win_sum[strat]+=profit; }
+   else if(profit<0.0) g_strat_loss_sum[strat]+=MathAbs(profit);
+}
+
+bool EmpiricalEdgeOk(const int strat)
+{
+   if(!InpRequireEmpiricalEdge) return true;
+   if(strat<1 || strat>3) return true;
+   if(g_strat_trades[strat]<InpEdgeProofMinTrades) return true;
+   const int losses=g_strat_trades[strat]-g_strat_wins[strat];
+   if(losses<=0 || g_strat_wins[strat]<=0) return true;
+   const double avg_win=g_strat_win_sum[strat]/g_strat_wins[strat];
+   const double avg_loss=g_strat_loss_sum[strat]/losses;
+   if(avg_win<=0.0 || avg_loss<=0.0) return true;
+   const double breakeven=avg_loss/(avg_win+avg_loss);
+   const double wr=(double)g_strat_wins[strat]/g_strat_trades[strat];
+   return wr>=breakeven+InpEdgeProofMargin;
+}
+
 bool DealAlreadyProcessed(const ulong ticket)
 {
    if(ticket==0) return true;
@@ -2524,6 +2560,7 @@ double SignalRank(const SignalInfo &s)
 
 void ExecuteCandidate(const SignalInfo &s)
 {
+   if(!EmpiricalEdgeOk(s.strategy)) { RejectSignal(REJ_EDGE_PROOF); return; }
    if(!StrategyDuplicateGate(s)) { RejectSignal(REJ_COOLDOWN); return; }
    double lot=RiskLot(s);
    if(lot<=0.0) { RejectSignal(REJ_LOT_ZERO); return; }
@@ -2581,6 +2618,7 @@ void AddDealSample(const double slip,const double profit,const double volume,
    g_sample_head=(g_sample_head+1)%OMEGA_SAMPLE_CAPACITY;
    g_sample_count=MathMin(OMEGA_SAMPLE_CAPACITY,g_sample_count+1);
 
+   RecordStratOutcome(strategy,profit);
    if(profit>0.0)
    {
       g_total_wins++;

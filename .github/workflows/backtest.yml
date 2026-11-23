@@ -229,7 +229,10 @@ jobs:
       - name: Purge previous run state
         shell: pwsh
         run: |
-          foreach ($dir in @("$env:MT5_DIR\Common\Files", "$env:MT5_DIR\Tester", "$env:MT5_DIR\MQL5\Files")) {
+          # FILE_COMMON resolves to the roaming Common\Files folder, not the
+          # install tree, so both have to be cleared.
+          $roaming = Join-Path $env:APPDATA 'MetaQuotes\Terminal\Common\Files'
+          foreach ($dir in @($roaming, "$env:MT5_DIR\Common\Files", "$env:MT5_DIR\Tester", "$env:MT5_DIR\MQL5\Files")) {
             if (Test-Path $dir) { Remove-Item -Recurse -Force $dir -ErrorAction SilentlyContinue }
           }
           New-Item -ItemType Directory -Force -Path "$env:MT5_DIR\Common\Files" | Out-Null

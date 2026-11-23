@@ -45,6 +45,44 @@ execution delay, 100 USD, stress spread 26 pts (matches the live quote).
   periodic log, so the next iteration is measurement driven.
 - Exhaustion and momentum no longer require an unreachable regime label.
 
+## High-frequency phase (30 day windows, leverage 1:3000)
+
+| run | configuration | trades | net USD | PF | DD | avg win | avg loss |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| A | tight gates p60, old ladder, 10 slots | 7 | -0.09 | 0.97 | 3.04% | 0.64 | -1.64 |
+| B | gates p30, ladder at 1.0/1.3 R, 200 ms | 101 | **+2.41** | **1.03** | 13.34% | **1.94** | -1.58 |
+| C | gates p20, 120 ms | - | - | - | - | - | - |
+| D | p30 + deal watermark fix, 6 slots | pending | | | | | |
+
+### The two defects that decided the outcome
+
+**1. The ladder, not the strategy, was the loss.** Run A won 5 of 7 trades and
+still lost money, because stage 1 armed at 78 pts and locked 31 pts: every
+winner exited at 0.35R while every loser paid 1.0R. Moving stage 1 to 1.00x the
+stop and stage 2 to 1.30x took the average win from 0.64 to 1.94 USD and the
+run from -0.09 to +2.41.
+
+**2. Deal accounting was multiplied by 18.** The processed-deal cache was a
+64 slot ring while the sync rescanned 30 days of history every 30 s. The ring
+overflowed after a few hundred deals, so every rescan replayed them: 1,832
+ledger rows for 101 trades, and the daily loss and drawdown guards were fed a
+loss figure 18 times too large. Deal tickets are monotonic, so a watermark is
+correct and O(1).
+
+### The law the measurements expose
+
+Win rate and frequency move in opposite directions:
+
+| selectivity | win rate | R:R | expectancy per trade |
+| --- | --- | --- | --- |
+| p60 | ~71% | 0.4R (old ladder) | negative |
+| p30 | 45.5% | 1.23 | +0.02R |
+| p20 | 31% | 1.23 | negative |
+
+Hundreds of trades per day is mechanically reachable, but on a 26 pt spread
+each trade pays 17% of R to enter, so the entry edge has to carry that cost.
+Loosening the gates buys trade count and spends the edge.
+
 ## Iteration log
 
 Every row is a real-tick run on `XAUUSD.m`, M1, 2026.10.07 -> 2026.11.21,
