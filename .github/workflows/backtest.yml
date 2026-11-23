@@ -5,6 +5,7 @@ on:
     inputs:
       days:
         description: "Backtest window length in days (ending at the last full day)"
+        default: "30"
         default: "45"
       model:
         description: "MT5 model: 4=real ticks, 1=every tick, 2=1 min OHLC"
@@ -240,7 +241,7 @@ jobs:
           MT5_LOGIN: ${{ secrets.MT5_LOGIN }}
           MT5_PASSWORD: ${{ secrets.MT5_PASSWORD }}
           MT5_SERVER: ${{ secrets.MT5_SERVER }}
-          DAYS: ${{ inputs.days || '45' }}
+          DAYS: ${{ inputs.days || '30' }}
           MODEL: ${{ inputs.model || '4' }}
           EXECMODE: ${{ inputs.execution_mode || '15' }}
         run: |
@@ -264,7 +265,7 @@ jobs:
             'ForwardMode=0',
             'Deposit=100',
             'Currency=USD',
-            'Leverage=1000',
+            'Leverage=1:3000',
             "FromDate=$($from.ToString('yyyy.MM.dd'))",
             "ToDate=$($to.ToString('yyyy.MM.dd'))",
             "Report=$report",

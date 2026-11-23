@@ -213,6 +213,7 @@ struct RollingStat
    double v[OMEGA_STAT_CAP];
    int    idx;
    int    cnt;
+   double p40;
    double p50;
    double p60;
    double p70;
@@ -329,13 +330,13 @@ input bool   InpUseOrderCheck              = true;
 input bool   InpUseExecutionStateMachine   = true;
 
 input group "RISK / COMPOUNDING"
-input double InpInitialRiskPct             = 1.50;
+input double InpInitialRiskPct             = 1.00;
 input double InpMaxAccountRiskPct          = 3.00;
 input double InpHardDrawdownPct            = 15.0;
 input double InpDrawdownSoftZonePct        = 0.70;
-input double InpMarginUtilizationMax       = 0.50;
+input double InpMarginUtilizationMax       = 0.60;
 input double InpFreeMarginFloorPct         = 30.0;
-input double InpPortfolioRiskCapPct        = 6.0;
+input double InpPortfolioRiskCapPct        = 12.0;
 input double InpLotCap                     = 1.00;
 input double InpMinLotOverride             = 0.01;
 input double InpVolatilityReferenceATR     = 100.0;
@@ -355,14 +356,14 @@ input double InpCVaRSoftPct                = 4.0;
 input double InpCVaRHardPct                = 8.0;
 
 input group "PORTFOLIO / THESIS ISOLATION"
-input int    InpMaxConcurrentPositions     = 4;
-input int    InpMaxSameDirectionPositions  = 2;
-input double InpMaxPortfolioLots           = 0.05;
-input double InpMaxPortfolioDeltaLots      = 0.06;
+input int    InpMaxConcurrentPositions     = 10;
+input int    InpMaxSameDirectionPositions  = 6;
+input double InpMaxPortfolioLots           = 0.30;
+input double InpMaxPortfolioDeltaLots      = 0.35;
 input bool   InpAllowMomentumAndReversion  = true;
 input bool   InpRejectDuplicatePending     = true;
 input int    InpDuplicateWindowMs          = 150;
-input int    InpStrategyCooldownMs         = 20;
+input int    InpStrategyCooldownMs         = 1500;
 
 input group "GATE CALIBRATION (percentile based)"
 input double InpIntensityGateAbs           = 1.10; // Absolute floor for the tick-intensity gate
@@ -373,8 +374,8 @@ input double InpRateEWMAAlpha              = 0.02; // Tick-rate baseline decay (
 
 input group "STOPS / POSITION MANAGEMENT"
 input ENUM_TIMEFRAMES InpATRTimeframe      = PERIOD_M5; // ATR/geometry timeframe (M1 ATR is smaller than the spread)
-input double InpSL_ATR_Multiplier           = 0.25;
-input double InpTP_ATR_Multiplier           = 0.30;
+input double InpSL_ATR_Multiplier           = 0.18;
+input double InpTP_ATR_Multiplier           = 0.28;
 input double InpSLSpreadMultiple            = 6.0;  // SL floor = 6x live spread
 input double InpTPSpreadMultiple            = 9.0;  // TP floor = 9x live spread
 input double InpMinATRSpreadMultiple        = 3.0;  // Skip entries when ATR < 3x spread
@@ -395,7 +396,7 @@ input double InpTrailVelocityStrong         = 100.0;
 input double InpTrailVelocityWeak           = 20.0;
 input double InpTrailStrongATR              = 1.00;
 input double InpTrailWeakATR                = 0.60;
-input int    InpMaxTradeAgeSec              = 600;
+input int    InpMaxTradeAgeSec              = 240;
 input double InpStallVelocityPtsSec         = 3.0;
 input double InpStallProfitFloorPts         = -30.0; // Only cut stalls that are worse than -1 spread
 input bool   InpCloseStalledTrades          = true;
@@ -1019,6 +1020,7 @@ void RS_UpdatePercentiles(RollingStat &s)
    for(int i=0;i<s.cnt;i++) tmp[i]=s.v[i];
    ArraySort(tmp);
    const int last=s.cnt-1;
+   s.p40=tmp[ClampI((int)MathFloor(0.40*last+0.5),0,last)];
    s.p50=tmp[ClampI((int)MathFloor(0.50*last+0.5),0,last)];
    s.p60=tmp[ClampI((int)MathFloor(0.60*last+0.5),0,last)];
    s.p70=tmp[ClampI((int)MathFloor(0.70*last+0.5),0,last)];
@@ -1030,7 +1032,6 @@ void SampleMarketStats(const long now_msc)
 {
    if(now_msc-g_stats_last_msc<1000) return;
    g_stats_last_msc=now_msc;
-   if(g_last_confidence>0.0) RS_Push(g_rs_confidence,g_last_confidence);
    g_intensity_max=MathMax(g_intensity_max,g_last_intensity);
    if(g_last_intensity>0.0) g_intensity_min=MathMin(g_intensity_min,g_last_intensity);
    RS_Push(g_rs_intensity,g_last_intensity);
@@ -1136,7 +1137,7 @@ double ProbabilityFloor(const double abs_floor)
    // Deliberately allowed to fall below the legacy constant: on this
    // instrument the model's own confidence tops out near 0.55, so a fixed
    // 0.56 floor would be an unreachable wall rather than a filter.
-   return ClampD(g_rs_confidence.p60,0.42,0.95);
+   return ClampD(g_rs_confidence.p40,0.42,0.95);
 }
 
 bool BuildSignal(const int strategy,SignalInfo &s)
@@ -1269,6 +1270,9 @@ bool BuildSignal(const int strategy,SignalInfo &s)
    // Edge is the probability-weighted share of the *actual* target, in points.
    s.probability=probability;
    g_last_confidence=probability;
+   // Sampled per evaluated signal: sampling it once per second repeated the
+   // last value and inflated the 60th percentile to 0.85.
+   RS_Push(g_rs_confidence,probability);
    const double edge=(probability-0.5)*2.0*s.tp_pts;
    if(edge<InpMinEdgePts) return RejectSignal(REJ_EDGE);
    if(!SpreadGate(edge,spread)) return RejectSignal(REJ_SPREAD);
