@@ -471,35 +471,33 @@ int OnInit()
    if(InpDiagnosticLog)
    {
       LogHandle = FileOpen(
-         "X13_Core_Diagnostics.csv"
-         قراءة الملف | كتابة الملف | ملف CSV |
-         ملف ANSI | ملف قراءة المشاركة |
-         FILE_SHARE_WRITE,
-         ;
+         "X13_Core_Diagnostics.csv",
+         FILE_READ|FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_SHARE_READ|FILE_SHARE_WRITE,
+         ';'
       );
 
 
-      إذا كان (LogHandle != INVALID_HANDLE)
+      if(LogHandle != INVALID_HANDLE)
          FileSeek(LogHandle, 0, SEEK_END);
-      آخر
-         Print("X13 تحذير: ملف التشخيص غير متوفر");
+      else
+         Print("X13 warning: diagnostic file unavailable");
    }
 
 
-   if(!EventSetTimer(MathMax(1, InpTimerSeconds))))
+   if(!EventSetTimer(MathMax(1, InpTimerSeconds)))
    {
       Print("X13 ERROR: Timer initialization failed");
-      أرجع INIT_FAILED؛
+      return INIT_FAILED;
    }
 
 
-   CoreReady = صحيح؛
+   CoreReady = true;
 
 
-   X13_Log("CORE", "تم بدء تشغيل X13 CORE v0.10");
+   X13_Log("CORE", "X13 CORE v0.10 started");
 
 
-   أعد INIT_SUCCEEDED؛
+   return INIT_SUCCEEDED;
 }
 
 
@@ -510,12 +508,12 @@ int OnInit()
 
 void OnTick()
 {
-   إذا لم يكن CoreReady
-      يعود؛
+   if(!CoreReady)
+      return;
 
 
-   إذا لم يتم تحديث السوق (X13_UpdateMarket())
-      يعود؛
+   if(!X13_UpdateMarket())
+      return;
 
 
    X13_UpdateRegime();
@@ -532,18 +530,18 @@ void OnTick()
 
 void OnTimer()
 {
-   إذا لم يكن CoreReady
-      يعود؛
+   if(!CoreReady)
+      return;
 
 
    datetime now = TimeTradeServer();
 
 
-   إذا كان الوقت الحالي يساوي وقت المؤقت الأخير
-      يعود؛
+   if(now == LastTimerTime)
+      return;
 
 
-   LastTimerTime = الآن؛
+   LastTimerTime = now;
 
 
    X13_Diagnostics();
@@ -564,12 +562,12 @@ void OnDeinit(const int reason)
 
 
    X13_Log(
-      "جوهر"،
-      "سبب الإغلاق=" + IntegerToString(السبب)
+      "CORE",
+      "shutdown reason=" + IntegerToString(reason)
    );
 
 
-   إذا كان (LogHandle != INVALID_HANDLE)
+   if(LogHandle != INVALID_HANDLE)
    {
       FileClose(LogHandle);
       LogHandle = INVALID_HANDLE;
