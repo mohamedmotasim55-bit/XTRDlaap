@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import datetime
 import glob
 import io
 import json
@@ -290,7 +291,21 @@ def load_csv(path: str) -> list[dict]:
     except csv.Error:
         dialect = csv.excel
         dialect.delimiter = ";" if ";" in sample else ","
-    return list(csv.DictReader(io.StringIO(text), dialect=dialect))
+    rows = list(csv.DictReader(io.StringIO(text), dialect=dialect))
+    if rows:
+        first = next(iter(rows[0].keys())) or ""
+        # The EA only writes a header when it creates the file; a ledger that
+        # survived from an earlier run starts straight at the first record.
+        if not first or first[:4] not in ("time", "TIME", "tick"):
+            raw = next(csv.reader(io.StringIO(text), dialect=dialect))
+            if len(raw) >= 9 and raw[0][:4] in ("2026", "2025", "2024"):
+                header = ["time_close", "strategy", "direction", "volume", "entry_price",
+                          "exit_price", "sl_pts", "tp_pts", "spread_at_entry_pts", "profit",
+                          "mfe_pts", "mae_pts", "age_sec", "exit_reason", "atr_pts",
+                          "regime", "session"][:len(raw)]
+                reader = csv.DictReader(io.StringIO(text), fieldnames=header, dialect=dialect)
+                rows = list(reader)
+    return rows
 
 
 
@@ -392,6 +407,20 @@ def summarize_ledger(rows: list[dict]) -> dict:
     for e in exits.values():
         e["net"] = round(e["net"], 2)
     out = {"per_strategy": per_strategy, "per_exit_reason": exits}
+    stamps = []
+    for r in rows:
+        raw = (r.get("time_close") or "").strip()
+        if len(raw) >= 19:
+            try:
+                stamps.append(datetime.datetime.strptime(raw[:19], "%Y.%m.%d %H:%M:%S"))
+            except ValueError:
+                pass
+    if len(stamps) >= 2:
+        span_days = max((max(stamps) - min(stamps)).total_seconds() / 86400.0, 1.0 / 24.0)
+        out["days_spanned"] = round(span_days, 2)
+        out["trades_per_day"] = round(len(rows) / span_days, 1)
+        wins = sum(1 for r in rows if (to_float(r.get("profit")) or 0.0) > 0)
+        out["win_rate_pct"] = round(100.0 * wins / len(rows), 1)
     if ages:
         out["avg_age_sec"] = round(sum(ages) / len(ages), 1)
     if spread_at_entry:

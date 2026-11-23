@@ -358,14 +358,14 @@ input double InpCVaRSoftPct                = 4.0;
 input double InpCVaRHardPct                = 8.0;
 
 input group "PORTFOLIO / THESIS ISOLATION"
-input int    InpMaxConcurrentPositions     = 10;
+input int    InpMaxConcurrentPositions     = 6;
 input int    InpMaxSameDirectionPositions  = 6;
 input double InpMaxPortfolioLots           = 0.30;
 input double InpMaxPortfolioDeltaLots      = 0.35;
 input bool   InpAllowMomentumAndReversion  = true;
 input bool   InpRejectDuplicatePending     = true;
 input int    InpDuplicateWindowMs          = 150;
-input int    InpStrategyCooldownMs         = 200;
+input int    InpStrategyCooldownMs         = 250;
 
 input group "GATE CALIBRATION (percentile based)"
 input double InpIntensityGateAbs           = 1.10; // Absolute floor for the tick-intensity gate
@@ -2122,21 +2122,22 @@ bool ClosePartialPosition(const ulong ticket,const double volume,const string re
 // OnTradeTransaction is not reliably delivered for async requests in the
 // tester, which left the ledger and telemetry empty even with live trades.
 // The deal history is reconciled on a timer instead.
-ulong g_deal_seen[64];
-int   g_deal_seen_idx=0;
+// Deal tickets are monotonic, so a watermark replaces the 64 slot ring: the
+// ring overflowed after a few hundred deals and every rescan of the 30 day
+// history replayed old deals, which inflated the ledger 18x and fed the risk
+// guards a multiplied loss.
+ulong g_last_deal_ticket=0;
 long  g_deal_sync_msc=0;
 
 bool DealAlreadyProcessed(const ulong ticket)
 {
    if(ticket==0) return true;
-   for(int i=0;i<64;i++) if(g_deal_seen[i]==ticket) return true;
-   return false;
+   return ticket<=g_last_deal_ticket;
 }
 
 void MarkDealProcessed(const ulong ticket)
 {
-   g_deal_seen[g_deal_seen_idx]=ticket;
-   g_deal_seen_idx=(g_deal_seen_idx+1)%64;
+   if(ticket>g_last_deal_ticket) g_last_deal_ticket=ticket;
 }
 
 void ProcessDealTicket(const ulong deal)
