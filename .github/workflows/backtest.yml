@@ -30,6 +30,9 @@ on:
       max_positions:
         description: "Override InpMaxConcurrentPositions (empty = EA default)"
         default: ""
+      spread_pts:
+        description: "Force a fixed spread in points (empty = broker real spread)"
+        default: ""
       extra_inputs:
         description: "Extra EA inputs, comma separated key=value"
         default: ""
@@ -55,6 +58,7 @@ env:
   INPUT_RISK: ${{ github.event.inputs.risk_pct }}
   INPUT_POS: ${{ github.event.inputs.max_positions }}
   INPUT_EXTRA: ${{ github.event.inputs.extra_inputs }}
+  SPREAD_PTS: ${{ github.event.inputs.spread_pts }}
   MT5_DIR: C:\mt5
 
 jobs:
@@ -298,7 +302,7 @@ jobs:
           MT5_SERVER: ${{ secrets.MT5_SERVER }}
           DAYS: ${{ inputs.days || '30' }}
           MODEL: ${{ inputs.model || '4' }}
-          EXECMODE: ${{ inputs.execution_mode || '15' }}
+          EXECMODE: ${{ inputs.execution_mode || '50' }}
         run: |
           $to   = (Get-Date).Date.AddDays(-1)
           $from = $to.AddDays(-[int]$env:DAYS)
@@ -328,6 +332,7 @@ jobs:
             'Visual=0',
             'ShutdownTerminal=1'
           )
+          if ($env:SPREAD_PTS -ne '') { $lines += "Spread=$env:SPREAD_PTS" }
           if ($env:INPUT_RISK -ne '' -or $env:INPUT_POS -ne '' -or $env:INPUT_EXTRA -ne '') {
             $lines += '[TesterInputs]'
             if ($env:INPUT_RISK -ne '') { $lines += "InpMaxAccountRiskPct=$env:INPUT_RISK" }
