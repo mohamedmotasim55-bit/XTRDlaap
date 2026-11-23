@@ -6,7 +6,6 @@ on:
       days:
         description: "Backtest window length in days (ending at the last full day)"
         default: "30"
-        default: "45"
       model:
         description: "MT5 model: 4=real ticks, 1=every tick, 2=1 min OHLC"
         default: "4"
