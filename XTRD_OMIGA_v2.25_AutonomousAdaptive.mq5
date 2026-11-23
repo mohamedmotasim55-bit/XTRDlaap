@@ -1226,10 +1226,13 @@ double EmpiricalCVaRFrac()
       if(g_samples[i].net_profit<0.0) losses[n++]=g_samples[i].net_profit;
    }
    if(n<5) return 0.0;
-   ArraySort(losses,n,0,MODE_ASCEND);
+   double sorted[];
+   ArrayResize(sorted,n);
+   for(int i=0;i<n;i++) sorted[i]=losses[i];
+   ArraySort(sorted);
    const int tail=MathMax(1,(int)MathCeil(n*ClampD(InpCVaRAlpha,0.01,0.50)));
    double sum=0.0;
-   for(int i=0;i<tail;i++) sum+=MathAbs(losses[i]);
+   for(int i=0;i<tail;i++) sum+=MathAbs(sorted[i]);
    const double eq=AccountInfoDouble(ACCOUNT_EQUITY);
    return (eq>0.0 ? (sum/tail)/eq*100.0 : 0.0);
 }
