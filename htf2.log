@@ -1,0 +1,27 @@
+nohup: ignoring input
+
+===== H1: 11186 bars =====
+brk20_trend      ALL n=  813 win= 35.5% exp= +1203.6 | IS   +614.7 | OOS  +2087.9  <== POSITIVE BOTH
+brk20_sl400      ALL n=  813 win= 23.4% exp=   -32.5 | IS    +15.8 | OOS   -105.0
+brk20_sl600      ALL n=  813 win= 25.5% exp=    +4.6 | IS    +69.9 | OOS    -93.3
+brk55_trend      ALL n=  624 win= 33.5% exp= +2508.4 | IS  +1260.8 | OOS  +4387.4  <== POSITIVE BOTH
+brk55_sl400      ALL n=  624 win= 23.6% exp=   -29.0 | IS    +14.8 | OOS    -95.0
+brk55_sl600      ALL n=  624 win= 25.2% exp=    -2.1 | IS    +62.3 | OOS    -99.0
+pullback_trend   ALL n=  940 win= 28.9% exp=  +257.1 | IS   +370.0 | OOS   +124.8  <== POSITIVE BOTH
+pullback_sl400   ALL n=  940 win= 19.6% exp=   -95.2 | IS    -79.1 | OOS   -114.1
+pullback_sl500   ALL n=  940 win= 21.3% exp=   -82.9 | IS    -81.3 | OOS    -84.8
+vol_break        ALL n=   69 win= 31.9% exp= +1529.9 | IS  -2145.6 | OOS  +3618.2
+meanrev_2.5s     ALL n=  494 win= 28.3% exp= -1169.7 | IS   -553.5 | OOS  -1733.4
+
+===== H4: 2925 bars =====
+brk20_trend      ALL n=  257 win= 44.0% exp= +3677.8 | IS  +3343.5 | OOS  +4065.6  <== POSITIVE BOTH
+brk20_sl400      ALL n=  257 win= 19.8% exp=   -87.5 | IS    -29.0 | OOS   -155.3
+brk20_sl600      ALL n=  257 win= 23.7% exp=   -35.4 | IS    +60.9 | OOS   -146.9
+brk55_trend      ALL n=  198 win= 36.9% exp= +3153.7 | IS  +4027.6 | OOS  +1837.4  <== POSITIVE BOTH
+brk55_sl400      ALL n=  198 win= 22.7% exp=   -40.3 | IS     +3.4 | OOS   -106.0
+brk55_sl600      ALL n=  198 win= 27.3% exp=   +50.6 | IS   +126.1 | OOS    -63.0
+pullback_trend   ALL n=  209 win= 46.9% exp= +4833.5 | IS  +3202.9 | OOS  +6417.9  <== POSITIVE BOTH
+pullback_sl400   ALL n=  209 win= 17.7% exp=  -124.3 | IS   -137.9 | OOS   -111.0
+pullback_sl500   ALL n=  209 win= 18.7% exp=  -134.3 | IS   -152.5 | OOS   -116.7
+vol_break        too few signals (20)
+meanrev_2.5s     ALL n=   98 win= 22.4% exp= -4685.2 | IS  -1296.7 | OOS  -7446.2

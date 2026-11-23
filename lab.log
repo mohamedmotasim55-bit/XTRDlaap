@@ -1,0 +1,48 @@
+nohup: ignoring input
+bars=669324  2025.01.02 01:00:00 -> 2026.11.20 23:57:00
+
+mean_reversion       ALL n=10541 win= 43.2% exp= -19.86 pf=0.90
+                     IS  n= 5504 win= 42.0% exp= -24.87 pf=0.84
+                     OOS n= 5037 win= 44.5% exp= -14.38 pf=0.94
+
+false_breakout       ALL n=32748 win= 37.3% exp= -19.46 pf=0.85
+                     IS  n=16993 win= 36.1% exp= -24.03 pf=0.77
+                     OOS n=15755 win= 38.6% exp= -14.53 pf=0.91
+
+pullback             ALL n=41384 win= 31.0% exp= -21.83 pf=0.87
+                     IS  n=22168 win= 29.8% exp= -26.64 pf=0.79
+                     OOS n=19216 win= 32.3% exp= -16.28 pf=0.92
+
+session_momentum_h13 ALL n=13088 win= 30.9% exp= -21.30 pf=0.83
+                     IS  n= 6956 win= 30.0% exp= -25.50 pf=0.75
+                     OOS n= 6132 win= 31.9% exp= -16.55 pf=0.89
+
+vol_expansion        ALL n=30820 win= 32.0% exp= -21.81 pf=0.91
+                     IS  n=16007 win= 31.3% exp= -24.37 pf=0.86
+                     OOS n=14813 win= 32.8% exp= -19.04 pf=0.94
+
+session_momentum_h8  ALL n=13139 win= 30.8% exp= -24.12 pf=0.82
+                     IS  n= 7049 win= 29.9% exp= -26.45 pf=0.75
+                     OOS n= 6090 win= 31.9% exp= -21.42 pf=0.87
+
+momentum_burst       ALL n=102327 win= 30.7% exp= -24.90 pf=0.83
+                     IS  n=53924 win= 29.8% exp= -26.58 pf=0.77
+                     OOS n=48403 win= 31.7% exp= -23.03 pf=0.88
+
+session_momentum_h15 ALL n=12967 win= 31.1% exp= -24.31 pf=0.84
+                     IS  n= 6924 win= 30.7% exp= -24.86 pf=0.80
+                     OOS n= 6043 win= 31.5% exp= -23.68 pf=0.88
+
+session_momentum_h10 ALL n=13029 win= 31.5% exp= -22.34 pf=0.83
+                     IS  n= 6954 win= 31.4% exp= -20.78 pf=0.80
+                     OOS n= 6075 win= 31.6% exp= -24.12 pf=0.85
+
+breakout_trend       ALL n=46752 win= 30.5% exp= -27.32 pf=0.85
+                     IS  n=25083 win= 29.7% exp= -27.79 pf=0.80
+                     OOS n=21669 win= 31.4% exp= -26.77 pf=0.89
+
+compression_break    ALL n=28333 win= 26.4% exp= -27.66 pf=0.82
+                     IS  n=14697 win= 26.0% exp= -25.39 pf=0.79
+                     OOS n=13636 win= 26.9% exp= -30.10 pf=0.85
+
+=== families positive in BOTH halves ===
