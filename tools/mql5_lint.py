@@ -20,6 +20,11 @@ import argparse
 import re
 import sys
 
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
+
 TYPE_KEYWORDS = {
     "void", "int", "uint", "short", "ushort", "char", "uchar", "long", "ulong",
     "float", "double", "bool", "string", "datetime", "color", "ENUM_TIMEFRAMES",
