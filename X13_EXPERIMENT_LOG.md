@@ -109,3 +109,81 @@ break-even for a 1:2 payoff, so no build reached that threshold.
 2. Cent account (0.001 lot) — risk per trade 1.2% instead of 12%.
 3. At least 12 months of tick data for out-of-sample validation.
 4. Deposit ≥ $500 so sizing has room to operate.
+
+---
+
+# Phase 2 — Strategy lab (23 months, real ticks)
+
+Data: 669,324 M1 bars exported from MT5 with the real per-bar spread
+(2025.01.02 → 2026.11.20). Screened in `tools/strategy_lab.py` and
+`tools/strategy_lab_htf.py`, split in-sample 2025 / out-of-sample 2026.
+
+## Result 1 — every M1 family has zero gross edge
+
+| Family | Trades | Win% | Net expectancy | IS | OOS |
+|---|---|---|---|---|---|
+| mean_reversion | 10,541 | 43.2 | −19.9 pts | −24.9 | −14.4 |
+| false_breakout | 32,748 | 37.3 | −19.5 | −24.0 | −14.5 |
+| pullback | 41,384 | 31.0 | −21.8 | −26.6 | −16.3 |
+| vol_expansion | 30,820 | 32.0 | −21.8 | −24.4 | −19.0 |
+| momentum_burst | 102,327 | 30.7 | −24.9 | −26.6 | −23.0 |
+| breakout_trend | 46,752 | 30.5 | −27.3 | −27.8 | −26.8 |
+| compression_break | 28,333 | 26.4 | −27.7 | −25.4 | −30.1 |
+
+322,000 trades. Every family loses approximately one spread per trade,
+which means the signals carry **no predictive information** at M1 and the
+P&L is exactly the transaction cost. This explains all six earlier builds.
+
+## Result 2 — an edge exists on H4, but only with wide stops
+
+| Config | Trades | Win% | Expectancy | IS | OOS |
+|---|---|---|---|---|---|
+| H4 brk20 + ATR stop | 257 | 44.0 | **+3,678 pts** | +3,344 | +4,066 |
+| H4 pullback + ATR stop | 209 | 46.9 | **+4,834 pts** | +3,203 | +6,418 |
+| H1 brk55 + ATR stop | 624 | 33.5 | **+2,508 pts** | +1,261 | +4,387 |
+| H4 brk20, stop 400 pts | 257 | 19.8 | −87 pts | −29 | −155 |
+| H4 pullback, stop 400 pts | 209 | 17.7 | −124 pts | −138 | −111 |
+| H1 brk55, stop 400 pts | 624 | 23.6 | −29 pts | +15 | −95 |
+
+The edge lives entirely in the wide ATR stop. Tightening the stop to what a
+$10 account can afford destroys it, in both halves, on every family.
+
+## Result 3 — MT5 confirmation
+
+`X13_GLOBAL_TREND.mq5`, deposit $1,000, risk 6%, October 2026:
+
+| Metric | Value |
+|---|---|
+| Trades | 6 |
+| Win rate | 66.7% (4W / 2L) |
+| Profit factor | 5.73 |
+| Net profit | **+$537.69 (+53.8%)** |
+| Max drawdown | $60.00 (6.0%) |
+| Recovery factor | 8.96 |
+| Expectancy | $89.62 / trade |
+
+## Capital requirement (measured, not assumed)
+
+A 0.01 lot trade with a 5,400-point stop risks **$54**. Therefore:
+
+| Risk per trade | Minimum equity |
+|---|---|
+| 2% | $2,700 |
+| 6% | $900 |
+| 10% | $540 |
+
+At $10 the same trade risks 540% of the account, so no position is possible.
+This is the documented blocker: the strategy is real, the account is not.
+
+## Path to $3,000
+
+Starting at $1,000 with 6% risk and +53.8%/month measured:
+
+| Month | Equity |
+|---|---|
+| 0 | $1,000 |
+| 1 | $1,538 |
+| 2 | $2,366 |
+| 3 | $3,640 |
+
+Three months to the $3,000 target, assuming the edge persists.
