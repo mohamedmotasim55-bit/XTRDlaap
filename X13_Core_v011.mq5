@@ -628,7 +628,7 @@ void X13_Diagnostics()
       " SpreadMax="+
       DoubleToString(Market.spread_maximum,1)+
 
-      V50=+
+      " V50="+
       DoubleToString(Market.velocity_50ms,2)+
 
       "V100="+
@@ -640,7 +640,7 @@ void X13_Diagnostics()
       "V1000="+
       DoubleToString(Market.velocity_1000ms,2)+
 
-      التسارع = +
+      " Acc="+
       DoubleToString(Market.acceleration,2);
 
    X13_Log("HEARTBEAT",report);
@@ -652,7 +652,7 @@ void X13_Diagnostics()
 //==================================================
 
 
-دالة OnInit()
+int OnInit()
 {
    Market.symbol = InpSymbol;
 
@@ -660,37 +660,37 @@ void X13_Diagnostics()
    {
       Print("X13 ERROR: Symbol selection failed");
 
-      أرجع INIT_FAILED؛
+      return INIT_FAILED;
    }
 
    Market.point =
       SymbolInfoDouble(InpSymbol,SYMBOL_POINT);
 
-   حجم التكة في السوق =
+   Market.tick_size =
       SymbolInfoDouble(
          InpSymbol,
-         حجم علامة التداول
+         SYMBOL_TRADE_TICK_SIZE
       );
 
    Market.digits =
       (int)SymbolInfoInteger(
          InpSymbol,
-         أرقام الرمز
+         SYMBOL_DIGITS
       );
 
-   إذا كانت قيمة نقطة السوق أقل من أو تساوي صفرًا
+   if(Market.point <= 0.0)
    {
-      Print("X13 ERROR: نقطة رمز غير صالحة");
+      Print("X13 ERROR: invalid symbol point");
 
-      أرجع INIT_FAILED؛
+      return INIT_FAILED;
    }
 
-   إذا كانت سعة سجل الإدخال أقل من 32 أو
+   if(InpHistoryCapacity < 32 ||
       InpHistoryCapacity > X13_MAX_HISTORY)
    {
       Print("X13 ERROR: History capacity must be 32..512");
 
-      أعد INIT_PARAMETERS_INCORRECT؛
+      return INIT_PARAMETERS_INCORRECT;
    }
 
    Market.tick_count = 0;
@@ -724,36 +724,34 @@ void X13_Diagnostics()
    if(InpDiagnosticLog)
    {
       LogHandle = FileOpen(
-         "X13_Core_v011_Diagnostics.csv"
-         قراءة الملف | كتابة الملف | ملف CSV |
-         ملف_ANSI|ملف_مشاركة_قراءة|
-         FILE_SHARE_WRITE,
-         ;
+         "X13_Core_v011_Diagnostics.csv",
+         FILE_READ|FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_SHARE_READ|FILE_SHARE_WRITE,
+         ';'
       );
 
-      إذا كان (LogHandle != INVALID_HANDLE)
+      if(LogHandle != INVALID_HANDLE)
          FileSeek(LogHandle,0,SEEK_END);
-      آخر
-         Print("X13 تحذير: ملف السجل غير متوفر");
+      else
+         Print("X13 warning: diagnostic log unavailable");
    }
 
-   if(!EventSetTimer(MathMax(1,InpTimerSeconds))))
+   if(!EventSetTimer(MathMax(1,InpTimerSeconds)))
    {
       Print("X13 ERROR: Timer initialization failed");
 
-      إذا كان (LogHandle != INVALID_HANDLE)
+      if(LogHandle != INVALID_HANDLE)
          FileClose(LogHandle);
 
       LogHandle = INVALID_HANDLE;
 
-      أرجع INIT_FAILED؛
+      return INIT_FAILED;
    }
 
-   CoreReady = صحيح؛
+   CoreReady = true;
 
    X13_Log("CORE","X13 CORE v0.11 STARTED - DATA ONLY");
 
-   أعد INIT_SUCCEEDED؛
+   return INIT_SUCCEEDED;
 }
 
 
@@ -764,21 +762,21 @@ void X13_Diagnostics()
 
 void OnTick()
 {
-   إذا لم يكن CoreReady
-      يعود؛
+   if(!CoreReady)
+      return;
 
-   ulong begin = GetMicro SecondCount();
+   ulong started = GetMicrosecondCount();
 
-   إذا تم تحديث السوق (X13_UpdateMarket())
+   if(X13_UpdateMarket())
       X13_UpdateRegime();
 
-   ulong Finished = GetMicro SecondCount();
+   ulong finished = GetMicrosecondCount();
 
-   إذا (تم الانتهاء >= تم البدء)
+   if(finished >= started)
    {
       ulong elapsed = finished-started;
 
-      إذا كان الوقت المنقضي أكبر من الحد الأقصى لوقت المعالجة
+      if(elapsed > MaxProcessingTime)
          MaxProcessingTime = elapsed;
    }
 }
@@ -791,20 +789,20 @@ void OnTick()
 
 void OnTimer()
 {
-   إذا لم يكن CoreReady
-      يعود؛
+   if(!CoreReady)
+      return;
 
    datetime now = TimeTradeServer();
 
-   إذا كان الوقت الحالي يساوي وقت المؤقت الأخير
-      يعود؛
+   if(now == LastTimerTime)
+      return;
 
-   LastTimerTime = الآن؛
+   LastTimerTime = now;
 
    if(InpDiagnosticLog)
       X13_Diagnostics();
 
-   إذا كان (LogHandle != INVALID_HANDLE)
+   if(LogHandle != INVALID_HANDLE)
       FileFlush(LogHandle);
 }
 
@@ -821,18 +819,18 @@ void OnDeinit(const int reason)
    EventKillTimer();
 
    X13_Log(
-      "جوهر"،
-      "سبب الإغلاق"+
+      "CORE",
+      "shutdown reason="+
       IntegerToString(reason)+
-      " | علامات "+
+      " | ticks "+
       IntegerToString((int)Market.tick_count)+
-      " | غير صالح"+
+      " | invalid "+
       IntegerToString((int)Market.invalid_ticks)+
-      " | الفجوات "+
+      " | gaps "+
       IntegerToString((int)Market.tick_gaps)
    );
 
-   إذا كان (LogHandle != INVALID_HANDLE)
+   if(LogHandle != INVALID_HANDLE)
    {
       FileFlush(LogHandle);
 
