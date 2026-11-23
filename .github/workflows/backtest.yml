@@ -290,14 +290,22 @@ jobs:
       - name: Run strategy tester (stress mode)
         shell: pwsh
         run: |
+          # MT5 sometimes cancels the tick download on a cold start and then
+          # aborts with "no history data"; a retry reuses the cached ticks.
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+          Write-Host "===== tester attempt $attempt ====="
           $p = Start-Process -FilePath $env:TERMINAL -ArgumentList '/portable', "/config:$env:TESTER_INI" -PassThru
-          $deadline = (Get-Date).AddMinutes(240)
+          $deadline = (Get-Date).AddMinutes(25)
+          $lastCpu = -1
+          $stall = 0
           while (-not $p.HasExited -and (Get-Date) -lt $deadline) {
             Start-Sleep -Seconds 20
             $p.Refresh()
             $cpu = 0
             try { $cpu = [int]((Get-Process -Id $p.Id).CPU) } catch { }
             Write-Host ("[{0:HH:mm:ss}] terminal alive, cpu={1}s" -f (Get-Date), $cpu)
+            if ($cpu -eq $lastCpu) { $stall++ } else { $stall = 0; $lastCpu = $cpu }
+            if ($stall -ge 9) { Write-Warning 'CPU idle for 3 minutes; treating as hung.'; break }
           }
           if (-not $p.HasExited) {
             Write-Warning 'Tester exceeded the time budget; stopping terminal.'
@@ -319,6 +327,11 @@ jobs:
             }
           }
           Write-Host "summary files found: $($summaryCsv.Count)"
+          if ((Test-Path "$env:REPORT_BASE.htm") -or ($summaryCsv.Count -gt 0)) { break }
+          Write-Host '----- no result yet, retrying after a short pause -----'
+          Start-Sleep -Seconds 15
+          }
+
           if ((-not (Test-Path "$env:REPORT_BASE.htm")) -and ($summaryCsv.Count -eq 0)) {
             Write-Host '----- terminal log tail -----'
             Get-ChildItem (Join-Path $env:MT5_DIR 'logs') -Filter '*.log' -ErrorAction SilentlyContinue |
