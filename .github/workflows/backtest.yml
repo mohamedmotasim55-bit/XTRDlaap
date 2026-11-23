@@ -36,6 +36,9 @@ on:
       extra_inputs:
         description: "Extra EA inputs, comma separated key=value"
         default: ""
+      to_date:
+        description: "End date yyyy-MM-dd (empty = yesterday), for month-by-month validation"
+        default: ""
   push:
     branches:
       - main
@@ -303,8 +306,13 @@ jobs:
           DAYS: ${{ inputs.days || '30' }}
           MODEL: ${{ inputs.model || '4' }}
           EXECMODE: ${{ inputs.execution_mode || '50' }}
+          TO_DATE: ${{ inputs.to_date }}
         run: |
-          $to   = (Get-Date).Date.AddDays(-1)
+          if ($env:TO_DATE -ne '') {
+            $to = [datetime]::ParseExact($env:TO_DATE, 'yyyy-MM-dd', $null)
+          } else {
+            $to = (Get-Date).Date.AddDays(-1)
+          }
           $from = $to.AddDays(-[int]$env:DAYS)
           $ini = Join-Path $env:MT5_DIR 'tester.ini'
           $report = Join-Path $env:MT5_DIR 'report'
