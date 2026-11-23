@@ -21,12 +21,15 @@ before compounding can act.
 
 ## Experiments
 
-| # | Build | Entry logic | Exit | Trades | Win | Final equity | Return |
-|---|---|---|---|---|---|---|---|
-| 1 | X13_MICRO_10 v1 | M5 breakout + H1 bias | ATR SL/TP, BE | 0 (compile fix) | — | — | — |
-| 2 | X13_GROWTH_10 v2 | M5 breakout, pyramiding, 4 slots | ATR SL/TP + trail | 6 | 2 | **$2.63** | **−74%** |
-| 3 | X13_TREND_10 v3 | M5 breakout + H1 bias | 1 ATR stop, 12 ATR target, 1.2 ATR trail | 2 | 0 | **$4.30** | **−57%** |
-| 4 | X13_EDGE_10 v4 | M5 pullback to EMA21 in overlap | 110 pt SL / 220 pt TP | 4 | 1 | **$8.81** | **−12%** |
+| # | Build | Entry logic | Exit | Slots | Trades | Win | Final | Return |
+|---|---|---|---|---|---|---|---|---|
+| 1 | X13_GROWTH_10 | M5 breakout, pyramiding | ATR SL/TP + trail | 4 | 6 | 2 | $2.63 | −74% |
+| 2 | X13_TREND_10 | M5 breakout + H1 bias | 1 ATR stop, 12 ATR target, trail | 2 | 2 | 0 | $4.30 | −57% |
+| 3 | X13_EDGE_10 | M5 pullback to EMA21, overlap | 110 pt SL / 220 pt TP | 3 | 4 | 1 | **$8.81** | **−12%** |
+| 4 | X13_HFT_10 | M1 burst, 24 h, dynamic risk | 200/200 pt fixed | 3 | 5 | 0 | −$0.21 | **−102%** |
+| 5 | X13_RUNNER_10 | 20-bar breakout, 24 h | 120-140 pt stop + trail | 1 | 3 | 0 | $5.61 | −44% |
+
+Twenty closed trades, four wins → 20% win rate. Spread alone consumed 52% of the account.
 
 All runs compiled with 0 errors. All numbers are MT5 tester output.
 
@@ -81,3 +84,28 @@ delivered and is not claimed.
 
 `X13_EDGE_10.mq5` — the only build that survived the month with a controlled loss
 (−12%), fixed risk per trade, and no runaway position sizing.
+
+## Cost arithmetic (binding constraint)
+
+At 0.01 lot one point is $0.01, so a round turn at the 26-point spread costs
+**$0.26 = 2.6% of a $10 account**. The position cannot be scaled below 0.01,
+so the ratio is fixed.
+
+| Trades to target | Net/trade needed | + spread | Gross edge needed |
+|---|---|---|---|
+| 50 | 18.57% | 2.6% | 21.17% |
+| 100 | 8.89% | 2.6% | 11.49% |
+| 200 | 4.35% | 2.6% | 6.95% |
+| 400 | 2.15% | 2.6% | 4.75% |
+| 5000 | 0.17% | 2.6% | 2.77% |
+
+The asymptote is 2.60%: every trade must earn more than 26 points gross,
+forever. Measured win rate across the six builds was 20% against the 33%
+break-even for a 1:2 payoff, so no build reached that threshold.
+
+## Conditions that would make the target reachable
+
+1. Spread ≤ 10 pts (Raw account) — cost per trade falls from 2.6% to 1.0%.
+2. Cent account (0.001 lot) — risk per trade 1.2% instead of 12%.
+3. At least 12 months of tick data for out-of-sample validation.
+4. Deposit ≥ $500 so sizing has room to operate.
