@@ -298,10 +298,10 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
   {
    if(trans.type != TRADE_TRANSACTION_DEAL_ADD) return;
    if(trans.symbol != _Symbol) return;
-   if((ulong)trans.magic != InpMagic) return;
 
    if(HistoryDealSelect(trans.deal))
      {
+      if((ulong)HistoryDealGetInteger(trans.deal, DEAL_MAGIC) != InpMagic) return;
       long entry = HistoryDealGetInteger(trans.deal, DEAL_ENTRY);
       if(entry == DEAL_ENTRY_OUT || entry == DEAL_ENTRY_INOUT)
         {
