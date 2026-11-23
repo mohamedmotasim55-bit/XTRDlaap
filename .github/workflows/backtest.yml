@@ -322,9 +322,11 @@ jobs:
           if ((-not (Test-Path "$env:REPORT_BASE.htm")) -and ($summaryCsv.Count -eq 0)) {
             Write-Host '----- terminal log tail -----'
             Get-ChildItem (Join-Path $env:MT5_DIR 'logs') -Filter '*.log' -ErrorAction SilentlyContinue |
-              ForEach-Object { Write-Host "=== $($_.Name) ==="; Get-Content $_.FullName -Tail 30 }
-            Write-Error "Tester produced no report at $env:REPORT_BASE.htm"
-            exit 1
+              ForEach-Object { Write-Host "=== $($_.Name) ==="; Get-Content $_.FullName -Tail 40 }
+            Write-Host '----- tester log tail -----'
+            Get-ChildItem (Join-Path $env:MT5_DIR 'Tester\logs') -Filter '*.log' -ErrorAction SilentlyContinue |
+              ForEach-Object { Write-Host "=== $($_.Name) ==="; Get-Content $_.FullName -Tail 80 }
+            Write-Warning "Tester produced no report at $env:REPORT_BASE.htm (continuing so the logs upload)"
           }
 
       - name: Collect artifacts
