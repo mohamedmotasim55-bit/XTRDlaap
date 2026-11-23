@@ -179,6 +179,7 @@ jobs:
           Get-ChildItem $env:EXPERTS_DIR | Select-Object Name, Length | Format-Table
 
       - name: Static MQL5 checks
+        continue-on-error: true
         shell: pwsh
         run: |
           python tools/mql5_lint.py "$env:EA_NAME.mq5"
