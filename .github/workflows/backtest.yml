@@ -24,6 +24,12 @@ on:
       deposit:
         description: "Starting deposit in USD"
         default: "10"
+      risk_pct:
+        description: "Override InpMaxAccountRiskPct (empty = EA default)"
+        default: ""
+      max_positions:
+        description: "Override InpMaxConcurrentPositions (empty = EA default)"
+        default: ""
   push:
     branches:
       - main
@@ -43,6 +49,8 @@ concurrency:
 env:
   INSTALLER_URL: https://download.mql5.com/cdn/web/just.global.markets/mt5/justmarkets5setup.exe
   EA_NAME: ${{ github.event.inputs.ea || 'XTRD_OMIGA_Enabled_GoldSymbol' }}
+  INPUT_RISK: ${{ github.event.inputs.risk_pct }}
+  INPUT_POS: ${{ github.event.inputs.max_positions }}
   MT5_DIR: C:\mt5
 
 jobs:
@@ -280,6 +288,12 @@ jobs:
             'ReplaceReport=1',
             'Visual=0',
             'ShutdownTerminal=1'
+          $lines += ''
+          if ($env:INPUT_RISK -ne '' -or $env:INPUT_POS -ne '') {
+            $lines += '[TesterInputs]'
+            if ($env:INPUT_RISK -ne '') { $lines += "InpMaxAccountRiskPct=$env:INPUT_RISK" }
+            if ($env:INPUT_POS -ne '') { $lines += "InpMaxConcurrentPositions=$env:INPUT_POS" }
+          }
           )
           $lines | Set-Content -Path $ini -Encoding ASCII
           Write-Host "----- tester.ini (password masked) -----"
