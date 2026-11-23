@@ -21,8 +21,9 @@ def resample(d: Data, minutes: int) -> Data:
     bo = bh = bl = bc = bv = bs = 0.0
     nb = 0
     for i in range(len(d.c)):
-        hh = int(d.t[i][11:13])
-        stamp = d.t[i][:11] + f"{(hh * 60 // minutes) * minutes // 60:02d}"
+        hh = int(d.t[i][11:13]); mm = int(d.t[i][14:16])
+        b = (hh * 60 + mm) // minutes * minutes
+        stamp = d.t[i][:11] + f"{b // 60:02d}:{b % 60:02d}"
         if stamp != bucket:
             if bucket is not None:
                 ts.append(bucket); o.append(bo); h.append(bh); l.append(bl)

@@ -268,3 +268,87 @@ constraint is relaxed, that engine is ready in `X13_GLOBAL_TREND.mq5`.
 | Zero-spread account | edge +6.6 becomes profitable |
 
 These are account-type decisions, not code decisions.
+
+---
+
+# Phase 4 — Root-cause repair
+
+## Cost audit (section 4 of the brief)
+
+| Check | Result |
+|---|---|
+| Spread counted once per round turn | yes |
+| Bid/ask direction correct | yes (buys fill at ask, sells at bid) |
+| Double counting | none |
+| Points vs price | 1 point = 0.01 USD, 1.00 move = 100 pts |
+| Commission | 0 on this account |
+| Verified against real fills | buy 4023.18 / sell 4023.75 = +57 pts; without cost +79 pts → cost 22 pts |
+| Strategy entering on widened spread | 13-24 entries rejected by the spread filter, correctly |
+
+The cost model is correct. 22.3 pts = $0.22 per round turn at 0.01 lot = 2.2%
+of a $10 account.
+
+## Failure map
+
+| Horizon | Entry | Stops | Gross expectancy | Verdict |
+|---|---|---|---|---|
+| M1 | 7 families, 322k trades | fixed | −28 to +6.6 pts | below cost |
+| M5 | breakout20 | fixed 75-900 | −38 to −3 pts | below cost |
+| M15 | breakout20 | fixed | −72 to +0.4 pts | below cost |
+| H1 | brk20/55 | ATR | +1,204 / +2,508 | positive |
+| H4 | brk20 / pullback | ATR | +3,678 / +4,834 | positive |
+
+Live months, `X13_SCALP` v1, $10, real ticks:
+
+| Month | Trades | Win% | Net |
+|---|---|---|---|
+| 2026-10 | 20 | 55.0 | +63.7% |
+| 2026-09 | 26 | 23.1 | −62.6% |
+| 2026-06 | 12 | 16.7 | −57.0% |
+
+All three months were downtrends of similar size (net −284 / −293 / −514,
+ADR 2,382 / 2,872 / 3,388). The hypothesis that October trended while the
+others ranged is **false**. October is variance.
+
+## Repair R1 — higher-timeframe context filter
+
+`X13_SCALP2.mq5`: trade only in the M15 EMA50 direction.
+June: 9 trades, 11.1% win, −$5.30 (baseline −$5.66). No repair.
+
+## Repair R2 — session filter
+
+Hours 8-21 only. Hour 22 had produced 12 trades at 16.7% win rate, −$6.35.
+September: 10 trades, 20.0% win, −$5.51 (baseline −$6.26). No repair.
+
+## Statistical proof of the blocker
+
+Best M1 family (`tick_activity`), 998 trades, 23 months:
+
+```
+gross expectancy = −4.34 pts   sd 226.2   se 7.16   t = −0.61
+95% CI            = [−18.38, +9.69] pts
+spread            = 22.3 pts
+```
+
+The upper confidence bound of the best available gross edge is **9.7 points**.
+The cost is **22.3 points**. No exit design, sizing scheme, trailing rule or
+concurrency model can close a gap of 12.6 points that exists before any trade
+management is applied.
+
+## Status: BLOCKED
+
+The blocker is not capital, not leverage, not code. It is that no M1/M5/M15
+signal family in this project has a gross edge that is statistically
+distinguishable from zero, and the account's fixed cost per round turn is
+2.2% of equity.
+
+Repairs attempted and their measured results are recorded above. Two targeted
+repairs (context, session) were implemented, tested on real ticks and did not
+change the outcome.
+
+## What is proven to work
+
+H1/H4 breakout and pullback with ATR stops: +53.8% on $1,000 in October 2026,
+PF 5.73, 6% drawdown, and positive in both halves of a 23-month screen.
+That engine exists in `X13_GLOBAL_TREND.mq5`. It is excluded by the current
+brief, which forbids trend engines as the core.
