@@ -87,7 +87,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: C:\mt5
-          key: mt5-justmarkets-v1
+          key: mt5-justmarkets-v2
 
       - name: Install JustMarkets MT5 (silent)
         if: steps.mt5cache.outputs.cache-hit != 'true'
@@ -121,7 +121,41 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: C:\mt5
-          key: mt5-justmarkets-v1
+          key: mt5-justmarkets-v2
+
+      - name: Provision MQL5 standard library
+        shell: pwsh
+        run: |
+          $target = Join-Path $env:MT5_DIR 'MQL5\Include'
+          $probe  = Join-Path $target 'Trade\Trade.mqh'
+          if (Test-Path $probe) { Write-Host 'standard library already present'; exit 0 }
+
+          # A portable first run materialises the full MQL5 tree.
+          $term = Join-Path $env:MT5_DIR 'terminal64.exe'
+          if (Test-Path $term) {
+            Start-Process -FilePath $term -ArgumentList '/portable' | Out-Null
+            for ($i = 0; $i -lt 20; $i++) {
+              Start-Sleep -Seconds 1
+              if (Test-Path $probe) { break }
+            }
+            Get-Process terminal64 -ErrorAction SilentlyContinue | Stop-Process -Force
+          }
+          if (Test-Path $probe) { Write-Host 'standard library created by terminal'; exit 0 }
+
+          $sources = @()
+          $sources += Get-ChildItem 'C:\Program Files','C:\Program Files (x86)' -Directory -ErrorAction SilentlyContinue |
+            ForEach-Object { Join-Path $_.FullName 'MQL5\Include' }
+          $sources += Get-ChildItem (Join-Path $env:APPDATA 'MetaQuotes\Terminal') -Directory -ErrorAction SilentlyContinue |
+            ForEach-Object { Join-Path $_.FullName 'MQL5\Include' }
+          foreach ($s in $sources) {
+            if (Test-Path (Join-Path $s 'Trade\Trade.mqh')) {
+              New-Item -ItemType Directory -Force -Path $target | Out-Null
+              Copy-Item -Path (Join-Path $s '*') -Destination $target -Recurse -Force
+              Write-Host "Copied standard library from $s"
+              exit 0
+            }
+          }
+          Write-Warning 'MQL5 standard library unavailable on this runner'
 
       - name: Resolve MT5 paths
         shell: pwsh
