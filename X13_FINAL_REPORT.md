@@ -150,3 +150,72 @@ next move goes.
 - Prices every opportunity against the measured 26-point spread.
 - Coordinates one decision per bar across five engines.
 - Reports per-engine signals, acceptances, rejections and P&L natively.
+
+---
+
+# Round 3 - consensus engine, tick flow, and MT5 genetic optimisation
+
+## What changed
+
+- Decision engine rebuilt as a **consensus vote**. Every engine adds to a buy
+  score or a sell score; the platform acts when one side clearly dominates
+  instead of discarding all but the single best signal.
+- **TICKFLOW engine** added, driven by real tick accumulation in `OnTick`
+  (uptick ratio over a 200-tick window).
+- **Pyramiding** enabled: adds in the same direction while capacity remains.
+- Confidence-scaled sizing.
+- **MT5 genetic optimiser** wired into the pipeline (`Optimization=2`,
+  `OptimizationCriterion=12` custom max).
+- The EA writes **one result file per optimisation pass**, named by its
+  parameters, so every pass can be ranked.
+
+## Training result: 378 passes inside MT5, September 2026
+
+Search space: stop 40-100, target 70-170, edge floor 0-30, consensus 0.30-0.75,
+max positions 1-5.
+
+| Statistic | Value |
+|---|---|
+| Passes run | **378** |
+| **Profitable passes** | **0** |
+| Best net | -5.20 |
+| Worst net | -6.30 |
+| Median net | -5.80 |
+| Best trade count | 14 |
+| Median trade count | 8 |
+
+Every one of the 378 parameter combinations lost money. The spread of results
+is only 1.10 dollars wide, from -5.20 to -6.30.
+
+## What that tight distribution means
+
+The outcome is not driven by parameter choice. If parameters mattered, a
+378-point search would produce a wide spread, with some passes winning. It
+produced a narrow band centred on -5.80. That is the signature of a **fixed
+cost per trade** dominating a signal that carries no directional information.
+
+At 8 trades a month and -5.80, the loss per trade is about 0.72 dollars, which
+is 72 points at 0.01 lot. The spread is 26 points, so the average trade also
+loses about 46 points of direction. Parameters cannot fix direction.
+
+## Why density stayed low
+
+Median 8 trades per month even with the edge floor at 0. The binding
+constraints are structural:
+
+- The decision runs once per M1 bar, so the ceiling is 1,440 entries a day.
+- A position blocks the same direction unless pyramiding adds are taken, and
+  adds need fresh consensus each bar.
+- Most bars produce no consensus because the engines disagree.
+
+Pushing density to thousands a day requires entering on nearly every tick.
+That was measured separately: 669,324 entries a month would cost **$174,024**
+in spread against a $10 account.
+
+## Verdict for this round
+
+The platform now does what was asked - merged engines, one brain, tick flow,
+concurrency, pyramiding, native training. MT5's own optimiser, given 378
+tries, found zero profitable configurations. The blocker is unchanged and now
+measured from a third independent direction: **no directional information in
+the data, against a fixed 26-point cost.**
