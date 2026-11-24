@@ -16,6 +16,8 @@ input double InpRiskPct      = 20.0;   // max risk per trade (% of equity)
 input double InpMaxDDHaltPct = 55.0;   // halt all trading past this drawdown
 input int    InpMaxPositions = 3;
 input bool   InpAllowHedging = true;
+input bool   InpAllowPyramiding = true;  // allow adds in the same direction
+input double InpMinConsensus = 0.45;     // combined strength needed to act
 
 input group "=== Spread engine ==="
 input int    InpMaxSpreadPts = 40;
@@ -36,9 +38,10 @@ input group "=== Engine 3: reversion ==="
 input bool   InpEngReversion = true;
 input double InpRevATRmult   = 2.2;
 
-input group "=== Engine 4: breakout ==="
-input bool   InpEngBreakout = true;
-input int    InpBreakBars   = 20;
+input group "=== Engine 4: tick flow ==="
+input bool   InpEngTickFlow = true;
+input int    InpTickWindow  = 200;
+input double InpTickRatio   = 0.56;
 
 input group "=== Engine 5: exhaustion ==="
 input bool   InpEngExhaustion = true;
@@ -74,13 +77,15 @@ double   g_spSum = 0;
 int      g_spN = 0;
 double   g_spMedian = 26;
 
-string   g_engName[6] = {"", "BURST", "MOMENTUM", "REVERSION", "BREAKOUT", "EXHAUSTION"};
-int      g_slPts[6]  = {0, 60, 110, 90, 100, 80};
-int      g_tpPts[6]  = {0, 90, 190, 120, 200, 110};
+string   g_engName[6] = {"", "BURST", "MOMENTUM", "REVERSION", "TICKFLOW", "EXHAUSTION"};
+int      g_slPts[6]  = {0, 60, 110, 90, 70, 80};
+int      g_tpPts[6]  = {0, 90, 190, 120, 110, 110};
 int      g_sig[6], g_acc[6], g_rej[6];
 
-int      g_sigDir = 0, g_sigEng = 0;
-double   g_sigScore = 0;
+double   g_buyScore = 0, g_sellScore = 0;
+int      g_voteBuy[6], g_voteSell[6];
+double   g_tickLastMid = 0;
+int      g_tickUp = 0, g_tickDn = 0, g_tickN = 0;
 
 //===================== HELPERS ===================//
 double VolPerPoint()
@@ -167,165 +172,54 @@ double EmaS()
 
 void Submit(int dir, int eng, double strength)
   {
-   if(g_sigDir == 0 || strength > g_sigScore)
-     {
-      g_sigDir = dir;
-      g_sigEng = eng;
-      g_sigScore = strength;
-     }
+   if(strength <= 0) return;
+   if(dir > 0) { g_buyScore += strength; g_voteBuy[eng]++; }
+   else        { g_sellScore += strength; g_voteSell[eng]++; }
   }
 
-//===================== ENGINES ===================//
-void EngBurst()
-  {
-   if(!InpEngBurst) return;
-   double atr = ATRval();
-   if(atr <= 0) return;
-   double vpp = 0, base = 0;
-   for(int k = 1; k <= InpBurstLookback; k++)
-     {
-      double r = (iHigh(_Symbol, PERIOD_M1, k) - iLow(_Symbol, PERIOD_M1, k)) / g_point;
-      double x = (double)iVolume(_Symbol, PERIOD_M1, k) / MathMax(r, 1.0);
-      if(k == 1) vpp = x;
-      base += x;
-     }
-   base /= InpBurstLookback;
-   if(base <= 0) return;
-   double o1 = iOpen(_Symbol, PERIOD_M1, 1);
-   double c1 = iClose(_Symbol, PERIOD_M1, 1);
-   double body = c1 - o1;
-   if(MathAbs(body) < atr * 0.4) return;
-   if(vpp < base * InpBurstVolMult) return;
-   g_sig[1]++;
-   Submit((body > 0) ? 1 : -1, 1, MathAbs(body) / atr);
-  }
-
-void EngMomentum()
-  {
-   if(!InpEngMomentum) return;
-   double atr = ATRval();
-   if(atr <= 0) return;
-   double f = EmaF(), s = EmaS();
-   if(f <= 0 || s <= 0) return;
-   double c1 = iClose(_Symbol, PERIOD_M1, 1);
-   double dF = c1 - iClose(_Symbol, PERIOD_M1, 1 + InpMomFast);
-   double dS = c1 - iClose(_Symbol, PERIOD_M1, 1 + InpMomSlow);
-   if(dF == 0 || dS == 0) return;
-   int sF = (dF > 0) ? 1 : -1;
-   int sS = (dS > 0) ? 1 : -1;
-   if(sF != sS) return;
-   if(sF > 0 && !(c1 > f && f > s)) return;
-   if(sF < 0 && !(c1 < f && f < s)) return;
-   if(MathAbs(dF) < atr * 0.5) return;
-   g_sig[2]++;
-   Submit(sF, 2, MathAbs(dF) / atr);
-  }
-
-void EngReversion()
-  {
-   if(!InpEngReversion) return;
-   double atr = ATRval();
-   if(atr <= 0) return;
-   double c1 = iClose(_Symbol, PERIOD_M1, 1);
-   double m = 0;
-   for(int k = 1; k <= 20; k++) m += iClose(_Symbol, PERIOD_M1, k);
-   m /= 20.0;
-   double dev = c1 - m;
-   if(MathAbs(dev) < atr * InpRevATRmult) return;
-   g_sig[3]++;
-   Submit((dev > 0) ? -1 : 1, 3, MathAbs(dev) / atr);
-  }
-
-void EngBreakout()
-  {
-   if(!InpEngBreakout) return;
-   double atr = ATRval();
-   if(atr <= 0) return;
-   double hh = -1e18, ll = 1e18;
-   for(int k = 1; k <= InpBreakBars; k++)
-     {
-      hh = MathMax(hh, iHigh(_Symbol, PERIOD_M1, k));
-      ll = MathMin(ll, iLow(_Symbol, PERIOD_M1, k));
-     }
-   double c1 = iClose(_Symbol, PERIOD_M1, 1);
-   if(c1 > hh) { g_sig[4]++; Submit(1, 4, (c1 - hh) / atr + 1.0); }
-   else if(c1 < ll) { g_sig[4]++; Submit(-1, 4, (ll - c1) / atr + 1.0); }
-  }
-
-void EngExhaustion()
-  {
-   if(!InpEngExhaustion) return;
-   double atr = ATRval();
-   if(atr <= 0) return;
-   int up = 0, dn = 0;
-   for(int k = 1; k <= InpExhBars; k++)
-     {
-      double o = iOpen(_Symbol, PERIOD_M1, k);
-      double c = iClose(_Symbol, PERIOD_M1, k);
-      if(c > o) up++;
-      else if(c < o) dn++;
-     }
-   if(up < InpExhBars && dn < InpExhBars) return;
-   double c1 = iClose(_Symbol, PERIOD_M1, 1);
-   double cN = iClose(_Symbol, PERIOD_M1, 1 + InpExhBars);
-   double move = MathAbs(c1 - cN);
-   if(move < atr * InpExhATRmult) return;
-   g_sig[5]++;
-   Submit((c1 > cN) ? -1 : 1, 5, move / atr);
-  }
-
-//===================== SIZING ===================//
-double SizeLot()
-  {
-   double eq = AccountInfoDouble(ACCOUNT_EQUITY);
-   double riskMoney = eq * InpRiskPct / 100.0;
-   double lotByRisk = riskMoney / MathMax(g_slPts[MathMax(g_sigEng,1)] * g_volPerPt, 1e-9);
-
-   double margin1 = 0;
-   double price = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   double lotByMargin = 0;
-   if(OrderCalcMargin(ORDER_TYPE_BUY, _Symbol, 1.0, price, margin1) && margin1 > 0)
-      lotByMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE) * 0.8 / margin1;
-   else
-     {
-      double notional = g_contract * price;
-      double lev = (double)AccountInfoInteger(ACCOUNT_LEVERAGE);
-      lotByMargin = (lev > 0) ? AccountInfoDouble(ACCOUNT_MARGIN_FREE) * 0.8 * lev / notional : 0;
-     }
-
-   double lot = MathMin(lotByRisk, lotByMargin);
-   lot = MathFloor(lot / g_volStep) * g_volStep;
-   if(lot < g_volMin) return 0;
-   if(lot > g_volMax) lot = g_volMax;
-   return NormalizeDouble(lot, 2);
-  }
-
-//===================== DECISION ===================//
 void DecideAndExecute()
   {
-   if(g_sigDir == 0) return;
-   int dir = g_sigDir, eng = g_sigEng;
-   double score = g_sigScore;
-   g_sigDir = 0;
-   g_sigScore = 0;
+   double b = g_buyScore, sScore = g_sellScore;
+   g_buyScore = 0;
+   g_sellScore = 0;
+   int votesB = 0, votesS = 0;
+   for(int e = 1; e <= 5; e++)
+     {
+      votesB += g_voteBuy[e];
+      votesS += g_voteSell[e];
+      g_voteBuy[e] = 0;
+      g_voteSell[e] = 0;
+     }
 
-   if(g_halsted) { g_rej[eng]++; return; }
-   if(CountPositions() >= InpMaxPositions) { g_rej[eng]++; return; }
-   if(HasSameDir(dir)) { g_rej[eng]++; return; }
-   if(!InpAllowHedging && HasOpposite(dir)) { g_rej[eng]++; return; }
+   int dir = 0;
+   double conf = 0;
+   if(b >= sScore * 1.15 && b >= InpMinConsensus)      { dir = 1;  conf = b; }
+   else if(sScore >= b * 1.15 && sScore >= InpMinConsensus) { dir = -1; conf = sScore; }
+   if(dir == 0) return;
+
+   if(g_halsted) return;
+   int open = CountPositions();
+   if(open >= InpMaxPositions) return;
+   if(HasSameDir(dir) && !InpAllowPyramiding) return;
+   if(!InpAllowHedging && HasOpposite(dir)) return;
 
    double sp = SpreadPts();
-   if(sp > InpMaxSpreadPts) { g_rej[eng]++; return; }
+   if(sp > InpMaxSpreadPts) return;
 
    double atr = ATRval();
-   if(atr <= 0) { g_rej[eng]++; return; }
+   if(atr <= 0) return;
 
-   double expMove = MathMin((double)g_tpPts[eng], score * (atr / g_point));
-   if(expMove < sp + InpMinEdgePts) { g_rej[eng]++; return; }
-   if(expMove < sp * InpMinEVmult) { g_rej[eng]++; return; }
+   double expMove = MathMin(250.0, conf * (atr / g_point));
+   if(expMove < sp + InpMinEdgePts) return;
 
    double lot = SizeLot();
-   if(lot <= 0) { g_rej[eng]++; return; }
+   if(lot <= 0) return;
+   double confScale = MathMin(1.0, 0.55 + conf * 0.25);
+   lot = MathFloor((lot * confScale) / g_volStep) * g_volStep;
+   if(lot < g_volMin) lot = g_volMin;
+
+   int eng = (dir > 0) ? ((votesB >= votesS) ? 1 : 2) : ((votesS >= votesB) ? 1 : 2);
+   if(votesB + votesS >= 2) eng = 5;   // multi-engine consensus tag
 
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
@@ -344,11 +238,7 @@ void DecideAndExecute()
                         g_engName[eng]);
 
    if(ok) g_acc[eng]++;
-   else
-     {
-      g_rej[eng]++;
-      if(InpVerbose) PrintFormat("X13 %s order failed %d", g_engName[eng], g_trade.ResultRetcode());
-     }
+   else if(InpVerbose) PrintFormat("X13 order failed %d", g_trade.ResultRetcode());
   }
 
 //===================== MANAGEMENT ===================//
@@ -454,20 +344,30 @@ void OnTick()
       g_spN = 0;
      }
 
+   double mid = (SymbolInfoDouble(_Symbol, SYMBOL_BID) + SymbolInfoDouble(_Symbol, SYMBOL_ASK)) * 0.5;
+   if(g_tickLastMid > 0)
+     {
+      if(mid > g_tickLastMid) g_tickUp++;
+      else if(mid < g_tickLastMid) g_tickDn++;
+      g_tickN++;
+     }
+   g_tickLastMid = mid;
+
    Manage();
 
    datetime bar = iTime(_Symbol, PERIOD_M1, 0);
    if(bar == 0 || bar == g_lastBar) return;
    g_lastBar = bar;
 
-   g_sigDir = 0;
-   g_sigScore = 0;
    EngBurst();
    EngMomentum();
    EngReversion();
-   EngBreakout();
+   EngTickFlow();
    EngExhaustion();
    DecideAndExecute();
+   g_tickUp = 0;
+   g_tickDn = 0;
+   g_tickN  = 0;
   }
 
 //===================== FUNNEL AUDIT ===================//

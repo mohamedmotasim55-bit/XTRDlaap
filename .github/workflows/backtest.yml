@@ -39,6 +39,12 @@ on:
       to_date:
         description: "End date yyyy-MM-dd (empty = yesterday), for month-by-month validation"
         default: ""
+      optimize:
+        description: "0=off, 1=slow complete, 2=fast genetic"
+        default: "0"
+      opt_criterion:
+        description: "MT5 OptimizationCriterion (12=custom max)"
+        default: "12"
   push:
     branches:
       - main
@@ -307,6 +313,8 @@ jobs:
           MODEL: ${{ inputs.model || '4' }}
           EXECMODE: ${{ inputs.execution_mode || '50' }}
           TO_DATE: ${{ inputs.to_date }}
+          OPT: ${{ inputs.optimize || '0' }}
+          OPTCRIT: ${{ inputs.opt_criterion || '12' }}
         run: |
           if ($env:TO_DATE -ne '') {
             $to = [datetime]::ParseExact($env:TO_DATE, 'yyyy-MM-dd', $null)
@@ -328,7 +336,7 @@ jobs:
             'Period=M1',
             "Model=$env:MODEL",
             "ExecutionMode=$env:EXECMODE",
-            'Optimization=0',
+            "Optimization=$env:OPT",
             'ForwardMode=0',
             "Deposit=${{ github.event.inputs.deposit || '10' }}",
             'Currency=USD',
@@ -340,6 +348,7 @@ jobs:
             'Visual=0',
             'ShutdownTerminal=1'
           )
+          if ($env:OPT -ne '0') { $lines += "OptimizationCriterion=$env:OPTCRIT" }
           if ($env:SPREAD_PTS -ne '') { $lines += "Spread=$env:SPREAD_PTS" }
           if ($env:INPUT_RISK -ne '' -or $env:INPUT_POS -ne '' -or $env:INPUT_EXTRA -ne '') {
             $lines += '[TesterInputs]'
@@ -436,6 +445,9 @@ jobs:
               Get-ChildItem -Path $dir -Filter '*.csv' -Recurse -ErrorAction SilentlyContinue |
                 ForEach-Object { Copy-Item $_.FullName (Join-Path $out $_.Name) -Force }
             }
+          }
+          foreach ($x in @(Get-ChildItem -Path $env:MT5_DIR -Include '*.xml','*.opt' -Recurse -ErrorAction SilentlyContinue)) {
+            Copy-Item $x.FullName (Join-Path $out $x.Name) -Force
           }
           $scan = Join-Path $env:RUNNER_TEMP 'symbols.csv'
           if (Test-Path $scan) { Copy-Item $scan (Join-Path $out 'symbols.csv') -Force }
