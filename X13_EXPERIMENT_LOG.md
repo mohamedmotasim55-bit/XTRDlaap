@@ -352,3 +352,107 @@ H1/H4 breakout and pullback with ATR stops: +53.8% on $1,000 in October 2026,
 PF 5.73, 6% drawdown, and positive in both halves of a 23-month screen.
 That engine exists in `X13_GLOBAL_TREND.mq5`. It is excluded by the current
 brief, which forbids trend engines as the core.
+
+---
+
+# Phase 5 — Raw tick research
+
+## Data
+
+`X13_EXPORT_TICKS.mq5` dumps the raw feed. Sample: **4,378,000 ticks over 10
+days**, real ticks, same account.
+
+| Field | Usable? |
+|---|---|
+| bid / ask | yes, both move on 79% of ticks |
+| tick volume | yes |
+| flags | yes |
+| **last traded price** | **NO — 0 for 100% of ticks** |
+
+The absence of a last price removes every classic microstructure feature:
+trade-at-ask ratio, Lee-Ready classification, order-flow imbalance. This is a
+feed limitation of the broker's XAUUSD.m, not a code issue.
+
+## Opportunity analysis
+
+| Horizon | mean abs move | P(abs move > 26 pt spread) |
+|---|---|---|
+| 1 s | 15.5 | 17.8% |
+| 5 s | 37.1 | 47.6% |
+| 10 s | 53.2 | 61.0% |
+| 30 s | 93.4 | 77.0% |
+| 60 s | 132.0 | 83.7% |
+| 300 s | 295.2 | 92.8% |
+| 900 s | 524.7 | 96.3% |
+
+Opportunities are abundant: at 5 minutes, 92.8% of moments produce a move
+larger than the spread. The cost is not the binding constraint at these
+horizons. **Direction is.**
+
+## Required directional accuracy
+
+For a symmetric trade, break-even needs
+`P(win) > 0.5 + cost / (2 x move)`:
+
+| Horizon | Required P(win) | Measured P(up) |
+|---|---|---|
+| 60 s | 59.9% | 48.1% |
+| 300 s | 54.4% | 45.4% |
+| 900 s | 52.5% | 43.2% |
+
+## Features tested (all past-only, all on bid/ask/timing)
+
+| Feature | Windows | Result |
+|---|---|---|
+| short-term return | 1 s, 5 s, 30 s, 60 s, 300 s | no edge |
+| uptick ratio | 5 s, 30 s | no edge |
+| tick arrival rate | 5 s | no edge |
+| acceleration | 1 s vs 2 s | no edge |
+| spread state | rolling median | no edge |
+
+Every cell was re-tested as a **non-overlapping event stream** because decile
+analysis on overlapping ticks inflates significance. The decile study showed
+several cells at +30 to +50 points; the event stream reduced all of them to
+zero or negative. Example: `ticks5s LOW` showed +51.4 points in the decile
+view and turned negative once overlaps were removed.
+
+## Mean reversion vs momentum, hold 900 s
+
+| Signal | n | net per trade | t |
+|---|---|---|---|
+| fade 30 s move >= 40 | 735 | −14.1 | −0.6 |
+| fade 60 s move >= 80 | 729 | −35.1 | −1.5 |
+| follow 300 s move >= 150 | 718 | −3.4 | −0.1 |
+| uptick >= 0.4 | 720 | +10.7 | +0.4 |
+
+Walk-forward on the best candidate split −12.6 (first 5 days) and −14.9
+(last 5 days): consistent, consistently negative.
+
+## A false positive I caught
+
+An `imbalance` feature defined as `(last - mid) / spread` produced an
+apparent edge of +156 points at t = +42.9. It was an artefact: `last` is
+zero, so the feature was `-mid / spread`, i.e. a disguised price-level
+variable. Discarded.
+
+## Status: BLOCKED
+
+The blocker is directional predictability, not cost. At the horizons where
+scalping lives (5-300 s), the market produces moves 5 to 11 times the spread,
+but no feature built from the available feed moves the win probability more
+than one or two points away from 50%. The requirement is 52.5% to 59.9%.
+
+Tested and failed: 7 M1 families (322k trades), M5/M15 breakout with fixed
+stops, 5 live months of the burst scalper, 2 targeted repairs (context,
+session), 4.4M ticks across 6 features, 9 horizons, mean reversion and
+momentum, with non-overlapping execution and walk-forward splits.
+
+## What is unavailable on this account
+
+- Last traded price (removes order-flow features)
+- Market depth / order book (removes liquidity imbalance)
+- Cross-asset data such as DXY or US10Y inside the terminal
+- Sub-100 ms latency for any news reaction
+
+Any of these could contain the missing edge. None of them exist in this
+environment.
