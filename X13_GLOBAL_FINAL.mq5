@@ -469,13 +469,13 @@ double OnTester()
       ulong t = HistoryDealGetTicket(i);
       if(t == 0) continue;
       if(!HistoryDealSelect(t)) continue;
-      if(HistoryDealGetString(DEAL_SYMBOL) != _Symbol) continue;
-      int mg = (int)HistoryDealGetInteger(DEAL_MAGIC);
+      if(HistoryDealGetString(t, DEAL_SYMBOL) != _Symbol) continue;
+      int mg = (int)HistoryDealGetInteger(t, DEAL_MAGIC);
       int e = mg - (int)InpMagicBase;
       if(e < 1 || e > 5) continue;
-      engPnL[e] += HistoryDealGetDouble(DEAL_PROFIT)
-                 + HistoryDealGetDouble(DEAL_SWAP)
-                 + HistoryDealGetDouble(DEAL_COMMISSION);
+      engPnL[e] += HistoryDealGetDouble(t, DEAL_PROFIT)
+                 + HistoryDealGetDouble(t, DEAL_SWAP)
+                 + HistoryDealGetDouble(t, DEAL_COMMISSION);
      }
 
    string f = "X13_Native_" + _Symbol + ".csv";
