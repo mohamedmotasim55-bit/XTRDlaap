@@ -222,7 +222,8 @@ void Submit(int dir, int eng, double strength)
    if(InpInvertSignals) dir = -dir;
    if(InpIndependent)
      {
-      if(TryEnter(dir, eng, strength)) g_sig[eng]++;
+      g_sig[eng]++;
+      TryEnter(dir, eng, strength);
       return;
      }
    if(dir > 0) { g_buyScore += strength; g_voteBuy[eng]++; }
@@ -459,6 +460,22 @@ double OnTester()
 
    WriteFunnel();
 
+   double dealSum = 0.0;
+   int dealCount = 0;
+   for(int i = 0; i < total; i++)
+     {
+      ulong tt = HistoryDealGetTicket(i);
+      if(tt == 0) continue;
+      if(!HistoryDealSelect(tt)) continue;
+      if(HistoryDealGetInteger(tt, DEAL_ENTRY) != DEAL_ENTRY_OUT) continue;
+      if(HistoryDealGetString(tt, DEAL_SYMBOL) != _Symbol) continue;
+      dealSum += HistoryDealGetDouble(tt, DEAL_PROFIT)
+               + HistoryDealGetDouble(tt, DEAL_SWAP)
+               + HistoryDealGetDouble(tt, DEAL_COMMISSION);
+      dealCount++;
+     }
+   double statProfit = TesterStatistics(STAT_PROFIT);
+
    string f = "X13_Native_" + _Symbol + ".csv";
    int h = FileOpen(f, FILE_WRITE | FILE_CSV | FILE_ANSI, ',');
    if(h == INVALID_HANDLE) return 0.0;
@@ -482,6 +499,10 @@ double OnTester()
    FileWrite(h, "final_balance",    DoubleToString(TesterStatistics(STAT_INITIAL_DEPOSIT) +
                                                    TesterStatistics(STAT_PROFIT), 2));
    FileWrite(h, "spread_median_pts", DoubleToString(g_spMedian, 2));
+   FileWrite(h, "audit_deal_sum",    DoubleToString(dealSum, 2));
+   FileWrite(h, "audit_deal_count",  IntegerToString(dealCount));
+   FileWrite(h, "audit_stat_profit", DoubleToString(statProfit, 2));
+   FileWrite(h, "audit_mismatch",    DoubleToString(dealSum - statProfit, 4));
 
    for(int e = 1; e <= 5; e++)
      {
