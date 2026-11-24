@@ -414,12 +414,22 @@ jobs:
         run: |
           $out = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
           New-Item -ItemType Directory -Force -Path $out | Out-Null
-          $report = "$env:REPORT_BASE.htm"
-          if (Test-Path $report) {
-            Copy-Item $report (Join-Path $out 'backtest_report.htm') -Force
-            Write-Host 'Report collected.'
+          $found = @()
+          foreach ($cand in @("$env:REPORT_BASE.htm", "$env:REPORT_BASE.html")) {
+            if (Test-Path $cand) { $found += (Get-Item $cand) }
+          }
+          if ($found.Count -eq 0) {
+            $found = @(Get-ChildItem -Path $env:MT5_DIR -Include '*.htm','*.html' -Recurse -ErrorAction SilentlyContinue |
+                       Sort-Object LastWriteTime -Descending)
+          }
+          if ($found.Count -gt 0) {
+            Copy-Item $found[0].FullName (Join-Path $out 'backtest_report.htm') -Force
+            Write-Host "Report collected: $($found[0].FullName) ($($found[0].Length) bytes)"
           } else {
-            Write-Warning "Report not found at $report"
+            Write-Warning "No HTML report anywhere under $env:MT5_DIR"
+            Get-ChildItem -Path $env:MT5_DIR -Recurse -ErrorAction SilentlyContinue |
+              Where-Object { $_.Extension -in '.htm','.html','.xml' } |
+              Select-Object FullName, Length | Format-Table -AutoSize | Out-String | Write-Host
           }
           foreach ($dir in @((Join-Path $env:MT5_DIR 'Common\Files'), (Join-Path $env:MT5_DIR 'MQL5\Files'), (Join-Path $env:MT5_DIR 'Tester'), (Join-Path $env:APPDATA 'MetaQuotes\Terminal\Common\Files'))) {
             if (Test-Path $dir) {
