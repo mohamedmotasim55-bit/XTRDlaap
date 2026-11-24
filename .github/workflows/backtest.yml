@@ -19,8 +19,8 @@ on:
         description: "Override the auto-detected gold symbol (empty = auto-detect)"
         default: ""
       ea:
-        description: "Expert file base name to test (no extension)"
-        default: "XTRD_OMIGA_Enabled_GoldSymbol"
+        description: "Expert file base name to test (no extension). Required."
+        default: ""
       deposit:
         description: "Starting deposit in USD"
         default: "10"
@@ -63,7 +63,7 @@ concurrency:
 
 env:
   INSTALLER_URL: https://download.mql5.com/cdn/web/just.global.markets/mt5/justmarkets5setup.exe
-  EA_NAME: ${{ github.event.inputs.ea || 'XTRD_OMIGA_Enabled_GoldSymbol' }}
+  EA_NAME: ${{ github.event.inputs.ea }}
   INPUT_RISK: ${{ github.event.inputs.risk_pct }}
   INPUT_POS: ${{ github.event.inputs.max_positions }}
   INPUT_EXTRA: ${{ github.event.inputs.extra_inputs }}
@@ -77,6 +77,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate EA file
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:EA_NAME)) {
+            Write-Error "No EA given. Run with -f ea=<FileName> (file must exist at repository root as <FileName>.mq5)."
+            exit 1
+          }
+          $f = Join-Path $env:GITHUB_WORKSPACE "$env:EA_NAME.mq5"
+          if (-not (Test-Path $f)) {
+            Write-Error "EA file not found: $f. Add it at the repository root."
+            exit 1
+          }
+          Write-Host "EA validated: $env:EA_NAME.mq5"
 
       - name: Validate required secrets
         shell: pwsh
