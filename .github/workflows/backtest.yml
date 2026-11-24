@@ -370,10 +370,10 @@ jobs:
             'Leverage=1:3000',
             "FromDate=$($from.ToString('yyyy.MM.dd'))",
             "ToDate=$($to.ToString('yyyy.MM.dd'))",
-            "Report=$report",
+            "Report=$report.htm",
             'ReplaceReport=1',
             'Visual=0',
-            'ShutdownTerminal=1'
+            'ShutdownTerminal=0'
           )
           if ($env:OPT -ne '0') { $lines += "OptimizationCriterion=$env:OPTCRIT" }
           if ($env:SPREAD_PTS -ne '') { $lines += "Spread=$env:SPREAD_PTS" }
@@ -408,6 +408,12 @@ jobs:
             Write-Host ("[{0:HH:mm:ss}] terminal alive, cpu={1}s" -f (Get-Date), $cpu)
             if ($cpu -eq $lastCpu) { $stall++ } else { $stall = 0; $lastCpu = $cpu }
             if ($stall -ge 9) { Write-Warning 'CPU idle for 3 minutes; treating as hung.'; break }
+            # MT5 writes the report after the agent finishes; stop once it is
+            # on disk and stable, instead of waiting for the terminal to exit.
+            if (Test-Path "$env:REPORT_BASE.htm") {
+              $age = (Get-Date) - (Get-Item "$env:REPORT_BASE.htm").LastWriteTime
+              if ($age.TotalSeconds -ge 10) { Write-Host 'report.htm written; stopping terminal.'; break }
+            }
           }
           if (-not $p.HasExited) {
             Write-Warning 'Tester exceeded the time budget; stopping terminal.'
