@@ -1,26 +1,26 @@
 //+------------------------------------------------------------------+
 //| XTRD OMIGA - GOLD HUNTER v1.23                                   |
-//| v1.23: monotonic equity high-water mark + recovery-gated re-arm |
-//| Tick-driven Dual Stop High-Quality Continuation Expert Advisor     |
+//| v1.23: balance-scaled position capacity + gradual lot scaling capped at 0.05 |
+//| Tick-driven Dual Stop High-Quality Continuation Expert Advisor with balance-scaled exposure     |
 //| Independent rebuild based on v1.02 source review.                 |
 //| IMPORTANT: Live execution selectable; defaults are Strategy Tester oriented. Compile and test in MT5 first. |
 //+------------------------------------------------------------------+
 #property strict
 #property version   "1.23"
-#property description "Adaptive tick-and-candle hunter: micro/impulse/expansion entries, dual stops, OCO, spread-aware cash-capped SL, open-ended trailing."
+#property description "Adaptive tick-and-candle gold hunter with balance-scaled positions and gradual 0.05 max lot scaling."
 
 //------------------------------- INPUTS -----------------------------
 input group "01. General / Safety"
 input string InpTradeSymbol                 = "";          // Empty = chart symbol
 input ulong  InpMagicNumber                 = 26112410;
 input bool   InpResearchMode                = false;        // true = no trade requests are sent
-input bool   InpEnableTrading                = true;      // Strategy Tester auto-trades; explicitly enable for demo/live
+input bool   InpEnableTrading                = false;      // Strategy Tester auto-trades; explicitly enable for demo/live
 input bool   InpSignalOnlyMode               = false;        // true = signals/logging only
 input bool   InpRequireHedgingAccount        = true;        // Required for independent stacked positions
 input int    InpDeviationPoints              = 30;
-input int    InpAbsoluteMaxPositions         = 16;          // Hard maximum, not the starting target
-input int    InpStartingMaxPositions         = 2;           // Starts with capacity for two open positions
-input double InpBalanceStepForExtraPosition  = 5.0;         // Each +$5 balance adds one position slot, up to absolute max
+input int    InpAbsoluteMaxPositions         = 5;           // Hard cap: never more than five simultaneous positions
+input int    InpStartingMaxPositions         = 1;           // At the $10 reference balance, allow one open position
+input double InpBalanceStepForExtraPosition  = 10.0;        // Each +$10 realized balance adds one slot, up to five
 input int    InpMaxPendingOrders             = 2;           // Initial dual-stop bracket
 input double InpFreeMarginReservePercent     = 10.0;        // Broker/account margin reserve only
 input int    InpExecutionPauseSeconds        = 10;
@@ -29,9 +29,9 @@ input int    InpPauseAfterMarketClosedSeconds = 300;
 
 input group "02. Volume Scaling"
 input double InpInitialLot                  = 0.01;
-input double InpMaximumLotPerPosition       = 0.01;
+input double InpMaximumLotPerPosition       = 0.05;        // Hard per-position lot ceiling
 input double InpLotIncrement                = 0.01;
-input double InpBalanceStepForLotIncrease   = 0.0;        // Disabled in v1.22 baseline; keep 0.01 lot for clean comparison        // Each realized balance step adds one lot increment
+input double InpBalanceStepForLotIncrease   = 20.0;        // Each +$20 balance adds one 0.01 lot increment, capped at 0.05
 input double InpReferenceBalance            = 10.0;        // Balance at which initial lot/position capacity applies
 
 input group "03. Tick Signal Engine"
@@ -90,8 +90,8 @@ input int    InpTrailModifyCooldownSeconds  = 1;
 input bool   InpEnableMomentumExit           = false;       // Disabled: no fixed profit target; trailing manages exits
 input double InpMomentumExitMinimumProfit   = 0.05;
 input double InpEstimatedRoundTurnFeePerLot= 0.0;
-input double InpMaxEquityDrawdownPercent    = 30.0;        // Soft peak-to-trough trigger; pauses entries until recovery condition is met
-input int    InpEquityGuardCooldownMinutes  = 10;          // Minimum wait before recovery can re-arm entries
+input double InpMaxEquityDrawdownPercent    = 30.0;        // Soft peak-to-trough trigger; pauses NEW entries temporarily
+input int    InpEquityGuardCooldownMinutes  = 10;          // Re-arm after this cooldown if hard equity floor is not breached
 input double InpHardEquityLossPercent       = 50.0;        // Permanent entry halt if equity falls this far below initial equity; 0 disables
 
 input group "07. Research / Diagnostics"
@@ -163,53 +163,6 @@ int      g_m1_bias = 0;
 int      g_m5_bias = 0;
 bool     g_signal_up = false;
 bool     g_signal_down = false;
-string   g_equity_state_key = "";
-
-// Persist the account high-water mark outside the Strategy Tester.
-// Tester runs intentionally start from their own initial equity to keep
-// separate optimization/backtest passes independent.
-string EquityStateKey()
-{
-   string sym = g_symbol;
-   StringReplace(sym, ".", "_");
-   StringReplace(sym, "#", "_");
-   return StringFormat("XTRD123_%I64d_%I64u_%s",
-                       AccountInfoInteger(ACCOUNT_LOGIN), InpMagicNumber, sym);
-}
-
-void SaveEquityGuardState()
-{
-   if((bool)MQLInfoInteger(MQL_TESTER) || g_equity_state_key == "")
-      return;
-   GlobalVariableSet(g_equity_state_key + "_I", g_initial_equity);
-   GlobalVariableSet(g_equity_state_key + "_P", g_peak_equity);
-   GlobalVariableSet(g_equity_state_key + "_H", g_hard_entry_halt ? 1.0 : 0.0);
-   GlobalVariableSet(g_equity_state_key + "_S", g_entry_halt ? 1.0 : 0.0);
-   GlobalVariableSet(g_equity_state_key + "_U", (double)g_entry_halt_until);
-}
-
-void LoadEquityGuardState()
-{
-   if((bool)MQLInfoInteger(MQL_TESTER) || g_equity_state_key == "")
-      return;
-   if(GlobalVariableCheck(g_equity_state_key + "_I") &&
-      GlobalVariableCheck(g_equity_state_key + "_P"))
-   {
-      double saved_initial = GlobalVariableGet(g_equity_state_key + "_I");
-      double saved_peak = GlobalVariableGet(g_equity_state_key + "_P");
-      if(saved_initial > 0.0 && saved_peak >= saved_initial)
-      {
-         g_initial_equity = saved_initial;
-         g_peak_equity = saved_peak;
-      }
-   }
-   if(GlobalVariableCheck(g_equity_state_key + "_H"))
-      g_hard_entry_halt = (GlobalVariableGet(g_equity_state_key + "_H") > 0.5);
-   if(GlobalVariableCheck(g_equity_state_key + "_S"))
-      g_entry_halt = (GlobalVariableGet(g_equity_state_key + "_S") > 0.5);
-   if(GlobalVariableCheck(g_equity_state_key + "_U"))
-      g_entry_halt_until = (datetime)GlobalVariableGet(g_equity_state_key + "_U");
-}
 
 //------------------------------- UTILITIES --------------------------
 void Log(const string message)
@@ -1428,11 +1381,11 @@ void EnsureEntryStructure()
    if(positions == 0)
    {
       if(buy_sl_distance > 0.0)
-         MaintainOrPlacePending(ORDER_TYPE_BUY_STOP, buy_price, lot, buy_sl_distance, 0.0, "GH122_BRACKET_BUY");
+         MaintainOrPlacePending(ORDER_TYPE_BUY_STOP, buy_price, lot, buy_sl_distance, 0.0, "GH123_BRACKET_BUY");
       else
          CancelPendingType(ORDER_TYPE_BUY_STOP);
       if(sell_sl_distance > 0.0)
-         MaintainOrPlacePending(ORDER_TYPE_SELL_STOP, sell_price, lot, sell_sl_distance, 0.0, "GH122_BRACKET_SELL");
+         MaintainOrPlacePending(ORDER_TYPE_SELL_STOP, sell_price, lot, sell_sl_distance, 0.0, "GH123_BRACKET_SELL");
       else
          CancelPendingType(ORDER_TYPE_SELL_STOP);
       return;
@@ -1444,7 +1397,7 @@ void EnsureEntryStructure()
       ulong opposite; double op, osl, otp; datetime ost;
       if(FindPending(ORDER_TYPE_SELL_STOP, opposite, op, osl, otp, ost)) DeletePending(opposite);
       if(buy_sl_distance > 0.0)
-         MaintainOrPlacePending(ORDER_TYPE_BUY_STOP, buy_price, lot, buy_sl_distance, 0.0, "GH122_ADD_BUY");
+         MaintainOrPlacePending(ORDER_TYPE_BUY_STOP, buy_price, lot, buy_sl_distance, 0.0, "GH123_ADD_BUY");
       else
          CancelPendingType(ORDER_TYPE_BUY_STOP);
    }
@@ -1453,7 +1406,7 @@ void EnsureEntryStructure()
       ulong opposite; double op, osl, otp; datetime ost;
       if(FindPending(ORDER_TYPE_BUY_STOP, opposite, op, osl, otp, ost)) DeletePending(opposite);
       if(sell_sl_distance > 0.0)
-         MaintainOrPlacePending(ORDER_TYPE_SELL_STOP, sell_price, lot, sell_sl_distance, 0.0, "GH122_ADD_SELL");
+         MaintainOrPlacePending(ORDER_TYPE_SELL_STOP, sell_price, lot, sell_sl_distance, 0.0, "GH123_ADD_SELL");
       else
          CancelPendingType(ORDER_TYPE_SELL_STOP);
    }
@@ -1534,7 +1487,7 @@ void ManageMomentumExit()
       double estimated_round_turn_fee = MathMax(0.0, InpEstimatedRoundTurnFeePerLot) * volume;
       bool reversal = (type == POSITION_TYPE_BUY ? g_signal_down : g_signal_up);
       if(reversal && floating - estimated_round_turn_fee >= InpMomentumExitMinimumProfit)
-         ClosePositionTicket(ticket, "GH122_MOMENTUM_PROFIT_EXIT");
+         ClosePositionTicket(ticket, "GH123_MOMENTUM_PROFIT_EXIT");
    }
 }
 
@@ -1715,12 +1668,6 @@ int OnInit()
    g_entry_halt_until = 0;
    g_entry_halt = false;
    g_hard_entry_halt = false;
-   g_equity_state_key = EquityStateKey();
-   LoadEquityGuardState();
-   // Never allow a persisted high-water mark to move below current equity.
-   if(AccountInfoDouble(ACCOUNT_EQUITY) > g_peak_equity)
-      g_peak_equity = AccountInfoDouble(ACCOUNT_EQUITY);
-   SaveEquityGuardState();
    OpenResearchLog();
    EventSetTimer(1);
 
@@ -1765,12 +1712,10 @@ void UpdateEquityDrawdownGuard()
    double equity = AccountInfoDouble(ACCOUNT_EQUITY);
    if(g_initial_equity <= 0.0)
       g_initial_equity = equity;
-
-   // Monotonic high-water mark: it can rise, but it is never reset downward.
    if(equity > g_peak_equity)
       g_peak_equity = equity;
 
-   // Permanent emergency floor remains anchored to the original baseline.
+   // Permanent emergency floor is measured from equity at EA initialization.
    if(!g_hard_entry_halt && InpHardEquityLossPercent > 0.0 && g_initial_equity > 0.0)
    {
       double hard_floor = g_initial_equity * (1.0 - InpHardEquityLossPercent / 100.0);
@@ -1779,76 +1724,50 @@ void UpdateEquityDrawdownGuard()
          g_hard_entry_halt = true;
          g_entry_halt = true;
          g_entry_halt_until = 0;
-         Log(StringFormat("EQUITY HARD GUARD: equity %.2f reached initial-equity floor %.2f (loss limit %.2f%%). Entries permanently halted; open positions remain managed.",
+         Log(StringFormat("EQUITY HARD GUARD: equity %.2f reached initial-equity floor %.2f (loss limit %.2f%%). Entries permanently halted until EA restart; open positions remain managed.",
                           equity, hard_floor, InpHardEquityLossPercent));
          CsvWrite("EQUITY_HARD_HALT", StringFormat("initial_equity=%.2f;equity=%.2f;hard_floor=%.2f;loss_limit_pct=%.2f",
                                                     g_initial_equity, equity, hard_floor, InpHardEquityLossPercent));
          CancelAllOurPendings();
-         SaveEquityGuardState();
          return;
       }
    }
 
    if(g_hard_entry_halt)
-   {
-      SaveEquityGuardState();
       return;
-   }
 
-   // Soft DD is always measured against the historical peak, never a local reset.
-   double drawdown = 0.0;
-   if(g_peak_equity > 0.0)
-      drawdown = (g_peak_equity - equity) / g_peak_equity * 100.0;
-
-   if(!g_entry_halt && InpMaxEquityDrawdownPercent > 0.0 &&
-      drawdown >= InpMaxEquityDrawdownPercent)
+   // A soft peak-to-trough breach pauses new entries, but does not kill the
+   // entire month-long test. Existing positions continue to be managed.
+   if(!g_entry_halt && InpMaxEquityDrawdownPercent > 0.0 && g_peak_equity > 0.0)
    {
-      g_entry_halt = true;
-      g_entry_halt_until = TimeCurrent() + InpEquityGuardCooldownMinutes * 60;
-      Log(StringFormat("EQUITY GUARD HALT: historical peak DD %.2f%% reached %.2f%%. Entries paused; cooldown is only a minimum wait, recovery is also required. Open positions remain managed.",
-                       drawdown, InpMaxEquityDrawdownPercent));
-      CsvWrite("EQUITY_GUARD_HALT", StringFormat("peak_equity=%.2f;equity=%.2f;drawdown_pct=%.2f;limit_pct=%.2f;cooldown_until=%s",
-                                                  g_peak_equity, equity, drawdown, InpMaxEquityDrawdownPercent,
-                                                  TimeToString(g_entry_halt_until, TIME_DATE|TIME_SECONDS)));
-      CancelAllOurPendings();
-      SaveEquityGuardState();
-      return;
-   }
-
-   // Re-arm only after BOTH the minimum cooldown and a 50% recovery of the
-   // allowed drawdown have occurred. Example: with a 30% guard, equity must
-   // recover to at least 85% of the immutable peak before new entries resume.
-   if(g_entry_halt &&
-      (g_entry_halt_until == 0 || TimeCurrent() >= g_entry_halt_until) &&
-      InpMaxEquityDrawdownPercent > 0.0)
-   {
-      double recovery_dd = InpMaxEquityDrawdownPercent * 0.5;
-      double recovery_floor = g_peak_equity * (1.0 - recovery_dd / 100.0);
-      if(equity >= recovery_floor)
+      double drawdown = (g_peak_equity - equity) / g_peak_equity * 100.0;
+      if(drawdown >= InpMaxEquityDrawdownPercent)
       {
-         g_entry_halt = false;
-         g_entry_halt_until = 0;
-         Log(StringFormat("EQUITY GUARD RE-ARMED after recovery: equity %.2f >= recovery threshold %.2f; historical peak remains %.2f.",
-                          equity, recovery_floor, g_peak_equity));
-         CsvWrite("EQUITY_GUARD_REARM", StringFormat("equity=%.2f;recovery_floor=%.2f;historical_peak=%.2f;initial_equity=%.2f",
-                                                      equity, recovery_floor, g_peak_equity, g_initial_equity));
-      }
-      else
-      {
-         // Remain halted until recovery; do not reset the historical peak.
-         // Clear the expired cooldown once, then keep checking recovery.
-         if(g_entry_halt_until > 0)
-         {
-            g_entry_halt_until = 0;
-            Log(StringFormat("EQUITY GUARD: cooldown elapsed, but equity %.2f is still below recovery threshold %.2f. Entries remain halted.",
-                             equity, recovery_floor));
-            CsvWrite("EQUITY_GUARD_RECOVERY_WAIT", StringFormat("equity=%.2f;recovery_floor=%.2f;historical_peak=%.2f",
-                                                                  equity, recovery_floor, g_peak_equity));
-         }
+         g_entry_halt = true;
+         g_entry_halt_until = TimeCurrent() + InpEquityGuardCooldownMinutes * 60;
+         Log(StringFormat("EQUITY GUARD COOLDOWN: peak-to-trough DD %.2f%% reached %.2f%%. New entries paused for %d minutes; open positions remain managed.",
+                          drawdown, InpMaxEquityDrawdownPercent, InpEquityGuardCooldownMinutes));
+         CsvWrite("EQUITY_GUARD_COOLDOWN", StringFormat("peak_equity=%.2f;equity=%.2f;drawdown_pct=%.2f;limit_pct=%.2f;resume_after=%s",
+                                                         g_peak_equity, equity, drawdown, InpMaxEquityDrawdownPercent,
+                                                         TimeToString(g_entry_halt_until, TIME_DATE|TIME_SECONDS)));
+         CancelAllOurPendings();
+         return;
       }
    }
 
-   SaveEquityGuardState();
+   // Re-arm after cooldown by starting a fresh local peak reference at current
+   // equity. A separate hard floor, anchored to initial equity, prevents
+   // repeated cooldowns from allowing an unlimited account drawdown.
+   if(g_entry_halt && g_entry_halt_until > 0 && TimeCurrent() >= g_entry_halt_until)
+   {
+      g_peak_equity = equity;
+      g_entry_halt = false;
+      g_entry_halt_until = 0;
+      Log(StringFormat("EQUITY GUARD RE-ARMED after cooldown. New local peak reference=%.2f; hard equity floor remains anchored to initial equity %.2f.",
+                       g_peak_equity, g_initial_equity));
+      CsvWrite("EQUITY_GUARD_REARM", StringFormat("equity=%.2f;initial_equity=%.2f;cooldown_minutes=%d",
+                                                   equity, g_initial_equity, InpEquityGuardCooldownMinutes));
+   }
 }
 
 void OnTick()
