@@ -1,26 +1,26 @@
 //+------------------------------------------------------------------+
 //| XTRD OMIGA - GOLD HUNTER v1.24                                   |
-//| v1.24: broader tick opportunity engine + lighter entry throttles |
-//| Responsive tick-driven Dual Stop Gold Hunter Expert Advisor     |
+//| v1.24: signal-directed entries, real RR take-profit, profit-preserving trailing, and execution-management fixes |
+//| Tick-driven Dual Stop High-Quality Continuation Expert Advisor with balance-scaled exposure     |
 //| Independent rebuild based on v1.02 source review.                 |
 //| IMPORTANT: Live execution selectable; defaults are Strategy Tester oriented. Compile and test in MT5 first. |
 //+------------------------------------------------------------------+
 #property strict
 #property version   "1.24"
-#property description "Responsive tick-and-candle hunter: micro/impulse/expansion entries, dual stops, OCO, cash-capped SL, adaptive trailing."
+#property description "Adaptive tick-and-candle gold hunter with directional pending entries, risk-multiple TP, trailing and balance-scaled exposure."
 
 //------------------------------- INPUTS -----------------------------
 input group "01. General / Safety"
 input string InpTradeSymbol                 = "";          // Empty = chart symbol
 input ulong  InpMagicNumber                 = 26112410;
 input bool   InpResearchMode                = false;        // true = no trade requests are sent
-input bool   InpEnableTrading                = true;      // Strategy Tester auto-trades; explicitly enable for demo/live
+input bool   InpEnableTrading                = false;      // Strategy Tester auto-trades; explicitly enable for demo/live
 input bool   InpSignalOnlyMode               = false;        // true = signals/logging only
 input bool   InpRequireHedgingAccount        = true;        // Required for independent stacked positions
 input int    InpDeviationPoints              = 30;
-input int    InpAbsoluteMaxPositions         = 16;          // Hard maximum, not the starting target
-input int    InpStartingMaxPositions         = 2;           // Starts with capacity for two open positions
-input double InpBalanceStepForExtraPosition  = 5.0;         // Each +$5 balance adds one position slot, up to absolute max
+input int    InpAbsoluteMaxPositions         = 5;           // Hard cap: never more than five simultaneous positions
+input int    InpStartingMaxPositions         = 1;           // At the $10 reference balance, allow one open position
+input double InpBalanceStepForExtraPosition  = 10.0;        // Each +$10 realized balance adds one slot, up to five
 input int    InpMaxPendingOrders             = 2;           // Initial dual-stop bracket
 input double InpFreeMarginReservePercent     = 10.0;        // Broker/account margin reserve only
 input int    InpExecutionPauseSeconds        = 10;
@@ -29,23 +29,23 @@ input int    InpPauseAfterMarketClosedSeconds = 300;
 
 input group "02. Volume Scaling"
 input double InpInitialLot                  = 0.01;
-input double InpMaximumLotPerPosition       = 0.09;
+input double InpMaximumLotPerPosition       = 0.05;        // Hard per-position lot ceiling
 input double InpLotIncrement                = 0.01;
-input double InpBalanceStepForLotIncrease   = 10.0;       // Gradual +0.01 lot per each +$10 balance, still subject to cash-risk sizing
+input double InpBalanceStepForLotIncrease   = 20.0;        // Each +$20 balance adds one 0.01 lot increment, capped at 0.05
 input double InpReferenceBalance            = 10.0;        // Balance at which initial lot/position capacity applies
 
 input group "03. Tick Signal Engine"
 input bool   InpEnableMovementScanner       = true;
 input bool   InpEnableMicroHunter           = true;
 input bool   InpEnableMomentumEngine        = true;
-input int    InpFastTickWindow              = 4;
-input int    InpSlowTickWindow              = 12;          // Shorter baseline for earlier response to gold impulses
-input int    InpMinimumTicksForSignal       = 17;          // Fast + slow + one tick
-input double InpMinimumDirectionalRatio     = 0.50;
-input double InpMinimumFastMovePoints       = 0.8;
-input double InpMinimumFastSpeedPointsSec   = 0.12;
-input double InpMinimumSignalScore          = 36.0;        // More responsive; tick movement remains the primary evidence
-input double InpMinimumEfficiency           = 0.03;        // Soft quality input, not a stand-alone hard gate
+input int    InpFastTickWindow              = 6;
+input int    InpSlowTickWindow              = 24;          // Non-overlapping baseline window after fast window
+input int    InpMinimumTicksForSignal       = 31;          // At least fast + slow + 1
+input double InpMinimumDirectionalRatio     = 0.54;
+input double InpMinimumFastMovePoints       = 1.2;
+input double InpMinimumFastSpeedPointsSec   = 0.20;
+input double InpMinimumSignalScore          = 50.0;        // Flexible composite score; tick movement leads
+input double InpMinimumEfficiency           = 0.08;        // Soft quality input, not a stand-alone hard gate
 input bool   InpUseM1ContextAsScore         = true;        // Primary chart context; soft score only
 input int    InpM1FastEMA                   = 5;
 input int    InpM1SlowEMA                   = 13;
@@ -57,42 +57,43 @@ input int    InpM5SlowEMA                   = 50;
 
 input group "04. Spread Intelligence"
 input int    InpHardMaxSpreadPoints         = 120;         // Absolute ceiling; set 0 to disable only this ceiling
-input double InpSpreadSpikeMultiplier       = 3.5;         // Current spread must not spike above EMA * multiplier
-input double InpSpreadToATRMaximum          = 1.00;        // Spread / ATR ceiling; set 0 to disable
+input double InpSpreadSpikeMultiplier       = 2.5;         // Current spread must not spike above EMA * multiplier
+input double InpSpreadToATRMaximum          = 0.80;        // Spread / ATR ceiling; set 0 to disable
 input double InpSpreadEmaAlpha              = 0.08;
 input int    InpSpreadWarmupSamples         = 20;
 
 input group "05. Entry / Pending Orders"
-input bool   InpEnableDualStop              = true;
+input bool   InpEnableDualStop              = false;        // false = arm only the side confirmed by the live signal; true = legacy two-sided bracket
 input bool   InpEnableOCO                   = true;
 input bool   InpEnableStacking              = true;
 input bool   InpRequireContinuationSignal   = true;
-input int    InpRearmCooldownSeconds        = 2;
-input double InpMinimumAdvanceBetweenAddsATR= 0.05;        // Avoid duplicate stacking at nearly the same price
-input double InpMinimumEntryDistancePoints  = 5.0;
-input double InpEntryATRMultiplier          = 0.06;
+input int    InpRearmCooldownSeconds        = 4;
+input double InpMinimumAdvanceBetweenAddsATR= 0.10;        // Avoid duplicate stacking at nearly the same price
+input double InpMinimumEntryDistancePoints  = 10.0;
+input double InpEntryATRMultiplier          = 0.08;
 input double InpMaximumEntryDistancePoints  = 300.0;
-input double InpPendingRepricePoints        = 10.0;
-input int    InpMinimumSecondsBetweenReprice= 1;
-input int    InpPendingExpiryMinutes        = 3;           // 0 = use GTC if broker allows
-input bool   InpCancelPendingWhenSignalDies = false;       // Expiry remains the normal stale-order control
+input double InpPendingRepricePoints        = 20.0;
+input int    InpMinimumSecondsBetweenReprice= 3;
+input int    InpPendingExpiryMinutes        = 2;           // 0 = use GTC if broker allows
+input bool   InpCancelPendingWhenSignalDies = true;       // Expiry remains the normal stale-order control
 
 input group "06. Open-Ended Profit / Cash Risk Protection"
 input double InpMaxLossPerPositionUSD       = 0.50;        // Maximum modelled initial SL loss per position
+input double InpTakeProfitRiskReward         = 2.50;        // Fixed TP distance = initial SL distance x this R multiple; 0 disables TP
 input double InpInitialSLATRMultiplier      = 0.20;        // ATR component; spread/broker-safe minimum is also enforced
 input bool   InpEnableAdaptiveTrailing       = true;
-input double InpTrailActivationATR          = 0.10;        // Start trailing after a small favorable move
+input double InpTrailActivationATR          = 0.10;        // Additional ATR trigger; trailing also waits until trail distance is covered
 input double InpTrailDistanceATR            = 0.25;
 input double InpTrailDistanceSpreadMultiple = 1.6;
 input double InpTrailMinimumDistancePoints  = 20.0;
 input int    InpTrailMinimumStepPoints      = 4;
 input int    InpTrailModifyCooldownSeconds  = 1;
-input bool   InpEnableMomentumExit           = false;       // Disabled: no fixed profit target; trailing manages exits
+input bool   InpEnableMomentumExit           = false;       // Optional: close on opposite signal once the position has net positive floating profit
 input double InpMomentumExitMinimumProfit   = 0.05;
 input double InpEstimatedRoundTurnFeePerLot= 0.0;
-input double InpMaxEquityDrawdownPercent    = 0.0;         // Disabled by default: avoid soft-guard deadlock; hard initial-equity floor remains active
-input int    InpEquityGuardCooldownMinutes  = 10;          // Minimum wait before recovery can re-arm entries
-input double InpHardEquityLossPercent       = 50.0;        // Permanent entry halt if equity falls this far below initial equity; 0 disables
+input double InpMaxEquityDrawdownPercent    = 0.0;          // Disabled by default (0 = no peak-equity entry pause)
+input int    InpEquityGuardCooldownMinutes  = 10;          // Re-arm after this cooldown if hard equity floor is not breached
+input double InpHardEquityLossPercent       = 0.0;          // Disabled by default (0 = no permanent equity-floor entry halt)
 
 input group "07. Research / Diagnostics"
 input bool   InpWriteCSVLog                  = true;
@@ -163,59 +164,12 @@ int      g_m1_bias = 0;
 int      g_m5_bias = 0;
 bool     g_signal_up = false;
 bool     g_signal_down = false;
-string   g_equity_state_key = "";
-
-// Persist the account high-water mark outside the Strategy Tester.
-// Tester runs intentionally start from their own initial equity to keep
-// separate optimization/backtest passes independent.
-string EquityStateKey()
-{
-   string sym = g_symbol;
-   StringReplace(sym, ".", "_");
-   StringReplace(sym, "#", "_");
-   return StringFormat("XTRD124_%I64d_%I64u_%s",
-                       AccountInfoInteger(ACCOUNT_LOGIN), InpMagicNumber, sym);
-}
-
-void SaveEquityGuardState()
-{
-   if((bool)MQLInfoInteger(MQL_TESTER) || g_equity_state_key == "")
-      return;
-   GlobalVariableSet(g_equity_state_key + "_I", g_initial_equity);
-   GlobalVariableSet(g_equity_state_key + "_P", g_peak_equity);
-   GlobalVariableSet(g_equity_state_key + "_H", g_hard_entry_halt ? 1.0 : 0.0);
-   GlobalVariableSet(g_equity_state_key + "_S", g_entry_halt ? 1.0 : 0.0);
-   GlobalVariableSet(g_equity_state_key + "_U", (double)g_entry_halt_until);
-}
-
-void LoadEquityGuardState()
-{
-   if((bool)MQLInfoInteger(MQL_TESTER) || g_equity_state_key == "")
-      return;
-   if(GlobalVariableCheck(g_equity_state_key + "_I") &&
-      GlobalVariableCheck(g_equity_state_key + "_P"))
-   {
-      double saved_initial = GlobalVariableGet(g_equity_state_key + "_I");
-      double saved_peak = GlobalVariableGet(g_equity_state_key + "_P");
-      if(saved_initial > 0.0 && saved_peak >= saved_initial)
-      {
-         g_initial_equity = saved_initial;
-         g_peak_equity = saved_peak;
-      }
-   }
-   if(GlobalVariableCheck(g_equity_state_key + "_H"))
-      g_hard_entry_halt = (GlobalVariableGet(g_equity_state_key + "_H") > 0.5);
-   if(GlobalVariableCheck(g_equity_state_key + "_S"))
-      g_entry_halt = (GlobalVariableGet(g_equity_state_key + "_S") > 0.5);
-   if(GlobalVariableCheck(g_equity_state_key + "_U"))
-      g_entry_halt_until = (datetime)GlobalVariableGet(g_equity_state_key + "_U");
-}
 
 //------------------------------- UTILITIES --------------------------
 void Log(const string message)
 {
    if(InpVerboseJournal)
-      Print("[XTRD_GH123] ", message);
+      Print("[XTRD_GH124] ", message);
 }
 
 double PointSize()
@@ -327,10 +281,17 @@ void CsvWrite(const string event_name, const string details)
 
 void SetExecutionPause(const uint retcode)
 {
-   int seconds = InpExecutionPauseSeconds;
    if(retcode == TRADE_RETCODE_MARKET_CLOSED)
-      seconds = InpPauseAfterMarketClosedSeconds;
-   else if(retcode == TRADE_RETCODE_NO_MONEY)
+   {
+      int closed_pause = MathMax(30, InpPauseAfterMarketClosedSeconds);
+      g_pause_until = TimeCurrent() + closed_pause;
+      Log(StringFormat("MARKET CLOSED: entry requests paused for %d seconds; this is a session condition, not an execution-error streak.", closed_pause));
+      CsvWrite("MARKET_CLOSED_PAUSE", StringFormat("retcode=%u;seconds=%d", retcode, closed_pause));
+      return;
+   }
+
+   int seconds = InpExecutionPauseSeconds;
+   if(retcode == TRADE_RETCODE_NO_MONEY)
       seconds = InpPauseAfterNoMoneySeconds;
    else if(retcode == TRADE_RETCODE_INVALID_STOPS || retcode == TRADE_RETCODE_INVALID_PRICE)
       seconds = MathMax(seconds, 30);
@@ -418,7 +379,7 @@ void OpenResearchLog()
    string safe_symbol = g_symbol;
    StringReplace(safe_symbol, ".", "_");
    StringReplace(safe_symbol, "/", "_");
-   string file_name = StringFormat("XTRD_GH123_%s_%I64u.csv", safe_symbol, InpMagicNumber);
+   string file_name = StringFormat("XTRD_GH124_%s_%I64u.csv", safe_symbol, InpMagicNumber);
    g_csv_handle = FileOpen(file_name, FILE_READ|FILE_WRITE|FILE_CSV|FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_ANSI, ',');
    if(g_csv_handle == INVALID_HANDLE)
    {
@@ -613,9 +574,9 @@ void CalculateSignalMetrics()
                        (g_m1_candle_strength >= 0.58 && abs_move >= 0.30));
    bool enough_speed = (g_fast_speed >= InpMinimumFastSpeedPointsSec * 0.45 ||
                         abs_move >= MathMax(3.0, (g_atr / point) * 0.08));
-   bool enough_direction = (g_directional_ratio >= MathMax(0.50, InpMinimumDirectionalRatio - 0.06) ||
-                            (fast_delta > 0.0 && candle_support_up) ||
-                            (fast_delta < 0.0 && candle_support_down));
+   bool enough_direction = (g_directional_ratio >= MathMax(0.52, InpMinimumDirectionalRatio - 0.02) ||
+                            (g_directional_ratio >= 0.52 && fast_delta > 0.0 && candle_support_up) ||
+                            (g_directional_ratio >= 0.52 && fast_delta < 0.0 && candle_support_down));
    bool enough_efficiency = (g_efficiency >= MathMax(0.025, InpMinimumEfficiency * 0.50) ||
                              g_m1_candle_strength >= 0.65 || g_m5_candle_strength >= 0.70);
    bool common_quality = (enough_activity && enough_move && enough_speed &&
@@ -629,10 +590,10 @@ void CalculateSignalMetrics()
       bool micro_down = (InpEnableMicroHunter && fast_delta < 0.0 && g_score_down >= InpMinimumSignalScore);
       bool impulse_up = (InpEnableMomentumEngine && fast_delta > 0.0 &&
                          (g_acceleration_ratio >= 0.90 || expansion_move) &&
-                         (g_score_up >= InpMinimumSignalScore - 5.0 || expansion_move));
+                         (g_score_up >= InpMinimumSignalScore - 3.0));
       bool impulse_down = (InpEnableMomentumEngine && fast_delta < 0.0 &&
                            (g_acceleration_ratio >= 0.90 || expansion_move) &&
-                           (g_score_down >= InpMinimumSignalScore - 5.0 || expansion_move));
+                           (g_score_down >= InpMinimumSignalScore - 3.0));
       g_signal_up = (micro_up || impulse_up);
       g_signal_down = (micro_down || impulse_down);
    }
@@ -1005,8 +966,8 @@ bool ModifyPending(const ulong ticket, const ENUM_ORDER_TYPE type,
 
 bool ModifyPositionStops(const ulong ticket, const double sl, const double tp)
 {
-   if(!TradingPermitted() || TimeCurrent() < g_pause_until || !PositionSelectByTicket(ticket))
-      return false;
+   if(!TradingPermitted() || !PositionSelectByTicket(ticket))
+      return false; // Entry cooldowns must never suspend protective stop/TP management.
    MqlTradeRequest request;
    MqlTradeResult result;
    ZeroMemory(request);
@@ -1166,6 +1127,36 @@ double EstimateInitialStopLoss(const double volume, const double entry_price,
    return MathAbs(profit);
 }
 
+double FitVolumeToCashRisk(const double requested_volume, const double entry_price, const int direction)
+{
+   double point = PointSize();
+   MqlTick tick;
+   if(point <= 0.0 || entry_price <= 0.0 || !SymbolInfoTick(g_symbol, tick))
+      return 0.0;
+
+   double vmin = SymbolInfoDouble(g_symbol, SYMBOL_VOLUME_MIN);
+   double step = SymbolInfoDouble(g_symbol, SYMBOL_VOLUME_STEP);
+   if(vmin <= 0.0 || step <= 0.0)
+      return 0.0;
+
+   double spread = MathMax(0.0, tick.ask - tick.bid);
+   double broker_distance = BrokerMinimumDistancePrice();
+   double safety_buffer = MathMax(2.0 * point, spread * 0.10);
+   double min_distance = NormalizeDistanceUp(MathMax(spread + broker_distance + safety_buffer,
+                                                      InpTrailMinimumDistancePoints * point));
+
+   double volume = NormalizeVolumeDown(requested_volume);
+   int max_steps = (int)MathCeil(MathMax(0.0, volume - vmin) / step) + 2;
+   for(int i = 0; i < max_steps && volume + 1e-9 >= vmin; i++)
+   {
+      double estimated_loss = EstimateInitialStopLoss(volume, entry_price, min_distance, direction);
+      if(estimated_loss >= 0.0 && estimated_loss <= InpMaxLossPerPositionUSD + 0.000001)
+         return volume;
+      volume = NormalizeVolumeDown(volume - step);
+   }
+   return 0.0;
+}
+
 double CalculateProtectedSLDistance(const double volume, const double entry_price, const int direction)
 {
    double point = PointSize();
@@ -1282,6 +1273,19 @@ bool PendingPriceIsSafe(const ENUM_ORDER_TYPE type, const double price)
    return false;
 }
 
+double CalculatePendingTakeProfit(const ENUM_ORDER_TYPE type,
+                                  const double entry_price,
+                                  const double tp_distance)
+{
+   if(InpTakeProfitRiskReward <= 0.0 || tp_distance <= 0.0 || entry_price <= 0.0)
+      return 0.0;
+   if(type == ORDER_TYPE_BUY_STOP)
+      return NormalizePriceUp(entry_price + tp_distance);
+   if(type == ORDER_TYPE_SELL_STOP)
+      return NormalizePriceDown(entry_price - tp_distance);
+   return 0.0;
+}
+
 void MaintainOrPlacePending(const ENUM_ORDER_TYPE type, const double desired_price,
                             const double volume, const double sl_distance, const double tp_distance,
                             const string comment)
@@ -1295,9 +1299,8 @@ void MaintainOrPlacePending(const ENUM_ORDER_TYPE type, const double desired_pri
       return;
    }
    double new_sl = (type == ORDER_TYPE_BUY_STOP ? desired_price - sl_distance : desired_price + sl_distance);
-   double new_tp = 0.0;
    new_sl = (type == ORDER_TYPE_BUY_STOP ? NormalizePriceDown(new_sl) : NormalizePriceUp(new_sl));
-   new_tp = NormalizePrice(new_tp);
+   double new_tp = CalculatePendingTakeProfit(type, desired_price, tp_distance);
 
    if(!PendingPriceIsSafe(type, desired_price))
       return;
@@ -1313,6 +1316,9 @@ void MaintainOrPlacePending(const ENUM_ORDER_TYPE type, const double desired_pri
    double threshold = MathMax(1.0, InpPendingRepricePoints) * PointSize();
    bool price_changed = (MathAbs(old_price - desired_price) >= threshold &&
                          TimeCurrent() - g_last_reprice_time >= InpMinimumSecondsBetweenReprice);
+   double tick_size = SymbolInfoDouble(g_symbol, SYMBOL_TRADE_TICK_SIZE);
+   if(tick_size <= 0.0) tick_size = PointSize();
+   bool tp_changed = (MathAbs(old_tp - new_tp) >= MathMax(tick_size * 0.5, PointSize() * 0.5));
    // If spread widened after the pending order was armed, widen its SL too.
    // Never tighten an already-armed initial stop merely because spread contracted.
    double sl_for_old_price = (type == ORDER_TYPE_BUY_STOP ? old_price - sl_distance : old_price + sl_distance);
@@ -1324,7 +1330,7 @@ void MaintainOrPlacePending(const ENUM_ORDER_TYPE type, const double desired_pri
    if(type == ORDER_TYPE_SELL_STOP && old_sl > 0.0 && sl_for_old_price > old_sl + sl_step)
       sl_widened = true;
 
-   if((price_changed || sl_widened) && TimeCurrent() - g_last_reprice_time >= InpMinimumSecondsBetweenReprice)
+   if((price_changed || sl_widened || tp_changed) && TimeCurrent() - g_last_reprice_time >= InpMinimumSecondsBetweenReprice)
    {
       // Avoid modifying an order inside the broker's freeze zone.
       double freeze_distance = SymbolInfoInteger(g_symbol, SYMBOL_TRADE_FREEZE_LEVEL) * PointSize();
@@ -1333,17 +1339,20 @@ void MaintainOrPlacePending(const ENUM_ORDER_TYPE type, const double desired_pri
       if(type == ORDER_TYPE_BUY_STOP && MathAbs(old_price - tick.ask) <= freeze_distance) return;
       if(type == ORDER_TYPE_SELL_STOP && MathAbs(old_price - tick.bid) <= freeze_distance) return;
       double target_price = (price_changed ? desired_price : old_price);
-      double target_sl = (price_changed ? new_sl : sl_for_old_price);
-      ModifyPending(ticket, type, target_price, target_sl, new_tp);
+      double target_sl = old_sl;
+      if(price_changed) target_sl = new_sl;
+      else if(sl_widened) target_sl = sl_for_old_price;
+      double target_tp = CalculatePendingTakeProfit(type, target_price, tp_distance);
+      ModifyPending(ticket, type, target_price, target_sl, target_tp);
    }
 }
 
 void EnsureEntryStructure()
 {
-   if(!InpEnableDualStop || !InpEnableMovementScanner)
+   if(!InpEnableMovementScanner)
       return;
    // Spread safety is checked even when the tick signal fades, so an old pending
-   // bracket cannot remain armed through a sudden spread blowout.
+   // order cannot remain armed through a sudden spread blowout.
    if(!SpreadIsAcceptable(g_atr))
    {
       if(CountOurPendingOrders() > 0)
@@ -1410,31 +1419,116 @@ void EnsureEntryStructure()
    MqlTick tick;
    if(!SymbolInfoTick(g_symbol, tick)) return;
    double point = PointSize();
-   double lot = DynamicPositionLot();
+   double requested_lot = DynamicPositionLot();
    double distance = CalculateEntryDistance();
-   if(point <= 0.0 || distance <= 0.0 || lot <= 0.0)
+   if(point <= 0.0 || distance <= 0.0 || requested_lot <= 0.0)
    {
       Log("Entry geometry/volume unavailable; check symbol specification and broker minimum lot.");
-      CsvWrite("ENTRY_GEOMETRY_SKIP", StringFormat("lot=%.3f;distance=%.5f", lot, distance));
+      CsvWrite("ENTRY_GEOMETRY_SKIP", StringFormat("lot=%.3f;distance=%.5f", requested_lot, distance));
       return;
    }
    double buy_price = NormalizePrice(tick.ask + distance);
    double sell_price = NormalizePrice(tick.bid - distance);
+
+   int selected_direction = 0;
+   if(positions == 0 && !InpEnableDualStop)
+   {
+      if(g_signal_up && !g_signal_down) selected_direction = 1;
+      else if(g_signal_down && !g_signal_up) selected_direction = -1;
+      else if(g_signal_up && g_signal_down)
+      {
+         if(g_score_up >= g_score_down + 3.0) selected_direction = 1;
+         else if(g_score_down >= g_score_up + 3.0) selected_direction = -1;
+      }
+      if(selected_direction == 0)
+      {
+         if(InpCancelPendingWhenSignalDies) CancelAllOurPendings();
+         return;
+      }
+   }
+
+   double lot = requested_lot;
+   if(positions == 0 && InpEnableDualStop)
+   {
+      double buy_fit = FitVolumeToCashRisk(requested_lot, buy_price, 1);
+      double sell_fit = FitVolumeToCashRisk(requested_lot, sell_price, -1);
+      if(buy_fit <= 0.0 || sell_fit <= 0.0)
+         lot = 0.0;
+      else
+         lot = MathMin(buy_fit, sell_fit); // Same size on both sides of the legacy bracket.
+   }
+   else if(positions == 0)
+   {
+      lot = (selected_direction > 0 ? FitVolumeToCashRisk(requested_lot, buy_price, 1)
+                                     : FitVolumeToCashRisk(requested_lot, sell_price, -1));
+   }
+   else if(have_buy)
+      lot = FitVolumeToCashRisk(requested_lot, buy_price, 1);
+   else if(have_sell)
+      lot = FitVolumeToCashRisk(requested_lot, sell_price, -1);
+
+   if(lot <= 0.0)
+   {
+      Log(StringFormat("RISK SKIP: even broker-minimum volume cannot fit %.2f USD cash risk at current spread/stops. Target lot=%.3f", InpMaxLossPerPositionUSD, requested_lot));
+      CsvWrite("RISK_SKIP_VOLUME", StringFormat("target_lot=%.3f;cash_cap=%.2f;spread_points=%.1f", requested_lot, InpMaxLossPerPositionUSD, (tick.ask-tick.bid)/point));
+      return;
+   }
+   if(lot + 1e-9 < requested_lot)
+   {
+      Log(StringFormat("RISK-BASED LOT DOWNSIZE: target=%.3f actual=%.3f cash_cap=%.2f", requested_lot, lot, InpMaxLossPerPositionUSD));
+      CsvWrite("VOLUME_RISK_ADJUST", StringFormat("target=%.3f;actual=%.3f;cash_cap=%.2f", requested_lot, lot, InpMaxLossPerPositionUSD));
+   }
+
    double buy_sl_distance = CalculateProtectedSLDistance(lot, buy_price, 1);
    double sell_sl_distance = CalculateProtectedSLDistance(lot, sell_price, -1);
+   double buy_tp_distance = (InpTakeProfitRiskReward > 0.0 ? buy_sl_distance * InpTakeProfitRiskReward : 0.0);
+   double sell_tp_distance = (InpTakeProfitRiskReward > 0.0 ? sell_sl_distance * InpTakeProfitRiskReward : 0.0);
 
-
-   // Flat state: arm a two-sided breakout bracket. Once one side fills, OCO removes the other.
+   // Flat state: by default arm only the side supported by the current signal.
+   // The old two-sided breakout bracket remains available as an explicit opt-in.
    if(positions == 0)
    {
-      if(buy_sl_distance > 0.0)
-         MaintainOrPlacePending(ORDER_TYPE_BUY_STOP, buy_price, lot, buy_sl_distance, 0.0, "GH124_BRACKET_BUY");
-      else
-         CancelPendingType(ORDER_TYPE_BUY_STOP);
-      if(sell_sl_distance > 0.0)
-         MaintainOrPlacePending(ORDER_TYPE_SELL_STOP, sell_price, lot, sell_sl_distance, 0.0, "GH124_BRACKET_SELL");
-      else
-         CancelPendingType(ORDER_TYPE_SELL_STOP);
+      if(InpEnableDualStop)
+      {
+         if(buy_sl_distance > 0.0)
+            MaintainOrPlacePending(ORDER_TYPE_BUY_STOP, buy_price, lot, buy_sl_distance, buy_tp_distance, "GH124_BRACKET_BUY");
+         else
+            CancelPendingType(ORDER_TYPE_BUY_STOP);
+         if(sell_sl_distance > 0.0)
+            MaintainOrPlacePending(ORDER_TYPE_SELL_STOP, sell_price, lot, sell_sl_distance, sell_tp_distance, "GH124_BRACKET_SELL");
+         else
+            CancelPendingType(ORDER_TYPE_SELL_STOP);
+         return;
+      }
+
+      if(selected_direction > 0)
+      {
+         ulong opposite; double op, osl, otp; datetime ost;
+         if(FindPending(ORDER_TYPE_SELL_STOP, opposite, op, osl, otp, ost))
+         {
+            if(!DeletePending(opposite) || OrderSelect(opposite)) return;
+         }
+         if(buy_sl_distance > 0.0)
+            MaintainOrPlacePending(ORDER_TYPE_BUY_STOP, buy_price, lot, buy_sl_distance, buy_tp_distance, "GH124_SIGNAL_BUY");
+         else
+            CancelPendingType(ORDER_TYPE_BUY_STOP);
+      }
+      else if(selected_direction < 0)
+      {
+         ulong opposite; double op, osl, otp; datetime ost;
+         if(FindPending(ORDER_TYPE_BUY_STOP, opposite, op, osl, otp, ost))
+         {
+            if(!DeletePending(opposite) || OrderSelect(opposite)) return;
+         }
+         if(sell_sl_distance > 0.0)
+            MaintainOrPlacePending(ORDER_TYPE_SELL_STOP, sell_price, lot, sell_sl_distance, sell_tp_distance, "GH124_SIGNAL_SELL");
+         else
+            CancelPendingType(ORDER_TYPE_SELL_STOP);
+      }
+      else if(InpCancelPendingWhenSignalDies)
+      {
+         CancelAllOurPendings();
+      }
       return;
    }
 
@@ -1444,7 +1538,8 @@ void EnsureEntryStructure()
       ulong opposite; double op, osl, otp; datetime ost;
       if(FindPending(ORDER_TYPE_SELL_STOP, opposite, op, osl, otp, ost)) DeletePending(opposite);
       if(buy_sl_distance > 0.0)
-         MaintainOrPlacePending(ORDER_TYPE_BUY_STOP, buy_price, lot, buy_sl_distance, 0.0, "GH124_ADD_BUY");
+         MaintainOrPlacePending(ORDER_TYPE_BUY_STOP, buy_price, lot, buy_sl_distance,
+                                buy_sl_distance * MathMax(0.0, InpTakeProfitRiskReward), "GH124_ADD_BUY");
       else
          CancelPendingType(ORDER_TYPE_BUY_STOP);
    }
@@ -1453,7 +1548,8 @@ void EnsureEntryStructure()
       ulong opposite; double op, osl, otp; datetime ost;
       if(FindPending(ORDER_TYPE_BUY_STOP, opposite, op, osl, otp, ost)) DeletePending(opposite);
       if(sell_sl_distance > 0.0)
-         MaintainOrPlacePending(ORDER_TYPE_SELL_STOP, sell_price, lot, sell_sl_distance, 0.0, "GH124_ADD_SELL");
+         MaintainOrPlacePending(ORDER_TYPE_SELL_STOP, sell_price, lot, sell_sl_distance,
+                                sell_sl_distance * MathMax(0.0, InpTakeProfitRiskReward), "GH124_ADD_SELL");
       else
          CancelPendingType(ORDER_TYPE_SELL_STOP);
    }
@@ -1487,9 +1583,9 @@ void ManageAdaptiveTrailing()
       ENUM_POSITION_TYPE type = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
       double open_price = PositionGetDouble(POSITION_PRICE_OPEN);
       double old_sl = PositionGetDouble(POSITION_SL);
-      double tp = 0.0;
+      double tp = PositionGetDouble(POSITION_TP);
       double favorable_move = (type == POSITION_TYPE_BUY ? tick.bid - open_price : open_price - tick.ask);
-      double activation = MathMax(g_atr * InpTrailActivationATR, InpTrailMinimumDistancePoints * point);
+      double activation = MathMax(g_atr * InpTrailActivationATR, trail_distance + spread + 2.0 * point);
       if(favorable_move < activation)
          continue;
 
@@ -1642,12 +1738,12 @@ int OnInit()
    g_symbol = (InpTradeSymbol == "" ? _Symbol : InpTradeSymbol);
    if(!SymbolSelect(g_symbol, true))
    {
-      Print("[XTRD_GH123] Cannot select symbol ", g_symbol);
+      Print("[XTRD_GH124] Cannot select symbol ", g_symbol);
       return INIT_FAILED;
    }
    if(g_symbol != _Symbol)
    {
-      Print("[XTRD_GH123] Attach the EA to the same chart symbol selected in InpTradeSymbol. OnTick is driven by the chart symbol.");
+      Print("[XTRD_GH124] Attach the EA to the same chart symbol selected in InpTradeSymbol. OnTick is driven by the chart symbol.");
       return INIT_FAILED;
    }
 
@@ -1661,31 +1757,31 @@ int OnInit()
       InpMinimumDirectionalRatio < 0.5 || InpMinimumDirectionalRatio > 1.0 ||
       InpM1FastEMA < 1 || InpM1SlowEMA <= InpM1FastEMA ||
       InpM5FastEMA < 1 || InpM5SlowEMA <= InpM5FastEMA ||
-      InpMaxLossPerPositionUSD <= 0.0 || InpInitialSLATRMultiplier <= 0.0 || InpTrailActivationATR < 0.0 ||
+      InpMaxLossPerPositionUSD <= 0.0 || InpTakeProfitRiskReward < 0.0 || InpInitialSLATRMultiplier <= 0.0 || InpTrailActivationATR < 0.0 ||
       InpMaxEquityDrawdownPercent < 0.0 || InpMaxEquityDrawdownPercent > 100.0 ||
       InpEquityGuardCooldownMinutes < 1 || InpHardEquityLossPercent < 0.0 || InpHardEquityLossPercent >= 100.0)
    {
-      Print("[XTRD_GH123] Invalid input combination. Check limits, lots, balance steps and tick windows.");
+      Print("[XTRD_GH124] Invalid input combination. Check limits, lots, balance steps and tick windows.");
       return INIT_PARAMETERS_INCORRECT;
    }
 
    if(InpRequireHedgingAccount && !IsHedgingAccount())
    {
-      Print("[XTRD_GH123] Netting account detected. Independent stacked positions require a HEDGING account. Initialization stopped.");
+      Print("[XTRD_GH124] Netting account detected. Independent stacked positions require a HEDGING account. Initialization stopped.");
       return INIT_FAILED;
    }
 
    long order_modes = SymbolInfoInteger(g_symbol, SYMBOL_ORDER_MODE);
    if((order_modes & SYMBOL_ORDER_STOP) != SYMBOL_ORDER_STOP)
    {
-      Print("[XTRD_GH123] This symbol does not advertise STOP pending orders. BUY STOP / SELL STOP cannot be used.");
+      Print("[XTRD_GH124] This symbol does not advertise STOP pending orders. BUY STOP / SELL STOP cannot be used.");
       return INIT_FAILED;
    }
 
    g_atr_handle = iATR(g_symbol, InpATRTimeframe, InpATRPeriod);
    if(g_atr_handle == INVALID_HANDLE)
    {
-      Print("[XTRD_GH123] Failed to create ATR handle.");
+      Print("[XTRD_GH124] Failed to create ATR handle.");
       return INIT_FAILED;
    }
 
@@ -1695,7 +1791,7 @@ int OnInit()
       g_m1_slow_handle = iMA(g_symbol, PERIOD_M1, InpM1SlowEMA, 0, MODE_EMA, PRICE_CLOSE);
       if(g_m1_fast_handle == INVALID_HANDLE || g_m1_slow_handle == INVALID_HANDLE)
       {
-         Print("[XTRD_GH123] Failed to create M1 EMA context handles.");
+         Print("[XTRD_GH124] Failed to create M1 EMA context handles.");
          return INIT_FAILED;
       }
    }
@@ -1705,7 +1801,7 @@ int OnInit()
       g_m5_slow_handle = iMA(g_symbol, PERIOD_M5, InpM5SlowEMA, 0, MODE_EMA, PRICE_CLOSE);
       if(g_m5_fast_handle == INVALID_HANDLE || g_m5_slow_handle == INVALID_HANDLE)
       {
-         Print("[XTRD_GH123] Failed to create M5 EMA context handles.");
+         Print("[XTRD_GH124] Failed to create M5 EMA context handles.");
          return INIT_FAILED;
       }
    }
@@ -1715,12 +1811,6 @@ int OnInit()
    g_entry_halt_until = 0;
    g_entry_halt = false;
    g_hard_entry_halt = false;
-   g_equity_state_key = EquityStateKey();
-   LoadEquityGuardState();
-   // Never allow a persisted high-water mark to move below current equity.
-   if(AccountInfoDouble(ACCOUNT_EQUITY) > g_peak_equity)
-      g_peak_equity = AccountInfoDouble(ACCOUNT_EQUITY);
-   SaveEquityGuardState();
    OpenResearchLog();
    EventSetTimer(1);
 
@@ -1729,9 +1819,9 @@ int OnInit()
                     InpInitialLot, InpMaximumLotPerPosition, InpLotIncrement,
                     InpBalanceStepForLotIncrease, InpBalanceStepForExtraPosition));
    Log("Signal model: flexible fast ticks + speed/acceleration + last CLOSED M1/M5 candle strength + soft EMA context.");
-   Log("Entry model: BUY STOP / SELL STOP bracket, OCO, continuation stacking; Strategy Tester auto-executes by default.");
-   Log("Exit model: spread-aware cash-capped SL + open-ended adaptive trailing; no fixed TP.");
-   Log(StringFormat("Equity protection: %.1f%% soft peak-DD cooldown for %d minutes; %.1f%% permanent floor from initial equity.",
+   Log(StringFormat("Entry model: %s signal-directed pending entry, OCO and continuation stacking; Strategy Tester auto-executes by default.", (InpEnableDualStop ? "dual-stop" : "single-side")));
+   Log(StringFormat("Exit model: spread-aware cash-capped SL + %.2fR TP + profit-preserving adaptive trailing.", InpTakeProfitRiskReward));
+   Log(StringFormat("Optional equity entry guards: %.1f%% soft peak-DD cooldown for %d minutes; %.1f%% permanent floor from initial equity (0 disables).",
                     InpMaxEquityDrawdownPercent, InpEquityGuardCooldownMinutes, InpHardEquityLossPercent));
    CsvWrite("INITIALIZED", StringFormat("balance=%.2f;equity=%.2f;hedging=%s;contract=%.2f;point=%.*f;ticksize=%.*f;tickvalue=%.5f",
                                         AccountInfoDouble(ACCOUNT_BALANCE), AccountInfoDouble(ACCOUNT_EQUITY),
@@ -1765,12 +1855,10 @@ void UpdateEquityDrawdownGuard()
    double equity = AccountInfoDouble(ACCOUNT_EQUITY);
    if(g_initial_equity <= 0.0)
       g_initial_equity = equity;
-
-   // Monotonic high-water mark: it can rise, but it is never reset downward.
    if(equity > g_peak_equity)
       g_peak_equity = equity;
 
-   // Permanent emergency floor remains anchored to the original baseline.
+   // Permanent emergency floor is measured from equity at EA initialization.
    if(!g_hard_entry_halt && InpHardEquityLossPercent > 0.0 && g_initial_equity > 0.0)
    {
       double hard_floor = g_initial_equity * (1.0 - InpHardEquityLossPercent / 100.0);
@@ -1779,76 +1867,50 @@ void UpdateEquityDrawdownGuard()
          g_hard_entry_halt = true;
          g_entry_halt = true;
          g_entry_halt_until = 0;
-         Log(StringFormat("EQUITY HARD GUARD: equity %.2f reached initial-equity floor %.2f (loss limit %.2f%%). Entries permanently halted; open positions remain managed.",
+         Log(StringFormat("EQUITY HARD GUARD: equity %.2f reached initial-equity floor %.2f (loss limit %.2f%%). Entries permanently halted until EA restart; open positions remain managed.",
                           equity, hard_floor, InpHardEquityLossPercent));
          CsvWrite("EQUITY_HARD_HALT", StringFormat("initial_equity=%.2f;equity=%.2f;hard_floor=%.2f;loss_limit_pct=%.2f",
                                                     g_initial_equity, equity, hard_floor, InpHardEquityLossPercent));
          CancelAllOurPendings();
-         SaveEquityGuardState();
          return;
       }
    }
 
    if(g_hard_entry_halt)
-   {
-      SaveEquityGuardState();
       return;
-   }
 
-   // Soft DD is always measured against the historical peak, never a local reset.
-   double drawdown = 0.0;
-   if(g_peak_equity > 0.0)
-      drawdown = (g_peak_equity - equity) / g_peak_equity * 100.0;
-
-   if(!g_entry_halt && InpMaxEquityDrawdownPercent > 0.0 &&
-      drawdown >= InpMaxEquityDrawdownPercent)
+   // A soft peak-to-trough breach pauses new entries, but does not kill the
+   // entire month-long test. Existing positions continue to be managed.
+   if(!g_entry_halt && InpMaxEquityDrawdownPercent > 0.0 && g_peak_equity > 0.0)
    {
-      g_entry_halt = true;
-      g_entry_halt_until = TimeCurrent() + InpEquityGuardCooldownMinutes * 60;
-      Log(StringFormat("EQUITY GUARD HALT: historical peak DD %.2f%% reached %.2f%%. Entries paused; cooldown is only a minimum wait, recovery is also required. Open positions remain managed.",
-                       drawdown, InpMaxEquityDrawdownPercent));
-      CsvWrite("EQUITY_GUARD_HALT", StringFormat("peak_equity=%.2f;equity=%.2f;drawdown_pct=%.2f;limit_pct=%.2f;cooldown_until=%s",
-                                                  g_peak_equity, equity, drawdown, InpMaxEquityDrawdownPercent,
-                                                  TimeToString(g_entry_halt_until, TIME_DATE|TIME_SECONDS)));
-      CancelAllOurPendings();
-      SaveEquityGuardState();
-      return;
-   }
-
-   // Re-arm only after BOTH the minimum cooldown and a 50% recovery of the
-   // allowed drawdown have occurred. Example: with a 30% guard, equity must
-   // recover to at least 85% of the immutable peak before new entries resume.
-   if(g_entry_halt &&
-      (g_entry_halt_until == 0 || TimeCurrent() >= g_entry_halt_until) &&
-      InpMaxEquityDrawdownPercent > 0.0)
-   {
-      double recovery_dd = InpMaxEquityDrawdownPercent * 0.5;
-      double recovery_floor = g_peak_equity * (1.0 - recovery_dd / 100.0);
-      if(equity >= recovery_floor)
+      double drawdown = (g_peak_equity - equity) / g_peak_equity * 100.0;
+      if(drawdown >= InpMaxEquityDrawdownPercent)
       {
-         g_entry_halt = false;
-         g_entry_halt_until = 0;
-         Log(StringFormat("EQUITY GUARD RE-ARMED after recovery: equity %.2f >= recovery threshold %.2f; historical peak remains %.2f.",
-                          equity, recovery_floor, g_peak_equity));
-         CsvWrite("EQUITY_GUARD_REARM", StringFormat("equity=%.2f;recovery_floor=%.2f;historical_peak=%.2f;initial_equity=%.2f",
-                                                      equity, recovery_floor, g_peak_equity, g_initial_equity));
-      }
-      else
-      {
-         // Remain halted until recovery; do not reset the historical peak.
-         // Clear the expired cooldown once, then keep checking recovery.
-         if(g_entry_halt_until > 0)
-         {
-            g_entry_halt_until = 0;
-            Log(StringFormat("EQUITY GUARD: cooldown elapsed, but equity %.2f is still below recovery threshold %.2f. Entries remain halted.",
-                             equity, recovery_floor));
-            CsvWrite("EQUITY_GUARD_RECOVERY_WAIT", StringFormat("equity=%.2f;recovery_floor=%.2f;historical_peak=%.2f",
-                                                                  equity, recovery_floor, g_peak_equity));
-         }
+         g_entry_halt = true;
+         g_entry_halt_until = TimeCurrent() + InpEquityGuardCooldownMinutes * 60;
+         Log(StringFormat("EQUITY GUARD COOLDOWN: peak-to-trough DD %.2f%% reached %.2f%%. New entries paused for %d minutes; open positions remain managed.",
+                          drawdown, InpMaxEquityDrawdownPercent, InpEquityGuardCooldownMinutes));
+         CsvWrite("EQUITY_GUARD_COOLDOWN", StringFormat("peak_equity=%.2f;equity=%.2f;drawdown_pct=%.2f;limit_pct=%.2f;resume_after=%s",
+                                                         g_peak_equity, equity, drawdown, InpMaxEquityDrawdownPercent,
+                                                         TimeToString(g_entry_halt_until, TIME_DATE|TIME_SECONDS)));
+         CancelAllOurPendings();
+         return;
       }
    }
 
-   SaveEquityGuardState();
+   // Re-arm after cooldown by starting a fresh local peak reference at current
+   // equity. A separate hard floor, anchored to initial equity, prevents
+   // repeated cooldowns from allowing an unlimited account drawdown.
+   if(g_entry_halt && g_entry_halt_until > 0 && TimeCurrent() >= g_entry_halt_until)
+   {
+      g_peak_equity = equity;
+      g_entry_halt = false;
+      g_entry_halt_until = 0;
+      Log(StringFormat("EQUITY GUARD RE-ARMED after cooldown. New local peak reference=%.2f; hard equity floor remains anchored to initial equity %.2f.",
+                       g_peak_equity, g_initial_equity));
+      CsvWrite("EQUITY_GUARD_REARM", StringFormat("equity=%.2f;initial_equity=%.2f;cooldown_minutes=%d",
+                                                   equity, g_initial_equity, InpEquityGuardCooldownMinutes));
+   }
 }
 
 void OnTick()
