@@ -184,6 +184,19 @@ jobs:
           }
           Write-Warning 'MQL5 standard library unavailable on this runner'
 
+      # Reuse ticks/rates downloaded by the dataprep workflow so backtests do
+      # not re-download a year of real ticks on every run.
+      - name: Restore downloaded data cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\mt5\bases
+            C:\mt5\Tester
+          key: mt5data-XAUUSD.m-365-v1
+          restore-keys: |
+            mt5data-XAUUSD.m-
+            mt5data-
+
       - name: Resolve MT5 paths
         shell: pwsh
         run: |

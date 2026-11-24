@@ -23,7 +23,12 @@ The EA file must sit in the repository root as `<EAName>.mq5`.
 - Broker: JustMarkets, Standard account
 - Symbol: XAUUSD.m, M1, Model=4 (every tick based on real ticks)
 - Leverage 1:3000, no commission, spread ~26 points
-- Real-tick history starts 2026.10.26 (about 28 days) — OOS/WF must fit inside it
+- Verified data coverage (from dataprep run 45383070437):
+  - real ticks: 2025.11.24 -> 2026.11.24, 85,471,198 ticks (1 year)
+  - M5: from 2025.06.27, M15: 2022.08.25, M30/H1/H4/D1: 2011.11.02
+  - M1 via CopyRates caps at 100,000 bars (chart limit); the tester loads
+    641,830 M1 bars from 2025.01.02 on its own
+  - data size 0.61 GB, cached under key mt5data-XAUUSD.m-365-v1
 
 ## Rules
 - Never modify the user's EA beyond fixing trivial compile errors.
