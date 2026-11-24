@@ -86,3 +86,67 @@ Verified technical blocker, documented in `X13_EXPERIMENT_LOG.md`:
 - On the only available channel (the price path), 22 features and two model
   classes give out-of-sample AUC 0.44-0.50.
 - Every strategy family tested loses after the 26-point round trip.
+
+---
+
+# Opportunity funnel audit (measured natively in MT5)
+
+`WriteFunnel()` runs inside `OnTester()` over every M1 bar of the test
+period. 669,324 bars, 30 days, spread 26.0 pts.
+
+| Horizon | bars with move > spread | > 3x spread | opportunities/day | hindsight ceiling at 0.01 lot | trades taken | capture |
+|---|---|---|---|---|---|---|
+| 5 min | 593,199 (88.6%) | 458,498 (68.5%) | 862 | $1,383,471 | 8 | 0.00% |
+| 15 min | 625,533 (93.5%) | 541,369 (80.9%) | 909 | $2,502,089 | 8 | 0.00% |
+| 60 min | 648,237 (96.9%) | 606,621 (90.6%) | 942 | $5,242,543 | 8 | 0.00% |
+
+The opportunities are not scarce. 862 per day clear the spread, and 68.5% of
+them clear three times the spread. The hindsight ceiling is 138,000 times the
+account.
+
+## Density experiment
+
+Relaxed everything: edge floor 0, EV multiplier 1.0, 5 concurrent positions,
+3-minute maximum hold.
+
+| Run | Net | Trades | WR | DD |
+|---|---|---|---|---|
+| density, risk 5% | 0.00 | **0** | - | 0% |
+| density, risk 20% | -7.45 | 17 | 23.5% | 74.9% |
+
+The first run took zero trades on purpose: at 5% risk with a 60-point stop the
+safe size is 0.008 lots, below the broker minimum of 0.01. The lot engine
+refused rather than over-risk the account. That is the correct behaviour.
+
+The second run shows what density costs: 17 trades, 74.9% drawdown.
+
+## The root cause, in one calculation
+
+| Item | Value |
+|---|---|
+| Trades if every M1 bar is taken | 669,324 per month (22,311/day) |
+| Spread cost per trade at 0.01 lot | $0.26 |
+| Total spread cost per month | **$174,024** |
+| Account | $10 |
+| Hindsight ceiling (perfect direction, 5 min) | $1,383,471 |
+| Share of perfect foresight needed just to break even | **12.6%** |
+| Directional accuracy that equals 12.6% of perfect foresight | **56.3%** |
+| Measured directional accuracy | 50.0% |
+| Measured out-of-sample AUC | 0.44-0.50 |
+
+Trading every bar costs $174,024 a month in spread against a $10 account. To
+break even you must capture 12.6% of the profit that perfect foresight would
+produce, which requires 56.3% directional accuracy on symmetric outcomes.
+Every measurement in this project lands at 50%.
+
+That is the root cause. It is not the entry gate, not the lot engine, not the
+decision engine. It is that the available data does not tell you which way the
+next move goes.
+
+## What the EA already does correctly
+
+- Rejects trades whose safe size is below the broker minimum instead of
+  over-risking.
+- Prices every opportunity against the measured 26-point spread.
+- Coordinates one decision per bar across five engines.
+- Reports per-engine signals, acceptances, rejections and P&L natively.
