@@ -209,4 +209,40 @@ void OnTick()
    g_lastBar = bar;
    TryEntry();
   }
+
+//--- native MT5 statistics, written by the terminal itself -------------
+double OnTester()
+  {
+   string f = "X13_Native_" + _Symbol + ".csv";
+   int h = FileOpen(f, FILE_WRITE | FILE_CSV | FILE_ANSI, ',');
+   if(h == INVALID_HANDLE) return 0.0;
+   string rows[][2] = {
+      {"metric","value"},
+      {"net_profit",     DoubleToString(TesterStatistics(STAT_PROFIT), 2)},
+      {"gross_profit",   DoubleToString(TesterStatistics(STAT_GROSS_PROFIT), 2)},
+      {"gross_loss",     DoubleToString(TesterStatistics(STAT_GROSS_LOSS), 2)},
+      {"profit_factor",  DoubleToString(TesterStatistics(STAT_PROFIT_FACTOR), 3)},
+      {"expected_payoff",DoubleToString(TesterStatistics(STAT_EXPECTED_PAYOFF), 3)},
+      {"trades",         DoubleToString(TesterStatistics(STAT_TRADES), 0)},
+      {"profit_trades",  DoubleToString(TesterStatistics(STAT_PROFIT_TRADES), 0)},
+      {"loss_trades",    DoubleToString(TesterStatistics(STAT_LOSS_TRADES), 0)},
+      {"win_pct",        DoubleToString(100.0 * TesterStatistics(STAT_PROFIT_TRADES) /
+                                        MathMax(TesterStatistics(STAT_TRADES), 1), 1)},
+      {"equity_dd",      DoubleToString(TesterStatistics(STAT_EQUITY_DD), 2)},
+      {"equity_dd_pct",  DoubleToString(TesterStatistics(STAT_EQUITYDD_PERCENT), 2)},
+      {"balance_dd_pct", DoubleToString(TesterStatistics(STAT_BALANCEDD_PERCENT), 2)},
+      {"sharpe",         DoubleToString(TesterStatistics(STAT_SHARPE_RATIO), 3)},
+      {"recovery",       DoubleToString(TesterStatistics(STAT_RECOVERY_FACTOR), 3)},
+      {"initial_deposit",DoubleToString(TesterStatistics(STAT_INITIAL_DEPOSIT), 2)},
+      {"final_equity",   DoubleToString(TesterStatistics(STAT_EQUITY), 2)}
+   };
+   for(int r = 0; r < 17; r++)
+      FileWrite(h, rows[r][0], rows[r][1]);
+   FileClose(h);
+   PrintFormat("X13 native stats -> %s  net=%.2f pf=%.3f trades=%d",
+               f, TesterStatistics(STAT_PROFIT), TesterStatistics(STAT_PROFIT_FACTOR),
+               (int)TesterStatistics(STAT_TRADES));
+   return TesterStatistics(STAT_PROFIT);
+  }
+
 //+------------------------------------------------------------------+
