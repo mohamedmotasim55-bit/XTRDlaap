@@ -72,6 +72,8 @@ int      g_spN = 0;
 double   g_spMedian = 26;
 
 string   g_engName[6] = {"", "BURST", "MOMENTUM", "REVERSION", "BREAKOUT", "EXHAUSTION"};
+int      g_slPts[6]  = {0, 60, 110, 90, 100, 80};
+int      g_tpPts[6]  = {0, 90, 190, 120, 200, 110};
 int      g_sig[6], g_acc[6], g_rej[6];
 
 int      g_sigDir = 0, g_sigEng = 0;
@@ -274,7 +276,7 @@ double SizeLot()
   {
    double eq = AccountInfoDouble(ACCOUNT_EQUITY);
    double riskMoney = eq * InpRiskPct / 100.0;
-   double lotByRisk = riskMoney / MathMax(InpSlPts * g_volPerPt, 1e-9);
+   double lotByRisk = riskMoney / MathMax(g_slPts[MathMax(g_sigEng,1)] * g_volPerPt, 1e-9);
 
    double margin1 = 0;
    double price = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
@@ -315,7 +317,8 @@ void DecideAndExecute()
    double atr = ATRval();
    if(atr <= 0) { g_rej[eng]++; return; }
 
-   double expMove = MathMin((double)InpTpPts, score * (atr / g_point));
+   double expMove = MathMin((double)g_tpPts[eng], score * (atr / g_point));
+   if(expMove < sp + 20.0) { g_rej[eng]++; return; }
    if(expMove < sp * InpMinEVmult) { g_rej[eng]++; return; }
 
    double lot = SizeLot();
@@ -328,13 +331,13 @@ void DecideAndExecute()
    bool ok;
    if(dir > 0)
       ok = g_trade.Buy(lot, _Symbol, 0.0,
-                       NormalizeDouble(ask - InpSlPts * g_point, g_digits),
-                       NormalizeDouble(ask + InpTpPts * g_point, g_digits),
+                       NormalizeDouble(ask - g_slPts[eng] * g_point, g_digits),
+                       NormalizeDouble(ask + g_tpPts[eng] * g_point, g_digits),
                        g_engName[eng]);
    else
       ok = g_trade.Sell(lot, _Symbol, 0.0,
-                        NormalizeDouble(bid + InpSlPts * g_point, g_digits),
-                        NormalizeDouble(bid - InpTpPts * g_point, g_digits),
+                        NormalizeDouble(bid + g_slPts[eng] * g_point, g_digits),
+                        NormalizeDouble(bid - g_tpPts[eng] * g_point, g_digits),
                         g_engName[eng]);
 
    if(ok) g_acc[eng]++;
@@ -370,11 +373,17 @@ void Manage()
          continue;
         }
 
+      int e = (int)PositionGetInteger(POSITION_MAGIC) - (int)InpMagicBase;
+      if(e < 1 || e > 5) e = 2;
+      double beAt = g_tpPts[e] * 0.40;
+      double trailStart = g_tpPts[e] * 0.60;
+      double trailPts = g_slPts[e] * 0.60;
+
       double newSl = sl;
-      if(gain >= InpTrailStart)
-         newSl = (type == POSITION_TYPE_BUY) ? cur - InpTrailPts * g_point
-                                             : cur + InpTrailPts * g_point;
-      else if(gain >= InpBeAtPts)
+      if(gain >= trailStart)
+         newSl = (type == POSITION_TYPE_BUY) ? cur - trailPts * g_point
+                                             : cur + trailPts * g_point;
+      else if(gain >= beAt)
          newSl = op;
 
       if(newSl != sl)
@@ -463,6 +472,7 @@ double OnTester()
   {
    double engPnL[6];
    ArrayInitialize(engPnL, 0.0);
+   HistorySelect(0, TimeCurrent());
    int total = HistoryDealsTotal();
    for(int i = 0; i < total; i++)
      {
