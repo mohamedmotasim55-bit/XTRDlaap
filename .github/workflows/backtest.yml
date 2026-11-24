@@ -373,7 +373,7 @@ jobs:
             "Report=$report.htm",
             'ReplaceReport=1',
             'Visual=0',
-            'ShutdownTerminal=0'
+            'ShutdownTerminal=1'
           )
           if ($env:OPT -ne '0') { $lines += "OptimizationCriterion=$env:OPTCRIT" }
           if ($env:SPREAD_PTS -ne '') { $lines += "Spread=$env:SPREAD_PTS" }
@@ -394,7 +394,7 @@ jobs:
         run: |
           # MT5 sometimes cancels the tick download on a cold start and then
           # aborts with "no history data"; a retry reuses the cached ticks.
-          for ($attempt = 1; $attempt -le 3; $attempt++) {
+          for ($attempt = 1; $attempt -le 1; $attempt++) {
           Write-Host "===== tester attempt $attempt ====="
           $p = Start-Process -FilePath $env:TERMINAL -ArgumentList '/portable', "/config:$env:TESTER_INI" -PassThru
           $deadline = (Get-Date).AddMinutes(25)
@@ -408,12 +408,6 @@ jobs:
             Write-Host ("[{0:HH:mm:ss}] terminal alive, cpu={1}s" -f (Get-Date), $cpu)
             if ($cpu -eq $lastCpu) { $stall++ } else { $stall = 0; $lastCpu = $cpu }
             if ($stall -ge 9) { Write-Warning 'CPU idle for 3 minutes; treating as hung.'; break }
-            # MT5 writes the report after the agent finishes; stop once it is
-            # on disk and stable, instead of waiting for the terminal to exit.
-            if (Test-Path "$env:REPORT_BASE.htm") {
-              $age = (Get-Date) - (Get-Item "$env:REPORT_BASE.htm").LastWriteTime
-              if ($age.TotalSeconds -ge 10) { Write-Host 'report.htm written; stopping terminal.'; break }
-            }
           }
           if (-not $p.HasExited) {
             Write-Warning 'Tester exceeded the time budget; stopping terminal.'
