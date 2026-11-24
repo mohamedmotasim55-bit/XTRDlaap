@@ -1,0 +1,18 @@
+nohup: ignoring input
+events=57,600  features=22
+features: disp_5s, eff_5s, posfrac_5s, negfrac_5s, ticks_5s, disp_15s, eff_15s, posfrac_15s, negfrac_15s, ticks_15s, disp_60s, eff_60s, posfrac_60s, negfrac_60s, ticks_60s, disp_300s, eff_300s, posfrac_300s, negfrac_300s, ticks_300s, reversals_20, absdisp_60s
+
+--- TP 60 / SL 40 : resolved 57,587 (100%), base TP-rate 22.1% ---
+  logit  AUC val=0.432 test=0.438
+     thr=0.50 trades=11062 win= 26.4% exp=  -13.6 pts  net_per_day=$-150.78
+  gbm    AUC val=0.501 test=0.440
+
+--- TP 100 / SL 60 : resolved 57,267 (99%), base TP-rate 24.0% ---
+  logit  AUC val=0.439 test=0.442
+     thr=0.50 trades=11061 win= 28.4% exp=  -14.5 pts  net_per_day=$-160.62
+  gbm    AUC val=0.498 test=0.425
+
+--- TP 150 / SL 90 : resolved 56,236 (98%), base TP-rate 25.3% ---
+  logit  AUC val=0.431 test=0.436
+     thr=0.50 trades=11009 win= 30.7% exp=  -16.4 pts  net_per_day=$-180.33
+  gbm    AUC val=0.498 test=0.441

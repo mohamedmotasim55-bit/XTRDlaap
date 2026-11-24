@@ -456,3 +456,88 @@ momentum, with non-overlapping execution and walk-forward splits.
 
 Any of these could contain the missing edge. None of them exist in this
 environment.
+
+---
+
+# Phase 6 — Tick sequence intelligence
+
+## Data-quality audit (4,378,000 ticks, 10 days)
+
+| Check | Result |
+|---|---|
+| monotonic timestamps | yes |
+| duplicate timestamps | 146 |
+| identical consecutive quotes | 21.0% |
+| bid <= 0 / ask <= 0 / crossed | 0 / 0 / 0 |
+| **volume** | **0 in 100% of ticks** |
+| spread | 26.0 pts in 99.99% of ticks (max 60) |
+| bid-only moves | 0.0% |
+| ask-only moves | 0.0% |
+| bid/ask move in lockstep | **100.0%** |
+| divergent (spread) moves | 0.0% |
+| inter-arrival < 10 ms | 0.03% |
+| inter-arrival 90-110 ms | 29.8% |
+| gaps > 60 s | 8 (holidays/weekends) |
+
+### Conclusion of the audit
+
+The MT5 tester's "real tick" history for XAUUSD.m is a **synthetic feed**:
+fixed 26-point spread, zero volume, bid and ask moving together, a 10 Hz
+cadence, and no sub-10 ms ticks. It carries exactly one information channel,
+the mid price path.
+
+Every microstructure family the brief lists - order-flow imbalance,
+trade-at-ask, spread dynamics, quote asymmetry, volume bursts - is
+**structurally absent** from this data. They cannot be tested because the
+fields do not exist.
+
+## Sequence features built (22, all past-only)
+
+Quote transition (up/down/both fractions, bid-only, ask-only, compression,
+expansion), path shape (displacement, efficiency, positive/negative tick
+fraction, reversals), timing (tick counts per window), at 5 s, 15 s, 60 s and
+300 s.
+
+## Models
+
+Chronological 60/20/20 split, barrier labels (TP hit before SL), fills at
+ask for buys and bid for sells.
+
+| Barrier | Base TP rate | Required | Gap |
+|---|---|---|---|
+| TP 60 / SL 40 | 22.1% | 27.0% | **−4.9** |
+| TP 100 / SL 60 | 24.0% | 29.4% | **−5.4** |
+| TP 150 / SL 90 | 25.3% | 32.1% | **−6.8** |
+| TP 300 / SL 100 | 14.0% | 21.8% | **−7.7** |
+| TP 500 / SL 100 | 6.2% | 14.5% | **−8.3** |
+
+Out-of-sample AUC:
+
+| Model | AUC val | AUC test |
+|---|---|---|
+| logistic | 0.43 | 0.44 |
+| gradient boosting | 0.50 | 0.44 |
+
+Symmetric barrier TP = SL = 100: long base 34.9%, short base 45.4%, both
+below the 50% break-even. The long/short gap is the sample's downtrend, not
+a signal.
+
+## Status: BLOCKED
+
+Two independent blockers, both documented:
+
+1. **Data blocker.** The only historical tick feed available in this
+   environment is synthetic and carries no order-flow information. The
+   feature families the brief asks for cannot be computed.
+
+2. **Predictability blocker on the available channel.** On the price path
+   alone, 22 sequence features and two model classes produce out-of-sample
+   AUC of 0.44-0.50 and TP rates 5-8 points below break-even in every
+   barrier configuration tested.
+
+## What would unblock this
+
+A real tick export for XAUUSD (variable spread, non-zero volume, independent
+bid/ask updates) from a genuine data vendor. The entire pipeline in
+`tools/tick_seq.py` and `tools/tick_model.py` runs unchanged on such a file.
+That is a data-sourcing task, not a strategy task.
