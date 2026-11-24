@@ -1429,7 +1429,7 @@ double EmpiricalCVaRFrac()
       if(g_samples[i].net_profit<0.0) losses[n++]=g_samples[i].net_profit;
    }
    if(n<5) return 0.0;
-   ArraySort(losses,n,0);
+   for(int a=1;a<n;a++){double key=losses[a];int b=a-1;while(b>=0 && losses[b]>key){losses[b+1]=losses[b];b--;}losses[b+1]=key;}
    const int tail=MathMax(1,(int)MathCeil(n*ClampD(InpCVaRAlpha,0.01,0.50)));
    double sum=0.0;
    for(int i=0;i<tail;i++) sum+=MathAbs(losses[i]);
