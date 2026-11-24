@@ -20,6 +20,7 @@ input bool   InpAllowHedging = true;
 input group "=== Spread engine ==="
 input int    InpMaxSpreadPts = 40;
 input double InpMinEVmult    = 1.35;   // required expected move / cost
+input double InpMinEdgePts   = 20.0;   // minimum edge above the spread, points
 
 input group "=== Engine 1: burst ==="
 input bool   InpEngBurst      = true;
@@ -55,6 +56,8 @@ input int    InpMaxBars    = 45;
 input group "=== Misc ==="
 input ulong  InpMagicBase = 14000;
 input bool   InpVerbose   = false;
+input group "=== Diagnostics ==="
+input bool   InpAuditFunnel = true;   // write the opportunity funnel audit
 
 //===================== STATE ====================//
 CTrade   g_trade;
@@ -318,7 +321,7 @@ void DecideAndExecute()
    if(atr <= 0) { g_rej[eng]++; return; }
 
    double expMove = MathMin((double)g_tpPts[eng], score * (atr / g_point));
-   if(expMove < sp + 20.0) { g_rej[eng]++; return; }
+   if(expMove < sp + InpMinEdgePts) { g_rej[eng]++; return; }
    if(expMove < sp * InpMinEVmult) { g_rej[eng]++; return; }
 
    double lot = SizeLot();
@@ -467,6 +470,51 @@ void OnTick()
    DecideAndExecute();
   }
 
+//===================== FUNNEL AUDIT ===================//
+void WriteFunnel()
+  {
+   if(!InpAuditFunnel) return;
+   int n = Bars(_Symbol, PERIOD_M1);
+   if(n < 100) return;
+   MqlRates r[];
+   int got = CopyRates(_Symbol, PERIOD_M1, 0, n, r);
+   if(got <= 0) return;
+
+   int h = FileOpen("X13_Funnel_" + _Symbol + ".csv", FILE_WRITE | FILE_CSV | FILE_ANSI, ',');
+   if(h == INVALID_HANDLE) return;
+   FileWrite(h, "horizon_bars", "bars", "opp_over_spread", "opp_over_3x_spread",
+             "opp_per_day", "hindsight_max_usd_at_001", "actual_trades", "capture_pct");
+
+   int horizons[3] = {5, 15, 60};
+   double sp = MathMax(g_spMedian, 1.0);
+   for(int q = 0; q < 3; q++)
+     {
+      int K = horizons[q];
+      int opp = 0, big = 0;
+      double maxUsd = 0;
+      for(int i = 0; i + K < got; i++)
+        {
+         double fwd = (r[i + K].close - r[i].close) / g_point;
+         double af = MathAbs(fwd);
+         if(af > sp)
+           {
+            opp++;
+            maxUsd += (af - sp) * g_volPerPt * 0.01;
+           }
+         if(af > sp * 3.0) big++;
+        }
+      int spanMin = (int)((r[got - 1].time - r[0].time) / 60);
+      double days = MathMax(spanMin / 1440.0, 1.0);
+      double trades = TesterStatistics(STAT_TRADES);
+      FileWrite(h, IntegerToString(K), IntegerToString(got), IntegerToString(opp),
+                IntegerToString(big), DoubleToString(opp / days, 0),
+                DoubleToString(maxUsd, 2), DoubleToString(trades, 0),
+                DoubleToString(100.0 * trades / MathMax(opp, 1), 2));
+     }
+   FileClose(h);
+   PrintFormat("X13 funnel -> X13_Funnel_%s.csv", _Symbol);
+  }
+
 //===================== NATIVE REPORT ===================//
 double OnTester()
   {
@@ -487,6 +535,8 @@ double OnTester()
                  + HistoryDealGetDouble(t, DEAL_SWAP)
                  + HistoryDealGetDouble(t, DEAL_COMMISSION);
      }
+
+   WriteFunnel();
 
    string f = "X13_Native_" + _Symbol + ".csv";
    int h = FileOpen(f, FILE_WRITE | FILE_CSV | FILE_ANSI, ',');
