@@ -25,6 +25,7 @@ input group "=== Spread engine ==="
 input int    InpMaxSpreadPts = 40;
 input double InpMinEVmult    = 1.35;   // required expected move / cost
 input double InpMinEdgePts   = 20.0;   // minimum edge above the spread, points
+input bool   InpForceMinLot  = false;  // trade the broker minimum when risk size is smaller
 
 input group "=== Engine 1: burst ==="
 input bool   InpEngBurst      = true;
@@ -329,8 +330,13 @@ double SizeLot()
    lot = MathFloor(lot / g_volStep) * g_volStep;
    if(lot < g_volMin)
      {
-      g_lotFail = (lotByRisk < g_volMin) ? 1 : 2;
-      return 0;
+      if(InpForceMinLot && lotByMargin >= g_volMin)
+         lot = g_volMin;
+      else
+        {
+         g_lotFail = (lotByRisk < g_volMin) ? 1 : 2;
+         return 0;
+        }
      }
    g_lotFail = 0;
    if(lot > g_volMax) lot = g_volMax;
