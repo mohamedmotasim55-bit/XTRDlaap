@@ -90,6 +90,42 @@ double   g_tickLastMid = 0;
 int      g_tickUp = 0, g_tickDn = 0, g_tickN = 0;
 int      g_lastEng = 1;
 
+#define MAX_REJ 60000
+datetime g_rejT[MAX_REJ];
+int      g_rejDir[MAX_REJ], g_rejEng[MAX_REJ], g_rejWhy[MAX_REJ];
+double   g_rejPx[MAX_REJ], g_rejSl[MAX_REJ], g_rejTp[MAX_REJ];
+int      g_rejN = 0;
+
+#define R_SPREAD   1
+#define R_QUALITY  2
+#define R_REGIME   3
+#define R_MOMENTUM 4
+#define R_COOLDOWN 5
+#define R_DUPLICATE 6
+#define R_POSLIMIT 7
+#define R_MARGIN   8
+#define R_RISK     9
+#define R_OPPOSITE 10
+#define R_EXEC     11
+#define R_SESSION  12
+#define R_VOLAT    13
+#define R_STOPDIST 14
+#define R_OTHER    15
+
+void LogRej(int eng, int dir, int why)
+  {
+   if(g_rejN >= MAX_REJ) return;
+   g_rejT[g_rejN]  = TimeCurrent();
+   g_rejDir[g_rejN] = dir;
+   g_rejEng[g_rejN] = eng;
+   g_rejWhy[g_rejN] = why;
+   g_rejPx[g_rejN]  = (dir > 0) ? SymbolInfoDouble(_Symbol, SYMBOL_ASK)
+                                : SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   g_rejSl[g_rejN]  = g_slPts[eng];
+   g_rejTp[g_rejN]  = g_tpPts[eng];
+   g_rejN++;
+  }
+
 //===================== HELPERS ===================//
 double VolPerPoint()
   {
@@ -292,23 +328,23 @@ double SizeLot()
 
 bool TryEnter(int dir, int eng, double conf)
   {
-   if(g_halsted) return false;
-   if(CountPositions() >= InpMaxPositions) return false;
-   if(HasSameDir(dir) && !InpAllowPyramiding) return false;
-   if(!InpAllowHedging && HasOpposite(dir)) return false;
+   if(g_halsted) { LogRej(eng, dir, R_RISK); return false; }
+   if(CountPositions() >= InpMaxPositions) { LogRej(eng, dir, R_POSLIMIT); return false; }
+   if(HasSameDir(dir) && !InpAllowPyramiding) { LogRej(eng, dir, R_DUPLICATE); return false; }
+   if(!InpAllowHedging && HasOpposite(dir)) { LogRej(eng, dir, R_OPPOSITE); return false; }
 
    double sp = SpreadPts();
-   if(sp > InpMaxSpreadPts) return false;
+   if(sp > InpMaxSpreadPts) { LogRej(eng, dir, R_SPREAD); return false; }
 
    double atr = ATRval();
-   if(atr <= 0) return false;
+   if(atr <= 0) { LogRej(eng, dir, R_VOLAT); return false; }
 
    double expMove = MathMin(250.0, conf * (atr / g_point));
-   if(expMove < sp + InpMinEdgePts) return false;
+   if(expMove < sp + InpMinEdgePts) { LogRej(eng, dir, R_QUALITY); return false; }
 
    g_lastEng = eng;
    double lot = SizeLot();
-   if(lot <= 0) return false;
+   if(lot <= 0) { LogRej(eng, dir, R_MARGIN); return false; }
    double confScale = MathMin(1.0, 0.55 + conf * 0.25);
    lot = MathFloor((lot * confScale) / g_volStep) * g_volStep;
    if(lot < g_volMin) lot = g_volMin;
@@ -509,6 +545,67 @@ void OnTick()
    g_tickN  = 0;
   }
 
+//===================== REJECTION AUDIT ===================//
+void WriteRejectAudit()
+  {
+   if(g_rejN <= 0) return;
+   int bars = Bars(_Symbol, PERIOD_M1);
+   if(bars < 50) return;
+   MqlRates r[];
+   int got = CopyRates(_Symbol, PERIOD_M1, 0, bars, r);
+   if(got < 50) return;
+
+   int win[6][16], los[6][16], cnt[6][16];
+   ArrayInitialize(win, 0);
+   ArrayInitialize(los, 0);
+   ArrayInitialize(cnt, 0);
+
+   int ptr = 0;
+   for(int k = 0; k < g_rejN; k++)
+     {
+      int e = MathMin(MathMax(g_rejEng[k], 1), 5);
+      int w = MathMin(MathMax(g_rejWhy[k], 1), 15);
+      cnt[e][w]++;
+      while(ptr < got - 1 && r[ptr].time < g_rejT[k]) ptr++;
+      if(ptr >= got - 1) continue;
+      double px = g_rejPx[k];
+      double tp = g_rejTp[k] * g_point;
+      double sl = g_rejSl[k] * g_point;
+      int dir = g_rejDir[k];
+      int end = MathMin(ptr + 60, got - 1);
+      for(int j = ptr + 1; j <= end; j++)
+        {
+         if(dir > 0)
+           {
+            if(r[j].high >= px + tp) { win[e][w]++; break; }
+            if(r[j].low  <= px - sl) { los[e][w]++; break; }
+           }
+         else
+           {
+            if(r[j].low  <= px - tp) { win[e][w]++; break; }
+            if(r[j].high >= px + sl) { los[e][w]++; break; }
+           }
+        }
+     }
+
+   int h = FileOpen("X13_Reject_" + _Symbol + ".csv",
+                    FILE_WRITE | FILE_CSV | FILE_ANSI, ',');
+   if(h == INVALID_HANDLE) return;
+   FileWrite(h, "engine", "reason", "count", "would_win", "would_lose", "net_usd_001");
+   for(int e = 1; e <= 5; e++)
+      for(int w = 1; w <= 15; w++)
+        {
+         if(cnt[e][w] == 0) continue;
+         double net = (win[e][w] * g_tpPts[e] - los[e][w] * g_slPts[e]
+                       - cnt[e][w] * g_spMedian) * g_volPerPt * 0.01;
+         FileWrite(h, g_engName[e], IntegerToString(w), IntegerToString(cnt[e][w]),
+                   IntegerToString(win[e][w]), IntegerToString(los[e][w]),
+                   DoubleToString(net, 2));
+        }
+   FileClose(h);
+   PrintFormat("X13 rejection audit -> X13_Reject_%s.csv (%d rejected)", _Symbol, g_rejN);
+  }
+
 //===================== FUNNEL AUDIT ===================//
 void WriteFunnel()
   {
@@ -575,6 +672,7 @@ double OnTester()
                  + HistoryDealGetDouble(t, DEAL_COMMISSION);
      }
 
+   WriteRejectAudit();
    WriteFunnel();
 
    double dealSum = 0.0;
