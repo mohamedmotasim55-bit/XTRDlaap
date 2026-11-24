@@ -433,6 +433,13 @@ int OnInit()
    hEmaS = iMA(_Symbol, PERIOD_M1, InpMomSlow, 0, MODE_EMA, PRICE_CLOSE);
    if(hATR == INVALID_HANDLE || hEmaF == INVALID_HANDLE || hEmaS == INVALID_HANDLE) return INIT_FAILED;
 
+   g_slPts[1] = InpSlPts;
+   g_tpPts[1] = InpTpPts;
+   g_slPts[2] = (int)(InpSlPts * 1.8); g_tpPts[2] = (int)(InpTpPts * 2.1);
+   g_slPts[3] = (int)(InpSlPts * 1.5); g_tpPts[3] = (int)(InpTpPts * 1.3);
+   g_slPts[4] = (int)(InpSlPts * 1.2); g_tpPts[4] = (int)(InpTpPts * 1.2);
+   g_slPts[5] = (int)(InpSlPts * 1.3); g_tpPts[5] = (int)(InpTpPts * 1.2);
+
    g_trade.SetDeviationInPoints(50);
    g_trade.SetTypeFillingBySymbol(_Symbol);
    g_initEq = AccountInfoDouble(ACCOUNT_EQUITY);
@@ -598,6 +605,31 @@ double OnTester()
      }
 
    FileClose(h);
+
+   // one result file per optimisation pass, named by its parameters
+   string tag = StringFormat("X13_Opt_%d_%d_%d_%d_%d",
+                             (int)InpSlPts, (int)InpTpPts, (int)InpMinEdgePts,
+                             (int)(InpMinConsensus * 100), InpMaxPositions);
+   int ho = FileOpen(tag + ".csv", FILE_WRITE | FILE_CSV | FILE_ANSI | FILE_COMMON, ',');
+   if(ho != INVALID_HANDLE)
+     {
+      FileWrite(ho, "sl", "tp", "edge", "cons", "maxpos", "net", "trades",
+                "win", "pf", "ddpct", "final");
+      FileWrite(ho,
+                DoubleToString(InpSlPts, 0), DoubleToString(InpTpPts, 0),
+                DoubleToString(InpMinEdgePts, 0), DoubleToString(InpMinConsensus, 2),
+                IntegerToString(InpMaxPositions),
+                DoubleToString(TesterStatistics(STAT_PROFIT), 2),
+                DoubleToString(TesterStatistics(STAT_TRADES), 0),
+                DoubleToString(100.0 * TesterStatistics(STAT_PROFIT_TRADES) /
+                              MathMax(TesterStatistics(STAT_TRADES), 1), 1),
+                DoubleToString(TesterStatistics(STAT_PROFIT_FACTOR), 3),
+                DoubleToString(TesterStatistics(STAT_EQUITYDD_PERCENT), 2),
+                DoubleToString(TesterStatistics(STAT_INITIAL_DEPOSIT) +
+                              TesterStatistics(STAT_PROFIT), 2));
+      FileClose(ho);
+     }
+
    PrintFormat("X13 FINAL native report -> %s", f);
    return TesterStatistics(STAT_PROFIT);
   }
