@@ -1,6 +1,10 @@
 name: MT5 Data Prep
 
 on:
+  push:
+    paths:
+      - '.github/workflows/dataprep.yml'
+      - 'tools/DataPrep.mq5'
   workflow_dispatch:
     inputs:
       symbol:
@@ -20,9 +24,9 @@ concurrency:
 env:
   INSTALLER_URL: https://download.mql5.com/cdn/web/just.global.markets/mt5/justmarkets5setup.exe
   MT5_DIR: C:\mt5
-  SYMBOL: ${{ github.event.inputs.symbol }}
-  WINDOW_DAYS: ${{ github.event.inputs.window_days }}
-  DL_TICKS: ${{ github.event.inputs.download_ticks }}
+  SYMBOL: ${{ github.event.inputs.symbol || 'XAUUSD.m' }}
+  WINDOW_DAYS: ${{ github.event.inputs.window_days || '365' }}
+  DL_TICKS: ${{ github.event.inputs.download_ticks || 'true' }}
 
 jobs:
   dataprep:
@@ -84,7 +88,7 @@ jobs:
           path: |
             C:\mt5\bases
             C:\mt5\Tester
-          key: mt5data-${{ github.event.inputs.symbol }}-${{ github.event.inputs.window_days }}-v1
+          key: mt5data-${{ github.event.inputs.symbol || 'XAUUSD.m' }}-${{ github.event.inputs.window_days || '365' }}-v1
 
       - name: Resolve MT5 paths
         shell: pwsh
@@ -188,12 +192,12 @@ jobs:
           path: |
             C:\mt5\bases
             C:\mt5\Tester
-          key: mt5data-${{ github.event.inputs.symbol }}-${{ github.event.inputs.window_days }}-v1
+          key: mt5data-${{ github.event.inputs.symbol || 'XAUUSD.m' }}-${{ github.event.inputs.window_days || '365' }}-v1
 
       - name: Upload coverage
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dataprep-${{ github.event.inputs.symbol }}-${{ github.event.inputs.window_days }}d
+          name: dataprep-${{ github.event.inputs.symbol || 'XAUUSD.m' }}-${{ github.event.inputs.window_days || '365' }}d
           path: dataprep.csv
           if-no-files-found: warn
