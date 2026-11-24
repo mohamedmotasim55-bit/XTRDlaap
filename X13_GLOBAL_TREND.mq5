@@ -224,7 +224,7 @@ double OnTester()
       {"sharpe",         DoubleToString(TesterStatistics(STAT_SHARPE_RATIO), 3)},
       {"recovery",       DoubleToString(TesterStatistics(STAT_RECOVERY_FACTOR), 3)},
       {"initial_deposit",DoubleToString(TesterStatistics(STAT_INITIAL_DEPOSIT), 2)},
-      {"final_equity",   DoubleToString(TesterStatistics(STAT_EQUITY), 2)}
+      {"final_equity",   DoubleToString(TesterStatistics(STAT_BALANCE), 2)}
    };
    for(int r = 0; r < 17; r++)
       FileWrite(h, rows[r][0], rows[r][1]);
