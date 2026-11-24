@@ -89,6 +89,8 @@ int      g_voteBuy[6], g_voteSell[6];
 double   g_tickLastMid = 0;
 int      g_tickUp = 0, g_tickDn = 0, g_tickN = 0;
 int      g_lastEng = 1;
+int      g_lotFail = 0;
+double   g_dbgRiskLot = 0, g_dbgMarginLot = 0, g_dbgEq = 0;
 
 #define MAX_REJ 60000
 datetime g_rejT[MAX_REJ];
@@ -111,6 +113,7 @@ int      g_rejN = 0;
 #define R_VOLAT    13
 #define R_STOPDIST 14
 #define R_OTHER    15
+#define R_MINLOT   16
 
 void LogRej(int eng, int dir, int why)
   {
@@ -319,9 +322,17 @@ double SizeLot()
       lotByMargin = (lev > 0) ? AccountInfoDouble(ACCOUNT_MARGIN_FREE) * 0.8 * lev / notional : 0;
      }
 
+   g_dbgRiskLot = lotByRisk;
+   g_dbgMarginLot = lotByMargin;
+   g_dbgEq = eq;
    double lot = MathMin(lotByRisk, lotByMargin);
    lot = MathFloor(lot / g_volStep) * g_volStep;
-   if(lot < g_volMin) return 0;
+   if(lot < g_volMin)
+     {
+      g_lotFail = (lotByRisk < g_volMin) ? 1 : 2;
+      return 0;
+     }
+   g_lotFail = 0;
    if(lot > g_volMax) lot = g_volMax;
    return NormalizeDouble(lot, 2);
   }
@@ -344,7 +355,7 @@ bool TryEnter(int dir, int eng, double conf)
 
    g_lastEng = eng;
    double lot = SizeLot();
-   if(lot <= 0) { LogRej(eng, dir, R_MARGIN); return false; }
+   if(lot <= 0) { LogRej(eng, dir, (g_lotFail == 1) ? R_MINLOT : R_MARGIN); return false; }
    double confScale = MathMin(1.0, 0.55 + conf * 0.25);
    lot = MathFloor((lot * confScale) / g_volStep) * g_volStep;
    if(lot < g_volMin) lot = g_volMin;
@@ -555,7 +566,7 @@ void WriteRejectAudit()
    int got = CopyRates(_Symbol, PERIOD_M1, 0, bars, r);
    if(got < 50) return;
 
-   int win[6][16], los[6][16], cnt[6][16];
+   int win[6][20], los[6][20], cnt[6][20];
    ArrayInitialize(win, 0);
    ArrayInitialize(los, 0);
    ArrayInitialize(cnt, 0);
@@ -564,7 +575,7 @@ void WriteRejectAudit()
    for(int k = 0; k < g_rejN; k++)
      {
       int e = MathMin(MathMax(g_rejEng[k], 1), 5);
-      int w = MathMin(MathMax(g_rejWhy[k], 1), 15);
+      int w = MathMin(MathMax(g_rejWhy[k], 1), 19);
       cnt[e][w]++;
       while(ptr < got - 1 && r[ptr].time < g_rejT[k]) ptr++;
       if(ptr >= got - 1) continue;
@@ -593,7 +604,7 @@ void WriteRejectAudit()
    if(h == INVALID_HANDLE) return;
    FileWrite(h, "engine", "reason", "count", "would_win", "would_lose", "net_usd_001");
    for(int e = 1; e <= 5; e++)
-      for(int w = 1; w <= 15; w++)
+      for(int w = 1; w <= 19; w++)
         {
          if(cnt[e][w] == 0) continue;
          double net = (win[e][w] * g_tpPts[e] - los[e][w] * g_slPts[e]
