@@ -1,5 +1,0 @@
-v3.01 (original, unmodified)
-96da088da2e2cf708b32dff01a5a9be97449c1522f5bad6cd7b12decad7db4ba  XTRD_OMIGA_InstantMomentum_v3.01_Research.mq5
-
-v3.02 (repair)
-c84b98ced061f2393512ed663ba374792050d072e628bae10eb3ca664163165f  XTRD_OMIGA_InstantMomentum_v3.02_Research_Repair.mq5

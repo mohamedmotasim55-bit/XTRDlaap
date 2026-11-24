@@ -1,5 +1,0 @@
-test,last_trade_close,gate_rejections_total,positions_at_reject,pending_orders_at_reject,outstanding_requests_INFERRED,max_allowed_pos,free_margin_usd,reserved_margin_usd_INFERRED,new_order_margin_usd,blocking_term,first_rejection_time,last_rejection_time,per_day_breakdown
-TEST_1_MICRO,2026-10-26 05:57:25,1933,0,0,6,6,8.28,8.0,1.33,occupied_slots>=max_allowed_pos(6) AND free_margin-reserved_margin<new_margin,UNKNOWN (not logged),UNKNOWN (not logged),UNKNOWN (not separable)
-TEST_2_SHORT,2026-10-26 12:07:31,1036,0,0,6,6,12.94,8.0,1.33,occupied_slots>=max_allowed_pos(6) AND free_margin-reserved_margin<new_margin,UNKNOWN (not logged),UNKNOWN (not logged),UNKNOWN (not separable)
-TEST_3_EXPANSION,2026-10-26 03:39:08,1538,0,0,5,6,6.9,6.67,1.33,free_margin-reserved_margin<new_margin,UNKNOWN (not logged),UNKNOWN (not logged),UNKNOWN (not separable)
-TEST_4_ALL_ENGINES,2026-10-26 12:59:13,4105,0,0,6,6,7.74,8.0,1.33,occupied_slots>=max_allowed_pos(6) AND free_margin-reserved_margin<new_margin,UNKNOWN (not logged),UNKNOWN (not logged),UNKNOWN (not separable)
