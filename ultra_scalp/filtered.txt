@@ -1,0 +1,35 @@
+nohup: ignoring input
+vol>q80 & rng60>q80          dev: n=  4529 WR= 18.3% net=  -51968 pt/tr=-11.47
+vol>q80 & rng60>q80          oos: n=  2195 WR= 19.0% net=  -23424 pt/tr=-10.67
+
+vol>q80                      dev: n=  7466 WR= 16.7% net=  -99360 pt/tr=-13.31
+vol>q80                      oos: n=  3517 WR= 18.0% net=  -41760 pt/tr=-11.87
+
+rng60>q80                    dev: n=  7463 WR= 16.3% net= -102288 pt/tr=-13.71
+rng60>q80                    oos: n=  3505 WR= 17.7% net=  -42832 pt/tr=-12.22
+
+hour15-18                    dev: n=  8832 WR= 14.7% net= -137696 pt/tr=-15.59
+hour15-18                    oos: n=  3851 WR= 15.1% net=  -57936 pt/tr=-15.04
+
+vol>q80 & hour15-18          dev: n=  4159 WR= 17.1% net=  -53568 pt/tr=-12.88
+vol>q80 & hour15-18          oos: n=  1323 WR= 18.3% net=  -15232 pt/tr=-11.51
+
+vol>q90 & rng60>q90          dev: n=  2024 WR= 20.3% net=  -18736 pt/tr= -9.26
+vol>q90 & rng60>q90          oos: n=   974 WR= 21.7% net=   -7536 pt/tr= -7.74
+
+absr5>q90 & vol>q80          dev: n=  1693 WR= 20.6% net=  -15088 pt/tr= -8.91
+absr5>q90 & vol>q80          oos: n=   897 WR= 19.0% net=   -9664 pt/tr=-10.77
+
+top: vol>q80&rng>q80&absr5>q80 dev: n=  1992 WR= 20.0% net=  -19168 pt/tr= -9.62
+top: vol>q80&rng>q80&absr5>q80 oos: n=  1034 WR= 19.9% net=  -10016 pt/tr= -9.69
+
+=== best combined subset, per month ===
+  m1: n= 2799 WR= 18.8% net= -30656 pt/tr=-10.95
+  m2: n= 1376 WR= 18.5% net= -15472 pt/tr=-11.24
+  m3: n= 2550 WR= 18.5% net= -28736 pt/tr=-11.27
+
+=== required win rate for each T/S at these odds ===
+  T=80 S=30: break-even WR = 27.3%
+  T=60 S=30: break-even WR = 33.3%
+  T=100 S=40: break-even WR = 28.6%
+  T=50 S=25: break-even WR = 33.3%
