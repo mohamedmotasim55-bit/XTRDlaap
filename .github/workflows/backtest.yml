@@ -39,6 +39,9 @@ on:
       to_date:
         description: "End date yyyy-MM-dd (empty = yesterday), for month-by-month validation"
         default: ""
+      set_file:
+        description: "Optional .set file at repository root, applied as ExpertParameters"
+        default: ""
       optimize:
         description: "0=off, 1=slow complete, 2=fast genetic"
         default: "0"
@@ -68,6 +71,7 @@ env:
   INPUT_POS: ${{ github.event.inputs.max_positions }}
   INPUT_EXTRA: ${{ github.event.inputs.extra_inputs }}
   SPREAD_PTS: ${{ github.event.inputs.spread_pts }}
+  SET_FILE: ${{ github.event.inputs.set_file }}
   MT5_DIR: C:\mt5
 
 jobs:
@@ -85,12 +89,14 @@ jobs:
             Write-Error "No EA given. Run with -f ea=<FileName> (file must exist at repository root as <FileName>.mq5)."
             exit 1
           }
-          $f = Join-Path $env:GITHUB_WORKSPACE "$env:EA_NAME.mq5"
-          if (-not (Test-Path $f)) {
-            Write-Error "EA file not found: $f. Add it at the repository root."
+          $src = Join-Path $env:GITHUB_WORKSPACE "$env:EA_NAME.mq5"
+          $bin = Join-Path $env:GITHUB_WORKSPACE "$env:EA_NAME.ex5"
+          if (-not (Test-Path $src) -and -not (Test-Path $bin)) {
+            Write-Error "Neither $env:EA_NAME.mq5 nor $env:EA_NAME.ex5 found at the repository root."
             exit 1
           }
-          Write-Host "EA validated: $env:EA_NAME.mq5"
+          if (Test-Path $src) { Write-Host "EA validated (source): $env:EA_NAME.mq5" }
+          else { Write-Host "EA validated (pre-compiled): $env:EA_NAME.ex5" }
 
       - name: Validate required secrets
         shell: pwsh
@@ -215,7 +221,12 @@ jobs:
       - name: Copy expert source
         shell: pwsh
         run: |
-          Copy-Item -Path "$env:EA_NAME.mq5" -Destination (Join-Path $env:EXPERTS_DIR "$env:EA_NAME.mq5") -Force
+          if (Test-Path "$env:EA_NAME.mq5") {
+            Copy-Item -Path "$env:EA_NAME.mq5" -Destination (Join-Path $env:EXPERTS_DIR "$env:EA_NAME.mq5") -Force
+          }
+          if (Test-Path "$env:EA_NAME.ex5") {
+            Copy-Item -Path "$env:EA_NAME.ex5" -Destination (Join-Path $env:EXPERTS_DIR "$env:EA_NAME.ex5") -Force
+          }
           Get-ChildItem $env:EXPERTS_DIR | Select-Object Name, Length | Format-Table
 
       - name: Static MQL5 checks
@@ -230,6 +241,14 @@ jobs:
         run: |
           $log = Join-Path $env:RUNNER_TEMP 'compile.log'
           $src = Join-Path $env:EXPERTS_DIR "$env:EA_NAME.mq5"
+          $prebuilt = Join-Path $env:EXPERTS_DIR "$env:EA_NAME.ex5"
+          if (-not (Test-Path $src)) {
+            if (-not (Test-Path $prebuilt)) { Write-Error 'Neither source nor pre-compiled expert is available.'; exit 1 }
+            if ((Get-Item $prebuilt).Length -lt 1024) { Write-Error 'Pre-compiled EX5 looks truncated.'; exit 1 }
+            "Pre-compiled expert supplied; MetaEditor compile skipped." | Set-Content -Path (Join-Path $env:RUNNER_TEMP 'compile-artifact.log')
+            Write-Host "Using pre-compiled expert: $prebuilt ($((Get-Item $prebuilt).Length) bytes)"
+            exit 0
+          }
           Write-Host "Compiling $src"
           $p = Start-Process -FilePath $env:METAEDITOR -ArgumentList "/portable","/compile:$src","/log:$log" -Wait -PassThru
           # metaeditor64.exe returns 1 even on a clean build, so the log text and
@@ -376,6 +395,16 @@ jobs:
             'ShutdownTerminal=1'
           )
           if ($env:OPT -ne '0') { $lines += "OptimizationCriterion=$env:OPTCRIT" }
+          if ($env:SET_FILE -ne '') {
+            $setSrc = Join-Path $env:GITHUB_WORKSPACE $env:SET_FILE
+            if (Test-Path $setSrc) {
+              $prof = Join-Path $env:MT5_DIR 'MQL5\Profiles\Tester'
+              New-Item -ItemType Directory -Force -Path $prof | Out-Null
+              Copy-Item $setSrc (Join-Path $prof $env:SET_FILE) -Force
+              $lines += "ExpertParameters=$env:SET_FILE"
+              Write-Host "Expert parameters file: $env:SET_FILE"
+            } else { Write-Warning "set file not found: $setSrc" }
+          }
           if ($env:SPREAD_PTS -ne '') { $lines += "Spread=$env:SPREAD_PTS" }
           if ($env:INPUT_RISK -ne '' -or $env:INPUT_POS -ne '' -or $env:INPUT_EXTRA -ne '') {
             $lines += '[TesterInputs]'
