@@ -59,6 +59,7 @@ input double InpH3MinStallScore      = 0.50;
 input double InpH3ReclaimSpreadFrac  = 0.15;
 input double InpH3StopSpreadMult     = 1.0;
 input int    InpH3MaxReclaimAgeSec   = 30;        // signal must follow the reclaim within this many seconds
+input double InpH3StallEffWeight      = 0.50;      // StallScore weight on efficiency (rest = quote-activity decay)
 
 // Reference sampling
 input int    InpRefSampleSeconds     = 60;        // push one sigma300 sample per minute
@@ -134,7 +135,7 @@ long    g_diag_last_ms = 0;
 int D_H1_HIST, D_H1_WIN, D_H1_IMP, D_H1_DISP, D_H1_EFF, D_H1_PB, D_H1_PBDUR,
     D_H1_VOLDEC, D_H1_TRIG, D_H1_SPREAD, D_H1_EMIT;
 int D_H2_HIST, D_H2_PCTL, D_H2_BOX, D_H2_BREAK, D_H2_RATE, D_H2_EFF, D_H2_EMIT;
-int D_H3_HIST, D_H3_SWEEP, D_H3_PEN, D_H3_STALL, D_H3_EFF, D_H3_RECLAIM, D_H3_BOS, D_H3_EMIT;
+int D_H3_HIST, D_H3_SWEEP, D_H3_PEN, D_H3_RECLAIM, D_H3_EFF, D_H3_ACT, D_H3_STALL, D_H3_BOS, D_H3_EMIT;
 int D_RND_EMIT;
 
 //====================== SMALL HELPERS ===============================
@@ -589,13 +590,15 @@ void DetectH3(const TickRec &r)
    double secs=MathMax(0.001,(double)(g_ticks[iRec].t-g_ticks[iExt].t)/1000.0);
    double rateStall=(double)(iRec-iExt)/secs;
    double rateRef=MathMax(0.01,g_quote_rate60);
-   double stallScore=0.5*(1.0-MathMin(1.0,effStall/MathMax(0.01,InpH3MaxStallEfficiency)))
-                   + 0.5*(1.0-MathMin(1.0,rateStall/rateRef));
-   Diag(D_H3_STALL,(stallScore>=InpH3MinStallScore));
-   if(stallScore<InpH3MinStallScore) return;
-
+   double wEff=MathMin(1.0,MathMax(0.0,InpH3StallEffWeight));
+   double stallScore=wEff*(1.0-MathMin(1.0,effStall/MathMax(0.01,InpH3MaxStallEfficiency)))
+                   + (1.0-wEff)*(1.0-MathMin(1.0,rateStall/rateRef));
    Diag(D_H3_EFF,(effStall<InpH3MaxStallEfficiency));
    if(effStall>=InpH3MaxStallEfficiency) return;
+
+   Diag(D_H3_ACT,(rateStall<rateRef));
+   Diag(D_H3_STALL,(stallScore>=InpH3MinStallScore));
+   if(stallScore<InpH3MinStallScore) return;
 
    // Micro break of structure after the reclaim: the current tick must break
    // the 3 s extreme formed between the reclaim and the previous tick.
@@ -711,11 +714,12 @@ int OnInit()
    D_H3_HIST=DiagSlot("H3_01_history");
    D_H3_SWEEP=DiagSlot("H3_02_sweep_present");
    D_H3_PEN =DiagSlot("H3_03_penetration_bounds");
-   D_H3_STALL=DiagSlot("H3_04_stall_score");
+   D_H3_RECLAIM=DiagSlot("H3_04_reclaim");
    D_H3_EFF =DiagSlot("H3_05_stall_efficiency");
-   D_H3_RECLAIM=DiagSlot("H3_06_reclaim");
-   D_H3_BOS =DiagSlot("H3_07_micro_bos");
-   D_H3_EMIT=DiagSlot("H3_08_emitted");
+   D_H3_ACT =DiagSlot("H3_06_quote_activity_decay");
+   D_H3_STALL=DiagSlot("H3_07_stall_score");
+   D_H3_BOS =DiagSlot("H3_08_micro_bos");
+   D_H3_EMIT=DiagSlot("H3_09_emitted");
    D_RND_EMIT=DiagSlot("RND_01_emitted");
 
    DumpDiagnostics();
