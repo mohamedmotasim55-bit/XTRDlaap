@@ -64,7 +64,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: backtest-${{ github.ref }}
+  group: backtest-${{ github.ref }}-${{ github.event.inputs.tag || 'push' }}
   cancel-in-progress: false
 
 env:
