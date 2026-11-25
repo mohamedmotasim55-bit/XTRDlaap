@@ -1,0 +1,1121 @@
+2026.10.26 00:11:18,XAUUSD.m,SIGNAL | SELL | boxHigh=3996.74 boxLow=3996.24 boxRangePts=50.0 displacementPts=-30.0 velocityPtsSec=-8.0 spreadPts=26.0 entry=3996.02 SL=3996.69 stopPts=67.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.01
+2026.10.26 00:11:18,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:11:18,XAUUSD.m,SIGNAL | SELL | boxHigh=3996.74 boxLow=3996.24 boxRangePts=50.0 displacementPts=-30.0 velocityPtsSec=-8.5 spreadPts=26.0 entry=3996.03 SL=3996.69 stopPts=66.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.98
+2026.10.26 00:11:18,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:29:54,XAUUSD.m,SIGNAL | BUY | boxHigh=3998.91 boxLow=3998.44 boxRangePts=47.0 displacementPts=36.0 velocityPtsSec=11.2 spreadPts=26.0 entry=3999.07 SL=3998.46 stopPts=61.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.44
+2026.10.26 00:29:54,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:29:54,XAUUSD.m,SIGNAL | BUY | boxHigh=3998.91 boxLow=3998.44 boxRangePts=47.0 displacementPts=36.0 velocityPtsSec=11.1 spreadPts=26.0 entry=3999.07 SL=3998.46 stopPts=61.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.44
+2026.10.26 00:29:54,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:29:54,XAUUSD.m,SIGNAL | BUY | boxHigh=3998.91 boxLow=3998.44 boxRangePts=47.0 displacementPts=40.0 velocityPtsSec=13.1 spreadPts=26.0 entry=3999.08 SL=3998.46 stopPts=62.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.48
+2026.10.26 00:29:54,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:29:55,XAUUSD.m,SIGNAL | BUY | boxHigh=3998.91 boxLow=3998.44 boxRangePts=47.0 displacementPts=38.0 velocityPtsSec=12.2 spreadPts=26.0 entry=3999.06 SL=3998.46 stopPts=60.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.40
+2026.10.26 00:29:55,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:29:57,XAUUSD.m,SIGNAL | SELL | boxHigh=3998.91 boxLow=3998.44 boxRangePts=47.0 displacementPts=-52.0 velocityPtsSec=-16.8 spreadPts=26.0 entry=3998.19 SL=3998.89 stopPts=70.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.10
+2026.10.26 00:29:57,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:29:57,XAUUSD.m,SIGNAL | SELL | boxHigh=3998.91 boxLow=3998.44 boxRangePts=47.0 displacementPts=-52.0 velocityPtsSec=-16.7 spreadPts=26.0 entry=3998.19 SL=3998.89 stopPts=70.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.10
+2026.10.26 00:29:57,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:29:57,XAUUSD.m,SIGNAL | SELL | boxHigh=3998.91 boxLow=3998.44 boxRangePts=47.0 displacementPts=-52.0 velocityPtsSec=-15.8 spreadPts=26.0 entry=3998.19 SL=3998.89 stopPts=70.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.10
+2026.10.26 00:29:57,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:38:46,XAUUSD.m,SIGNAL | BUY | boxHigh=4000.19 boxLow=3999.59 boxRangePts=60.0 displacementPts=66.0 velocityPtsSec=20.5 spreadPts=26.0 entry=4000.38 SL=3999.74 stopPts=64.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.92
+2026.10.26 00:38:46,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:38:46,XAUUSD.m,SIGNAL | BUY | boxHigh=4000.19 boxLow=3999.59 boxRangePts=60.0 displacementPts=66.0 velocityPtsSec=18.2 spreadPts=26.0 entry=4000.38 SL=3999.74 stopPts=64.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.92
+2026.10.26 00:38:46,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:38:47,XAUUSD.m,SIGNAL | BUY | boxHigh=4000.19 boxLow=3999.59 boxRangePts=60.0 displacementPts=65.0 velocityPtsSec=16.2 spreadPts=26.0 entry=4000.37 SL=3999.74 stopPts=63.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.89
+2026.10.26 00:38:47,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:38:48,XAUUSD.m,SIGNAL | BUY | boxHigh=4000.19 boxLow=3999.59 boxRangePts=60.0 displacementPts=55.0 velocityPtsSec=18.3 spreadPts=26.0 entry=4000.38 SL=3999.74 stopPts=64.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.92
+2026.10.26 00:38:48,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:50:19,XAUUSD.m,SIGNAL | BUY | boxHigh=4003.00 boxLow=4002.41 boxRangePts=59.0 displacementPts=36.0 velocityPtsSec=11.8 spreadPts=26.0 entry=4003.22 SL=4002.55 stopPts=67.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.01
+2026.10.26 00:50:19,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:50:20,XAUUSD.m,SIGNAL | BUY | boxHigh=4003.00 boxLow=4002.41 boxRangePts=59.0 displacementPts=36.0 velocityPtsSec=11.2 spreadPts=26.0 entry=4003.22 SL=4002.55 stopPts=67.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.01
+2026.10.26 00:50:20,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:50:20,XAUUSD.m,SIGNAL | BUY | boxHigh=4003.00 boxLow=4002.41 boxRangePts=59.0 displacementPts=30.0 velocityPtsSec=9.2 spreadPts=26.0 entry=4003.16 SL=4002.55 stopPts=61.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.44
+2026.10.26 00:50:20,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:50:20,XAUUSD.m,SIGNAL | BUY | boxHigh=4003.00 boxLow=4002.41 boxRangePts=59.0 displacementPts=27.0 velocityPtsSec=8.7 spreadPts=26.0 entry=4003.17 SL=4002.55 stopPts=62.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.48
+2026.10.26 00:50:20,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:52:21,XAUUSD.m,SIGNAL | BUY | boxHigh=4002.81 boxLow=4002.34 boxRangePts=47.0 displacementPts=37.0 velocityPtsSec=11.2 spreadPts=26.0 entry=4003.06 SL=4002.36 stopPts=70.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.10
+2026.10.26 00:52:21,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:52:21,XAUUSD.m,SIGNAL | BUY | boxHigh=4002.81 boxLow=4002.34 boxRangePts=47.0 displacementPts=36.0 velocityPtsSec=10.7 spreadPts=26.0 entry=4003.05 SL=4002.36 stopPts=69.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.07
+2026.10.26 00:52:21,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:52:22,XAUUSD.m,SIGNAL | BUY | boxHigh=4002.81 boxLow=4002.34 boxRangePts=47.0 displacementPts=37.0 velocityPtsSec=9.8 spreadPts=26.0 entry=4003.06 SL=4002.36 stopPts=70.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.10
+2026.10.26 00:52:22,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:52:22,XAUUSD.m,SIGNAL | BUY | boxHigh=4002.81 boxLow=4002.34 boxRangePts=47.0 displacementPts=36.0 velocityPtsSec=9.3 spreadPts=26.0 entry=4003.05 SL=4002.36 stopPts=69.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.07
+2026.10.26 00:52:22,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:52:22,XAUUSD.m,SIGNAL | BUY | boxHigh=4002.81 boxLow=4002.34 boxRangePts=47.0 displacementPts=35.0 velocityPtsSec=9.0 spreadPts=26.0 entry=4003.04 SL=4002.36 stopPts=68.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.04
+2026.10.26 00:52:22,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 00:55:00,XAUUSD.m,SIGNAL | SELL | boxHigh=4001.81 boxLow=4001.30 boxRangePts=51.0 displacementPts=-29.0 velocityPtsSec=-8.3 spreadPts=26.0 entry=4001.09 SL=4001.75 stopPts=66.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.98
+2026.10.26 00:55:00,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.26 05:36:28,XAUUSD.m,SIGNAL | BUY | boxHigh=4011.99 boxLow=4011.40 boxRangePts=59.0 displacementPts=38.0 velocityPtsSec=11.9 spreadPts=26.0 entry=4012.14 SL=4011.54 stopPts=60.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.40
+2026.10.26 05:36:28,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4012.14 deal=2 order=2
+2026.10.26 05:36:28,XAUUSD.m,DEAL | entry=0 price=4012.14 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 05:36:53,XAUUSD.m,DEAL | entry=1 price=4012.18 profit=0.16 commission=0.00 swap=0.00
+2026.10.26 05:50:06,XAUUSD.m,SIGNAL | SELL | boxHigh=4011.09 boxLow=4010.53 boxRangePts=56.0 displacementPts=-50.0 velocityPtsSec=-16.6 spreadPts=26.0 entry=4010.35 SL=4010.98 stopPts=63.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.89
+2026.10.26 05:50:06,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4010.35 deal=4 order=4
+2026.10.26 05:50:06,XAUUSD.m,DEAL | entry=0 price=4010.35 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 05:51:13,XAUUSD.m,DEAL | entry=1 price=4010.98 profit=-1.89 commission=0.00 swap=0.00
+2026.10.26 05:51:46,XAUUSD.m,SIGNAL | SELL | boxHigh=4010.99 boxLow=4010.39 boxRangePts=60.0 displacementPts=-32.0 velocityPtsSec=-10.1 spreadPts=26.0 entry=4010.24 SL=4010.84 stopPts=60.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.40
+2026.10.26 05:51:46,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4010.24 deal=6 order=6
+2026.10.26 05:51:46,XAUUSD.m,DEAL | entry=0 price=4010.24 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 05:52:07,XAUUSD.m,DEAL | entry=1 price=4010.84 profit=-2.40 commission=0.00 swap=0.00
+2026.10.26 05:55:17,XAUUSD.m,SIGNAL | SELL | boxHigh=4009.13 boxLow=4008.66 boxRangePts=47.0 displacementPts=-31.0 velocityPtsSec=-10.2 spreadPts=26.0 entry=4008.43 SL=4009.11 stopPts=68.0 volume=0.03 riskMoney=2.49 estimatedLoss=2.04
+2026.10.26 05:55:17,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4008.43 deal=8 order=8
+2026.10.26 05:55:17,XAUUSD.m,DEAL | entry=0 price=4008.43 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 05:55:45,XAUUSD.m,DEAL | entry=1 price=4008.28 profit=0.45 commission=0.00 swap=0.00
+2026.10.26 06:02:54,XAUUSD.m,SIGNAL | SELL | boxHigh=4009.12 boxLow=4008.63 boxRangePts=49.0 displacementPts=-28.0 velocityPtsSec=-8.2 spreadPts=26.0 entry=4008.38 SL=4009.08 stopPts=70.0 volume=0.03 riskMoney=2.49 estimatedLoss=2.10
+2026.10.26 06:02:54,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4008.38 deal=10 order=10
+2026.10.26 06:02:54,XAUUSD.m,DEAL | entry=0 price=4008.38 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 06:03:04,XAUUSD.m,DEAL | entry=1 price=4009.09 profit=-2.13 commission=0.00 swap=0.00
+2026.10.26 06:11:29,XAUUSD.m,SIGNAL | SELL | boxHigh=4008.54 boxLow=4008.02 boxRangePts=52.0 displacementPts=-32.0 velocityPtsSec=-10.6 spreadPts=26.0 entry=4007.84 SL=4008.47 stopPts=63.0 volume=0.03 riskMoney=2.49 estimatedLoss=1.89
+2026.10.26 06:11:29,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4007.84 deal=12 order=12
+2026.10.26 06:11:29,XAUUSD.m,DEAL | entry=0 price=4007.84 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 06:11:47,XAUUSD.m,DEAL | entry=1 price=4008.47 profit=-1.89 commission=0.00 swap=0.00
+2026.10.26 06:11:49,XAUUSD.m,SIGNAL | BUY | boxHigh=4008.54 boxLow=4007.96 boxRangePts=58.0 displacementPts=40.0 velocityPtsSec=13.3 spreadPts=26.0 entry=4008.71 SL=4008.09 stopPts=62.0 volume=0.04 riskMoney=2.48 estimatedLoss=2.48
+2026.10.26 06:11:49,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4008.71 deal=14 order=14
+2026.10.26 06:11:49,XAUUSD.m,DEAL | entry=0 price=4008.71 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 06:12:24,XAUUSD.m,EXIT_HARVEST | ticket=14 profit_pts=49.0 last_10_tick_move=0.0
+2026.10.26 06:12:24,XAUUSD.m,DEAL | entry=1 price=4009.20 profit=1.96 commission=0.00 swap=0.00
+2026.10.26 06:23:06,XAUUSD.m,SIGNAL | BUY | boxHigh=4009.63 boxLow=4009.18 boxRangePts=45.0 displacementPts=49.0 velocityPtsSec=15.8 spreadPts=26.0 entry=4009.80 SL=4009.18 stopPts=62.0 volume=0.04 riskMoney=2.49 estimatedLoss=2.48
+2026.10.26 06:23:06,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4009.80 deal=16 order=16
+2026.10.26 06:23:06,XAUUSD.m,DEAL | entry=0 price=4009.80 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 06:25:25,XAUUSD.m,DEAL | entry=1 price=4009.18 profit=-2.48 commission=0.00 swap=0.00
+2026.10.26 06:40:31,XAUUSD.m,SIGNAL | BUY | boxHigh=4012.46 boxLow=4011.95 boxRangePts=51.0 displacementPts=30.0 velocityPtsSec=8.7 spreadPts=26.0 entry=4012.70 SL=4012.01 stopPts=69.0 volume=0.03 riskMoney=2.48 estimatedLoss=2.07
+2026.10.26 06:40:31,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4012.70 deal=18 order=18
+2026.10.26 06:40:31,XAUUSD.m,DEAL | entry=0 price=4012.70 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 06:40:37,XAUUSD.m,DEAL | entry=1 price=4011.95 profit=-2.25 commission=0.00 swap=0.00
+2026.10.26 06:46:14,XAUUSD.m,SIGNAL | BUY | boxHigh=4012.64 boxLow=4012.33 boxRangePts=31.0 displacementPts=34.0 velocityPtsSec=10.2 spreadPts=26.0 entry=4012.85 SL=4012.19 stopPts=66.0 volume=0.03 riskMoney=2.47 estimatedLoss=1.98
+2026.10.26 06:46:14,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4012.85 deal=20 order=20
+2026.10.26 06:46:14,XAUUSD.m,DEAL | entry=0 price=4012.85 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 06:46:59,XAUUSD.m,DEAL | entry=1 price=4013.00 profit=0.45 commission=0.00 swap=0.00
+2026.10.26 06:50:51,XAUUSD.m,SIGNAL | BUY | boxHigh=4012.24 boxLow=4011.84 boxRangePts=40.0 displacementPts=48.0 velocityPtsSec=15.2 spreadPts=26.0 entry=4012.47 SL=4011.79 stopPts=68.0 volume=0.03 riskMoney=2.47 estimatedLoss=2.04
+2026.10.26 06:50:51,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4012.47 deal=22 order=22
+2026.10.26 06:50:51,XAUUSD.m,DEAL | entry=0 price=4012.47 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 06:50:57,XAUUSD.m,EXIT_HARVEST | ticket=22 profit_pts=145.0 last_10_tick_move=1.0
+2026.10.26 06:50:57,XAUUSD.m,DEAL | entry=1 price=4013.92 profit=4.35 commission=0.00 swap=0.00
+2026.10.26 07:58:04,XAUUSD.m,SIGNAL | BUY | boxHigh=4012.55 boxLow=4011.98 boxRangePts=57.0 displacementPts=40.0 velocityPtsSec=9.1 spreadPts=26.0 entry=4012.73 SL=4012.10 stopPts=63.0 volume=0.03 riskMoney=2.49 estimatedLoss=1.89
+2026.10.26 07:58:04,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4012.73 deal=24 order=24
+2026.10.26 07:58:04,XAUUSD.m,DEAL | entry=0 price=4012.73 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 07:58:22,XAUUSD.m,DEAL | entry=1 price=4012.10 profit=-1.89 commission=0.00 swap=0.00
+2026.10.26 08:19:50,XAUUSD.m,SIGNAL | SELL | boxHigh=4006.75 boxLow=4006.22 boxRangePts=53.0 displacementPts=-44.0 velocityPtsSec=-14.6 spreadPts=26.0 entry=4006.07 SL=4006.67 stopPts=60.0 volume=0.04 riskMoney=2.48 estimatedLoss=2.40
+2026.10.26 08:19:50,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4006.07 deal=26 order=26
+2026.10.26 08:19:50,XAUUSD.m,DEAL | entry=0 price=4006.07 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 08:20:10,XAUUSD.m,DEAL | entry=1 price=4005.10 profit=3.88 commission=0.00 swap=0.00
+2026.10.26 08:42:02,XAUUSD.m,SIGNAL | BUY | boxHigh=4007.28 boxLow=4006.73 boxRangePts=55.0 displacementPts=57.0 velocityPtsSec=17.0 spreadPts=26.0 entry=4007.44 SL=4006.83 stopPts=61.0 volume=0.04 riskMoney=2.49 estimatedLoss=2.44
+2026.10.26 08:42:02,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4007.44 deal=28 order=28
+2026.10.26 08:42:02,XAUUSD.m,DEAL | entry=0 price=4007.44 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 08:42:21,XAUUSD.m,DEAL | entry=1 price=4007.60 profit=0.64 commission=0.00 swap=0.00
+2026.10.26 08:49:55,XAUUSD.m,SIGNAL | BUY | boxHigh=4008.50 boxLow=4007.99 boxRangePts=51.0 displacementPts=27.0 velocityPtsSec=8.7 spreadPts=26.0 entry=4008.71 SL=4008.05 stopPts=66.0 volume=0.03 riskMoney=2.49 estimatedLoss=1.98
+2026.10.26 08:49:55,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4008.71 deal=30 order=30
+2026.10.26 08:49:55,XAUUSD.m,DEAL | entry=0 price=4008.71 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 08:50:12,XAUUSD.m,DEAL | entry=1 price=4008.02 profit=-2.07 commission=0.00 swap=0.00
+2026.10.26 09:13:49,XAUUSD.m,SIGNAL | SELL | boxHigh=4006.42 boxLow=4005.84 boxRangePts=58.0 displacementPts=-42.0 velocityPtsSec=-13.4 spreadPts=26.0 entry=4005.69 SL=4006.29 stopPts=60.0 volume=0.04 riskMoney=2.49 estimatedLoss=2.40
+2026.10.26 09:13:49,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4005.69 deal=32 order=32
+2026.10.26 09:13:49,XAUUSD.m,DEAL | entry=0 price=4005.69 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 09:14:01,XAUUSD.m,DEAL | entry=1 price=4005.32 profit=1.48 commission=0.00 swap=0.00
+2026.10.26 09:27:53,XAUUSD.m,SIGNAL | BUY | boxHigh=4008.53 boxLow=4007.99 boxRangePts=54.0 displacementPts=35.0 velocityPtsSec=11.7 spreadPts=26.0 entry=4008.75 SL=4008.08 stopPts=67.0 volume=0.03 riskMoney=2.49 estimatedLoss=2.01
+2026.10.26 09:27:53,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4008.75 deal=34 order=34
+2026.10.26 09:27:53,XAUUSD.m,DEAL | entry=0 price=4008.75 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 09:28:00,XAUUSD.m,DEAL | entry=1 price=4008.08 profit=-2.01 commission=0.00 swap=0.00
+2026.10.26 09:44:22,XAUUSD.m,SIGNAL | BUY | boxHigh=4008.80 boxLow=4008.47 boxRangePts=33.0 displacementPts=31.0 velocityPtsSec=10.1 spreadPts=26.0 entry=4008.96 SL=4008.35 stopPts=61.0 volume=0.04 riskMoney=2.49 estimatedLoss=2.44
+2026.10.26 09:44:22,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4008.96 deal=36 order=36
+2026.10.26 09:44:22,XAUUSD.m,DEAL | entry=0 price=4008.96 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 09:44:32,XAUUSD.m,DEAL | entry=1 price=4009.18 profit=0.88 commission=0.00 swap=0.00
+2026.10.26 09:48:46,XAUUSD.m,SIGNAL | SELL | boxHigh=4009.88 boxLow=4009.35 boxRangePts=53.0 displacementPts=-41.0 velocityPtsSec=-13.2 spreadPts=26.0 entry=4009.18 SL=4009.80 stopPts=62.0 volume=0.04 riskMoney=2.49 estimatedLoss=2.48
+2026.10.26 09:48:46,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4009.18 deal=38 order=38
+2026.10.26 09:48:46,XAUUSD.m,DEAL | entry=0 price=4009.18 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 09:48:52,XAUUSD.m,DEAL | entry=1 price=4009.80 profit=-2.48 commission=0.00 swap=0.00
+2026.10.26 10:06:10,XAUUSD.m,SIGNAL | BUY | boxHigh=4014.12 boxLow=4013.53 boxRangePts=59.0 displacementPts=29.0 velocityPtsSec=9.7 spreadPts=26.0 entry=4014.27 SL=4013.67 stopPts=60.0 volume=0.04 riskMoney=2.48 estimatedLoss=2.40
+2026.10.26 10:06:10,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4014.27 deal=40 order=40
+2026.10.26 10:06:10,XAUUSD.m,DEAL | entry=0 price=4014.27 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 10:06:14,XAUUSD.m,EXIT_HARVEST | ticket=40 profit_pts=38.0 last_10_tick_move=-1.0
+2026.10.26 10:06:14,XAUUSD.m,DEAL | entry=1 price=4014.65 profit=1.52 commission=0.00 swap=0.00
+2026.10.26 10:30:00,XAUUSD.m,SIGNAL | SELL | boxHigh=4015.10 boxLow=4014.50 boxRangePts=60.0 displacementPts=-25.0 velocityPtsSec=-8.3 spreadPts=26.0 entry=4014.33 SL=4014.95 stopPts=62.0 volume=0.04 riskMoney=2.49 estimatedLoss=2.48
+2026.10.26 10:30:00,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4014.33 deal=42 order=42
+2026.10.26 10:30:00,XAUUSD.m,DEAL | entry=0 price=4014.33 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 10:30:19,XAUUSD.m,DEAL | entry=1 price=4014.20 profit=0.52 commission=0.00 swap=0.00
+2026.10.26 10:41:41,XAUUSD.m,SIGNAL | BUY | boxHigh=4017.27 boxLow=4016.68 boxRangePts=59.0 displacementPts=25.0 velocityPtsSec=8.3 spreadPts=26.0 entry=4017.49 SL=4016.82 stopPts=67.0 volume=0.03 riskMoney=2.49 estimatedLoss=2.01
+2026.10.26 10:41:41,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4017.49 deal=44 order=44
+2026.10.26 10:41:41,XAUUSD.m,DEAL | entry=0 price=4017.49 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 10:42:03,XAUUSD.m,DEAL | entry=1 price=4017.73 profit=0.72 commission=0.00 swap=0.00
+2026.10.26 10:51:17,XAUUSD.m,SIGNAL | BUY | boxHigh=4018.77 boxLow=4018.19 boxRangePts=58.0 displacementPts=40.0 velocityPtsSec=12.9 spreadPts=26.0 entry=4018.93 SL=4018.32 stopPts=61.0 volume=0.04 riskMoney=2.49 estimatedLoss=2.44
+2026.10.26 10:51:17,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4018.93 deal=46 order=46
+2026.10.26 10:51:17,XAUUSD.m,DEAL | entry=0 price=4018.93 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 10:51:36,XAUUSD.m,EXIT_HARVEST | ticket=46 profit_pts=100.0 last_10_tick_move=-16.0
+2026.10.26 10:51:36,XAUUSD.m,DEAL | entry=1 price=4019.93 profit=4.00 commission=0.00 swap=0.00
+2026.10.26 11:31:55,XAUUSD.m,SIGNAL | BUY | boxHigh=4017.62 boxLow=4017.10 boxRangePts=52.0 displacementPts=27.0 velocityPtsSec=8.1 spreadPts=26.0 entry=4017.86 SL=4017.17 stopPts=69.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.07
+2026.10.26 11:31:55,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4017.86 deal=48 order=48
+2026.10.26 11:31:55,XAUUSD.m,DEAL | entry=0 price=4017.86 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 11:32:04,XAUUSD.m,DEAL | entry=1 price=4017.13 profit=-2.19 commission=0.00 swap=0.00
+2026.10.26 11:33:12,XAUUSD.m,SIGNAL | BUY | boxHigh=4017.36 boxLow=4016.80 boxRangePts=56.0 displacementPts=53.0 velocityPtsSec=17.5 spreadPts=26.0 entry=4017.51 SL=4016.91 stopPts=60.0 volume=0.04 riskMoney=2.49 estimatedLoss=2.40
+2026.10.26 11:33:12,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4017.51 deal=50 order=50
+2026.10.26 11:33:12,XAUUSD.m,DEAL | entry=0 price=4017.51 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 11:33:20,XAUUSD.m,DEAL | entry=1 price=4016.87 profit=-2.56 commission=0.00 swap=0.00
+2026.10.26 11:39:21,XAUUSD.m,SIGNAL | SELL | boxHigh=4018.10 boxLow=4017.56 boxRangePts=54.0 displacementPts=-26.0 velocityPtsSec=-8.6 spreadPts=26.0 entry=4017.38 SL=4018.01 stopPts=63.0 volume=0.03 riskMoney=2.49 estimatedLoss=1.89
+2026.10.26 11:39:21,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4017.38 deal=52 order=52
+2026.10.26 11:39:21,XAUUSD.m,DEAL | entry=0 price=4017.38 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 11:39:49,XAUUSD.m,DEAL | entry=1 price=4018.02 profit=-1.92 commission=0.00 swap=0.00
+2026.10.26 11:48:00,XAUUSD.m,SIGNAL | SELL | boxHigh=4018.56 boxLow=4017.96 boxRangePts=60.0 displacementPts=-33.0 velocityPtsSec=-10.0 spreadPts=26.0 entry=4017.77 SL=4018.41 stopPts=64.0 volume=0.03 riskMoney=2.48 estimatedLoss=1.92
+2026.10.26 11:48:00,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4017.77 deal=54 order=54
+2026.10.26 11:48:00,XAUUSD.m,DEAL | entry=0 price=4017.77 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 11:48:27,XAUUSD.m,DEAL | entry=1 price=4017.50 profit=0.81 commission=0.00 swap=0.00
+2026.10.26 11:54:54,XAUUSD.m,SIGNAL | SELL | boxHigh=4017.56 boxLow=4016.98 boxRangePts=58.0 displacementPts=-31.0 velocityPtsSec=-10.3 spreadPts=26.0 entry=4016.79 SL=4017.43 stopPts=64.0 volume=0.03 riskMoney=2.48 estimatedLoss=1.92
+2026.10.26 11:54:54,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4016.79 deal=56 order=56
+2026.10.26 11:54:54,XAUUSD.m,DEAL | entry=0 price=4016.79 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 11:56:14,XAUUSD.m,DEAL | entry=1 price=4017.43 profit=-1.92 commission=0.00 swap=0.00
+2026.10.26 12:05:50,XAUUSD.m,SIGNAL | SELL | boxHigh=4017.62 boxLow=4017.05 boxRangePts=57.0 displacementPts=-36.0 velocityPtsSec=-11.3 spreadPts=26.0 entry=4016.80 SL=4017.50 stopPts=70.0 volume=0.03 riskMoney=2.48 estimatedLoss=2.10
+2026.10.26 12:05:50,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4016.80 deal=58 order=58
+2026.10.26 12:05:50,XAUUSD.m,DEAL | entry=0 price=4016.80 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 12:06:22,XAUUSD.m,DEAL | entry=1 price=4016.63 profit=0.51 commission=0.00 swap=0.00
+2026.10.26 12:07:31,XAUUSD.m,SIGNAL | BUY | boxHigh=4017.17 boxLow=4016.72 boxRangePts=45.0 displacementPts=30.0 velocityPtsSec=9.4 spreadPts=26.0 entry=4017.37 SL=4016.72 stopPts=65.0 volume=0.03 riskMoney=2.48 estimatedLoss=1.95
+2026.10.26 12:07:31,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4017.37 deal=60 order=60
+2026.10.26 12:07:31,XAUUSD.m,DEAL | entry=0 price=4017.37 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 12:09:10,XAUUSD.m,EXIT_HARVEST | ticket=60 profit_pts=63.0 last_10_tick_move=1.0
+2026.10.26 12:09:10,XAUUSD.m,DEAL | entry=1 price=4018.00 profit=1.89 commission=0.00 swap=0.00
+2026.10.26 12:12:36,XAUUSD.m,SIGNAL | SELL | boxHigh=4018.98 boxLow=4018.41 boxRangePts=57.0 displacementPts=-28.0 velocityPtsSec=-9.0 spreadPts=26.0 entry=4018.23 SL=4018.86 stopPts=63.0 volume=0.03 riskMoney=2.49 estimatedLoss=1.89
+2026.10.26 12:12:36,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4018.23 deal=62 order=62
+2026.10.26 12:12:36,XAUUSD.m,DEAL | entry=0 price=4018.23 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 12:12:45,XAUUSD.m,DEAL | entry=1 price=4017.32 profit=2.73 commission=0.00 swap=0.00
+2026.10.26 14:18:15,XAUUSD.m,SIGNAL | SELL | boxHigh=4017.34 boxLow=4016.77 boxRangePts=57.0 displacementPts=-37.0 velocityPtsSec=-11.8 spreadPts=26.0 entry=4016.55 SL=4017.22 stopPts=67.0 volume=0.03 riskMoney=2.49 estimatedLoss=2.01
+2026.10.26 14:18:15,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4016.55 deal=64 order=64
+2026.10.26 14:18:15,XAUUSD.m,DEAL | entry=0 price=4016.55 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 14:18:54,XAUUSD.m,EXIT_HARVEST | ticket=64 profit_pts=141.0 last_10_tick_move=-12.0
+2026.10.26 14:18:54,XAUUSD.m,DEAL | entry=1 price=4015.14 profit=4.23 commission=0.00 swap=0.00
+2026.10.26 18:31:50,XAUUSD.m,SIGNAL | SELL | boxHigh=4020.03 boxLow=4019.45 boxRangePts=58.0 displacementPts=-59.0 velocityPtsSec=-18.6 spreadPts=26.0 entry=4019.23 SL=4019.90 stopPts=67.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.01
+2026.10.26 18:31:50,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4019.23 deal=66 order=66
+2026.10.26 18:31:50,XAUUSD.m,DEAL | entry=0 price=4019.23 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 18:31:57,XAUUSD.m,DEAL | entry=1 price=4019.94 profit=-2.13 commission=0.00 swap=0.00
+2026.10.26 18:43:31,XAUUSD.m,SIGNAL | BUY | boxHigh=4019.61 boxLow=4019.11 boxRangePts=50.0 displacementPts=29.0 velocityPtsSec=8.5 spreadPts=26.0 entry=4019.79 SL=4019.16 stopPts=63.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.89
+2026.10.26 18:43:31,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4019.79 deal=68 order=68
+2026.10.26 18:43:31,XAUUSD.m,DEAL | entry=0 price=4019.79 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 18:43:47,XAUUSD.m,EXIT_HARVEST | ticket=68 profit_pts=46.0 last_10_tick_move=2.0
+2026.10.26 18:43:47,XAUUSD.m,DEAL | entry=1 price=4020.25 profit=1.38 commission=0.00 swap=0.00
+2026.10.26 18:57:02,XAUUSD.m,SIGNAL | BUY | boxHigh=4018.38 boxLow=4017.94 boxRangePts=44.0 displacementPts=47.0 velocityPtsSec=14.8 spreadPts=26.0 entry=4018.62 SL=4017.93 stopPts=69.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.07
+2026.10.26 18:57:02,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4018.62 deal=70 order=70
+2026.10.26 18:57:02,XAUUSD.m,DEAL | entry=0 price=4018.62 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 18:57:15,XAUUSD.m,DEAL | entry=1 price=4018.74 profit=0.36 commission=0.00 swap=0.00
+2026.10.26 19:50:52,XAUUSD.m,SIGNAL | BUY | boxHigh=4018.48 boxLow=4018.04 boxRangePts=44.0 displacementPts=35.0 velocityPtsSec=11.0 spreadPts=26.0 entry=4018.67 SL=4018.03 stopPts=64.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.92
+2026.10.26 19:50:52,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4018.67 deal=72 order=72
+2026.10.26 19:50:52,XAUUSD.m,DEAL | entry=0 price=4018.67 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 19:51:00,XAUUSD.m,DEAL | entry=1 price=4018.03 profit=-1.92 commission=0.00 swap=0.00
+2026.10.26 19:54:56,XAUUSD.m,SIGNAL | BUY | boxHigh=4018.70 boxLow=4018.30 boxRangePts=40.0 displacementPts=28.0 velocityPtsSec=9.3 spreadPts=26.0 entry=4018.93 SL=4018.25 stopPts=68.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.04
+2026.10.26 19:54:56,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4018.93 deal=74 order=74
+2026.10.26 19:54:56,XAUUSD.m,DEAL | entry=0 price=4018.93 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 19:55:00,XAUUSD.m,DEAL | entry=1 price=4019.37 profit=1.32 commission=0.00 swap=0.00
+2026.10.26 20:30:29,XAUUSD.m,SIGNAL | SELL | boxHigh=4018.57 boxLow=4018.01 boxRangePts=56.0 displacementPts=-29.0 velocityPtsSec=-9.4 spreadPts=26.0 entry=4017.82 SL=4018.46 stopPts=64.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.92
+2026.10.26 20:30:29,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4017.82 deal=76 order=76
+2026.10.26 20:30:29,XAUUSD.m,DEAL | entry=0 price=4017.82 profit=0.00 commission=0.00 swap=0.00
+2026.10.26 20:31:04,XAUUSD.m,EXIT_HARVEST | ticket=76 profit_pts=35.0 last_10_tick_move=3.0
+2026.10.26 20:31:04,XAUUSD.m,DEAL | entry=1 price=4017.47 profit=1.05 commission=0.00 swap=0.00
+2026.10.27 00:04:21,XAUUSD.m,SIGNAL | BUY | boxHigh=4016.21 boxLow=4015.70 boxRangePts=51.0 displacementPts=49.0 velocityPtsSec=13.9 spreadPts=26.0 entry=4016.37 SL=4015.76 stopPts=61.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.44
+2026.10.27 00:04:21,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:09:13,XAUUSD.m,SIGNAL | SELL | boxHigh=4016.77 boxLow=4016.27 boxRangePts=50.0 displacementPts=-39.0 velocityPtsSec=-9.2 spreadPts=26.0 entry=4016.06 SL=4016.72 stopPts=66.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.98
+2026.10.27 00:09:13,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:09:14,XAUUSD.m,SIGNAL | SELL | boxHigh=4016.77 boxLow=4016.27 boxRangePts=50.0 displacementPts=-38.0 velocityPtsSec=-12.7 spreadPts=26.0 entry=4016.07 SL=4016.72 stopPts=65.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.95
+2026.10.27 00:09:14,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:09:14,XAUUSD.m,SIGNAL | SELL | boxHigh=4016.76 boxLow=4016.27 boxRangePts=49.0 displacementPts=-36.0 velocityPtsSec=-10.8 spreadPts=26.0 entry=4016.09 SL=4016.72 stopPts=63.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.89
+2026.10.27 00:09:14,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:09:15,XAUUSD.m,SIGNAL | SELL | boxHigh=4016.76 boxLow=4016.27 boxRangePts=49.0 displacementPts=-36.0 velocityPtsSec=-8.2 spreadPts=26.0 entry=4016.09 SL=4016.72 stopPts=63.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.89
+2026.10.27 00:09:15,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:16:03,XAUUSD.m,SIGNAL | SELL | boxHigh=4015.98 boxLow=4015.72 boxRangePts=26.0 displacementPts=-26.0 velocityPtsSec=-8.7 spreadPts=26.0 entry=4015.48 SL=4016.17 stopPts=69.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.07
+2026.10.27 00:16:03,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:16:07,XAUUSD.m,SIGNAL | BUY | boxHigh=4015.98 boxLow=4015.40 boxRangePts=58.0 displacementPts=67.0 velocityPtsSec=20.2 spreadPts=26.0 entry=4016.20 SL=4015.53 stopPts=67.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.01
+2026.10.27 00:16:07,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:16:08,XAUUSD.m,SIGNAL | BUY | boxHigh=4015.98 boxLow=4015.40 boxRangePts=58.0 displacementPts=66.0 velocityPtsSec=19.5 spreadPts=26.0 entry=4016.19 SL=4015.53 stopPts=66.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.98
+2026.10.27 00:16:08,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:16:08,XAUUSD.m,SIGNAL | BUY | boxHigh=4015.98 boxLow=4015.40 boxRangePts=58.0 displacementPts=67.0 velocityPtsSec=19.3 spreadPts=26.0 entry=4016.20 SL=4015.53 stopPts=67.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.01
+2026.10.27 00:16:08,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:16:08,XAUUSD.m,SIGNAL | BUY | boxHigh=4015.98 boxLow=4015.40 boxRangePts=58.0 displacementPts=68.0 velocityPtsSec=19.4 spreadPts=26.0 entry=4016.21 SL=4015.53 stopPts=68.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.04
+2026.10.27 00:16:08,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:16:08,XAUUSD.m,SIGNAL | BUY | boxHigh=4015.98 boxLow=4015.40 boxRangePts=58.0 displacementPts=69.0 velocityPtsSec=19.2 spreadPts=26.0 entry=4016.22 SL=4015.53 stopPts=69.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.07
+2026.10.27 00:16:08,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:16:08,XAUUSD.m,SIGNAL | BUY | boxHigh=4015.98 boxLow=4015.40 boxRangePts=58.0 displacementPts=70.0 velocityPtsSec=19.0 spreadPts=26.0 entry=4016.23 SL=4015.53 stopPts=70.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.10
+2026.10.27 00:16:08,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:21:01,XAUUSD.m,SIGNAL | BUY | boxHigh=4016.57 boxLow=4016.28 boxRangePts=29.0 displacementPts=32.0 velocityPtsSec=9.8 spreadPts=26.0 entry=4016.73 SL=4016.12 stopPts=61.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.44
+2026.10.27 00:21:01,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:33:00,XAUUSD.m,SIGNAL | SELL | boxHigh=4014.66 boxLow=4014.29 boxRangePts=37.0 displacementPts=-41.0 velocityPtsSec=-11.7 spreadPts=26.0 entry=4014.12 SL=4014.74 stopPts=62.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.48
+2026.10.27 00:33:00,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:33:01,XAUUSD.m,SIGNAL | SELL | boxHigh=4014.66 boxLow=4014.29 boxRangePts=37.0 displacementPts=-42.0 velocityPtsSec=-10.8 spreadPts=26.0 entry=4014.11 SL=4014.74 stopPts=63.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.89
+2026.10.27 00:33:01,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:33:01,XAUUSD.m,SIGNAL | SELL | boxHigh=4014.66 boxLow=4014.29 boxRangePts=37.0 displacementPts=-43.0 velocityPtsSec=-9.5 spreadPts=26.0 entry=4014.10 SL=4014.74 stopPts=64.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.92
+2026.10.27 00:33:01,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:33:01,XAUUSD.m,SIGNAL | SELL | boxHigh=4014.66 boxLow=4014.29 boxRangePts=37.0 displacementPts=-45.0 velocityPtsSec=-9.6 spreadPts=26.0 entry=4014.08 SL=4014.74 stopPts=66.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.98
+2026.10.27 00:33:01,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:33:02,XAUUSD.m,SIGNAL | SELL | boxHigh=4014.66 boxLow=4014.29 boxRangePts=37.0 displacementPts=-46.0 velocityPtsSec=-14.7 spreadPts=26.0 entry=4014.07 SL=4014.74 stopPts=67.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.01
+2026.10.27 00:33:02,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:33:02,XAUUSD.m,SIGNAL | SELL | boxHigh=4014.66 boxLow=4014.29 boxRangePts=37.0 displacementPts=-44.0 velocityPtsSec=-11.5 spreadPts=26.0 entry=4014.09 SL=4014.74 stopPts=65.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.95
+2026.10.27 00:33:02,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:44:46,XAUUSD.m,SIGNAL | BUY | boxHigh=4014.67 boxLow=4014.12 boxRangePts=55.0 displacementPts=57.0 velocityPtsSec=18.5 spreadPts=26.0 entry=4014.85 SL=4014.22 stopPts=63.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.89
+2026.10.27 00:44:46,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:44:47,XAUUSD.m,SIGNAL | BUY | boxHigh=4014.67 boxLow=4014.12 boxRangePts=55.0 displacementPts=55.0 velocityPtsSec=17.3 spreadPts=26.0 entry=4014.83 SL=4014.22 stopPts=61.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.44
+2026.10.27 00:44:47,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:50:58,XAUUSD.m,SIGNAL | BUY | boxHigh=4014.36 boxLow=4013.77 boxRangePts=59.0 displacementPts=28.0 velocityPtsSec=9.2 spreadPts=26.0 entry=4014.51 SL=4013.91 stopPts=60.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.40
+2026.10.27 00:50:58,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:55:06,XAUUSD.m,SIGNAL | SELL | boxHigh=4013.61 boxLow=4013.11 boxRangePts=50.0 displacementPts=-46.0 velocityPtsSec=-15.3 spreadPts=26.0 entry=4012.93 SL=4013.56 stopPts=63.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.89
+2026.10.27 00:55:06,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:56:14,XAUUSD.m,SIGNAL | SELL | boxHigh=4012.57 boxLow=4012.01 boxRangePts=56.0 displacementPts=-52.0 velocityPtsSec=-16.3 spreadPts=26.0 entry=4011.86 SL=4012.46 stopPts=60.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.40
+2026.10.27 00:56:14,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:56:19,XAUUSD.m,SIGNAL | BUY | boxHigh=4012.51 boxLow=4011.99 boxRangePts=52.0 displacementPts=50.0 velocityPtsSec=13.7 spreadPts=26.0 entry=4012.72 SL=4012.06 stopPts=66.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.98
+2026.10.27 00:56:19,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:56:19,XAUUSD.m,SIGNAL | BUY | boxHigh=4012.51 boxLow=4011.99 boxRangePts=52.0 displacementPts=40.0 velocityPtsSec=13.2 spreadPts=26.0 entry=4012.68 SL=4012.06 stopPts=62.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.48
+2026.10.27 00:56:19,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 00:56:19,XAUUSD.m,SIGNAL | BUY | boxHigh=4012.51 boxLow=4011.99 boxRangePts=52.0 displacementPts=40.0 velocityPtsSec=13.0 spreadPts=26.0 entry=4012.68 SL=4012.06 stopPts=62.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.48
+2026.10.27 00:56:19,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.27 01:04:15,XAUUSD.m,SIGNAL | BUY | boxHigh=4011.57 boxLow=4011.11 boxRangePts=46.0 displacementPts=38.0 velocityPtsSec=11.9 spreadPts=26.0 entry=4011.72 SL=4011.12 stopPts=60.0 volume=0.04 riskMoney=2.50 estimatedLoss=2.40
+2026.10.27 01:04:15,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4011.72 deal=78 order=78
+2026.10.27 01:04:15,XAUUSD.m,DEAL | entry=0 price=4011.72 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 01:04:30,XAUUSD.m,EXIT_HARVEST | ticket=78 profit_pts=47.0 last_10_tick_move=3.0
+2026.10.27 01:04:30,XAUUSD.m,DEAL | entry=1 price=4012.19 profit=1.88 commission=0.00 swap=0.00
+2026.10.27 01:13:06,XAUUSD.m,SIGNAL | BUY | boxHigh=4011.24 boxLow=4010.75 boxRangePts=49.0 displacementPts=42.0 velocityPtsSec=13.2 spreadPts=26.0 entry=4011.39 SL=4010.79 stopPts=60.0 volume=0.04 riskMoney=2.51 estimatedLoss=2.40
+2026.10.27 01:13:06,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4011.39 deal=80 order=80
+2026.10.27 01:13:06,XAUUSD.m,DEAL | entry=0 price=4011.39 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 01:14:24,XAUUSD.m,DEAL | entry=1 price=4010.75 profit=-2.56 commission=0.00 swap=0.00
+2026.10.27 01:17:40,XAUUSD.m,SIGNAL | SELL | boxHigh=4012.33 boxLow=4011.89 boxRangePts=44.0 displacementPts=-37.0 velocityPtsSec=-9.2 spreadPts=26.0 entry=4011.66 SL=4012.34 stopPts=68.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.04
+2026.10.27 01:17:40,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4011.66 deal=82 order=82
+2026.10.27 01:17:40,XAUUSD.m,DEAL | entry=0 price=4011.66 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 01:19:21,XAUUSD.m,DEAL | entry=1 price=4012.42 profit=-2.28 commission=0.00 swap=0.00
+2026.10.27 01:20:15,XAUUSD.m,SIGNAL | SELL | boxHigh=4012.53 boxLow=4012.00 boxRangePts=53.0 displacementPts=-37.0 velocityPtsSec=-11.9 spreadPts=26.0 entry=4011.79 SL=4012.45 stopPts=66.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.98
+2026.10.27 01:20:15,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4011.79 deal=84 order=84
+2026.10.27 01:20:15,XAUUSD.m,DEAL | entry=0 price=4011.79 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 01:20:54,XAUUSD.m,EXIT_HARVEST | ticket=84 profit_pts=36.0 last_10_tick_move=-6.0
+2026.10.27 01:20:54,XAUUSD.m,DEAL | entry=1 price=4011.43 profit=1.08 commission=0.00 swap=0.00
+2026.10.27 01:26:42,XAUUSD.m,SIGNAL | BUY | boxHigh=4012.90 boxLow=4012.33 boxRangePts=57.0 displacementPts=49.0 velocityPtsSec=14.6 spreadPts=26.0 entry=4013.13 SL=4012.45 stopPts=68.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.04
+2026.10.27 01:26:42,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4013.13 deal=86 order=86
+2026.10.27 01:26:42,XAUUSD.m,DEAL | entry=0 price=4013.13 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 01:27:07,XAUUSD.m,DEAL | entry=1 price=4013.75 profit=1.86 commission=0.00 swap=0.00
+2026.10.27 01:41:53,XAUUSD.m,SIGNAL | SELL | boxHigh=4009.75 boxLow=4009.19 boxRangePts=56.0 displacementPts=-57.0 velocityPtsSec=-14.1 spreadPts=26.0 entry=4008.98 SL=4009.64 stopPts=66.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.98
+2026.10.27 01:41:53,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4008.98 deal=88 order=88
+2026.10.27 01:41:53,XAUUSD.m,DEAL | entry=0 price=4008.98 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 01:41:59,XAUUSD.m,DEAL | entry=1 price=4009.64 profit=-1.98 commission=0.00 swap=0.00
+2026.10.27 01:45:15,XAUUSD.m,SIGNAL | SELL | boxHigh=4009.98 boxLow=4009.57 boxRangePts=41.0 displacementPts=-48.0 velocityPtsSec=-14.8 spreadPts=26.0 entry=4009.35 SL=4010.02 stopPts=67.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.01
+2026.10.27 01:45:15,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4009.35 deal=90 order=90
+2026.10.27 01:45:15,XAUUSD.m,DEAL | entry=0 price=4009.35 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 01:45:54,XAUUSD.m,EXIT_HARVEST | ticket=90 profit_pts=44.0 last_10_tick_move=-1.0
+2026.10.27 01:45:54,XAUUSD.m,DEAL | entry=1 price=4008.91 profit=1.32 commission=0.00 swap=0.00
+2026.10.27 01:47:54,XAUUSD.m,SIGNAL | SELL | boxHigh=4007.83 boxLow=4007.36 boxRangePts=47.0 displacementPts=-51.0 velocityPtsSec=-16.1 spreadPts=26.0 entry=4007.17 SL=4007.81 stopPts=64.0 volume=0.03 riskMoney=2.50 estimatedLoss=1.92
+2026.10.27 01:47:54,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4007.17 deal=92 order=92
+2026.10.27 01:47:54,XAUUSD.m,DEAL | entry=0 price=4007.17 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 01:49:02,XAUUSD.m,DEAL | entry=1 price=4007.97 profit=-2.40 commission=0.00 swap=0.00
+2026.10.27 02:00:02,XAUUSD.m,SIGNAL | BUY | boxHigh=4005.96 boxLow=4005.44 boxRangePts=52.0 displacementPts=48.0 velocityPtsSec=15.9 spreadPts=26.0 entry=4006.19 SL=4005.51 stopPts=68.0 volume=0.03 riskMoney=2.50 estimatedLoss=2.04
+2026.10.27 02:00:02,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4006.19 deal=94 order=94
+2026.10.27 02:00:02,XAUUSD.m,DEAL | entry=0 price=4006.19 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 02:00:13,XAUUSD.m,DEAL | entry=1 price=4005.49 profit=-2.10 commission=0.00 swap=0.00
+2026.10.27 05:20:48,XAUUSD.m,SIGNAL | BUY | boxHigh=4007.43 boxLow=4006.88 boxRangePts=55.0 displacementPts=32.0 velocityPtsSec=8.9 spreadPts=26.0 entry=4007.62 SL=4006.98 stopPts=64.0 volume=0.03 riskMoney=2.49 estimatedLoss=1.92
+2026.10.27 05:20:48,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4007.62 deal=96 order=96
+2026.10.27 05:20:48,XAUUSD.m,DEAL | entry=0 price=4007.62 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 05:22:48,XAUUSD.m,DEAL | entry=1 price=4006.98 profit=-1.92 commission=0.00 swap=0.00
+2026.10.27 05:45:41,XAUUSD.m,SIGNAL | SELL | boxHigh=4020.84 boxLow=4020.30 boxRangePts=54.0 displacementPts=-35.0 velocityPtsSec=-11.4 spreadPts=26.0 entry=4020.07 SL=4020.75 stopPts=68.0 volume=0.03 riskMoney=2.49 estimatedLoss=2.04
+2026.10.27 05:45:41,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4020.07 deal=98 order=98
+2026.10.27 05:45:41,XAUUSD.m,DEAL | entry=0 price=4020.07 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 05:46:16,XAUUSD.m,EXIT_HARVEST | ticket=98 profit_pts=44.0 last_10_tick_move=-13.0
+2026.10.27 05:46:16,XAUUSD.m,DEAL | entry=1 price=4019.63 profit=1.32 commission=0.00 swap=0.00
+2026.10.27 06:11:04,XAUUSD.m,SIGNAL | BUY | boxHigh=4022.33 boxLow=4021.79 boxRangePts=54.0 displacementPts=32.0 velocityPtsSec=9.0 spreadPts=26.0 entry=4022.56 SL=4021.88 stopPts=68.0 volume=0.03 riskMoney=2.49 estimatedLoss=2.04
+2026.10.27 06:11:04,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4022.56 deal=100 order=100
+2026.10.27 06:11:04,XAUUSD.m,DEAL | entry=0 price=4022.56 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 06:11:47,XAUUSD.m,DEAL | entry=1 price=4022.75 profit=0.57 commission=0.00 swap=0.00
+2026.10.27 06:14:59,XAUUSD.m,SIGNAL | SELL | boxHigh=4022.27 boxLow=4021.76 boxRangePts=51.0 displacementPts=-34.0 velocityPtsSec=-10.6 spreadPts=26.0 entry=4021.53 SL=4022.21 stopPts=68.0 volume=0.03 riskMoney=2.49 estimatedLoss=2.04
+2026.10.27 06:14:59,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4021.53 deal=102 order=102
+2026.10.27 06:14:59,XAUUSD.m,DEAL | entry=0 price=4021.53 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 06:15:11,XAUUSD.m,DEAL | entry=1 price=4022.24 profit=-2.13 commission=0.00 swap=0.00
+2026.10.27 06:17:13,XAUUSD.m,SIGNAL | BUY | boxHigh=4022.62 boxLow=4022.07 boxRangePts=55.0 displacementPts=29.0 velocityPtsSec=9.3 spreadPts=26.0 entry=4022.82 SL=4022.17 stopPts=65.0 volume=0.03 riskMoney=2.48 estimatedLoss=1.95
+2026.10.27 06:17:13,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4022.82 deal=104 order=104
+2026.10.27 06:17:13,XAUUSD.m,DEAL | entry=0 price=4022.82 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 06:17:19,XAUUSD.m,DEAL | entry=1 price=4022.88 profit=0.18 commission=0.00 swap=0.00
+2026.10.27 06:32:59,XAUUSD.m,SIGNAL | BUY | boxHigh=4020.66 boxLow=4020.13 boxRangePts=53.0 displacementPts=26.0 velocityPtsSec=8.2 spreadPts=26.0 entry=4020.91 SL=4020.21 stopPts=70.0 volume=0.03 riskMoney=2.48 estimatedLoss=2.10
+2026.10.27 06:32:59,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4020.91 deal=106 order=106
+2026.10.27 06:32:59,XAUUSD.m,DEAL | entry=0 price=4020.91 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 06:33:28,XAUUSD.m,DEAL | entry=1 price=4020.18 profit=-2.19 commission=0.00 swap=0.00
+2026.10.27 06:35:12,XAUUSD.m,SIGNAL | SELL | boxHigh=4021.06 boxLow=4020.53 boxRangePts=53.0 displacementPts=-30.0 velocityPtsSec=-9.4 spreadPts=26.0 entry=4020.34 SL=4020.98 stopPts=64.0 volume=0.03 riskMoney=2.48 estimatedLoss=1.92
+2026.10.27 06:35:12,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4020.34 deal=108 order=108
+2026.10.27 06:35:12,XAUUSD.m,DEAL | entry=0 price=4020.34 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 06:35:18,XAUUSD.m,EXIT_HARVEST | ticket=108 profit_pts=53.0 last_10_tick_move=2.0
+2026.10.27 06:35:18,XAUUSD.m,DEAL | entry=1 price=4019.81 profit=1.59 commission=0.00 swap=0.00
+2026.10.27 17:59:02,XAUUSD.m,SIGNAL | SELL | boxHigh=4063.60 boxLow=4063.02 boxRangePts=58.0 displacementPts=-40.0 velocityPtsSec=-12.7 spreadPts=26.0 entry=4062.84 SL=4063.47 stopPts=63.0 volume=0.03 riskMoney=2.48 estimatedLoss=1.89
+2026.10.27 17:59:02,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4062.84 deal=110 order=110
+2026.10.27 17:59:02,XAUUSD.m,DEAL | entry=0 price=4062.84 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 17:59:14,XAUUSD.m,DEAL | entry=1 price=4063.47 profit=-1.89 commission=0.00 swap=0.00
+2026.10.27 18:12:17,XAUUSD.m,SIGNAL | BUY | boxHigh=4059.04 boxLow=4058.46 boxRangePts=58.0 displacementPts=34.0 velocityPtsSec=11.3 spreadPts=26.0 entry=4059.22 SL=4058.59 stopPts=63.0 volume=0.03 riskMoney=2.48 estimatedLoss=1.89
+2026.10.27 18:12:17,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4059.22 deal=112 order=112
+2026.10.27 18:12:17,XAUUSD.m,DEAL | entry=0 price=4059.22 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 18:12:25,XAUUSD.m,DEAL | entry=1 price=4058.57 profit=-1.95 commission=0.00 swap=0.00
+2026.10.27 18:26:44,XAUUSD.m,SIGNAL | BUY | boxHigh=4058.88 boxLow=4058.34 boxRangePts=54.0 displacementPts=29.0 velocityPtsSec=9.5 spreadPts=26.0 entry=4059.11 SL=4058.43 stopPts=68.0 volume=0.03 riskMoney=2.47 estimatedLoss=2.04
+2026.10.27 18:26:44,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4059.11 deal=114 order=114
+2026.10.27 18:26:44,XAUUSD.m,DEAL | entry=0 price=4059.11 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 18:27:14,XAUUSD.m,DEAL | entry=1 price=4058.43 profit=-2.04 commission=0.00 swap=0.00
+2026.10.27 18:34:32,XAUUSD.m,SIGNAL | BUY | boxHigh=4058.00 boxLow=4057.56 boxRangePts=44.0 displacementPts=30.0 velocityPtsSec=8.1 spreadPts=26.0 entry=4058.22 SL=4057.55 stopPts=67.0 volume=0.03 riskMoney=2.47 estimatedLoss=2.01
+2026.10.27 18:34:32,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4058.22 deal=116 order=116
+2026.10.27 18:34:32,XAUUSD.m,DEAL | entry=0 price=4058.22 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 18:35:20,XAUUSD.m,EXIT_HARVEST | ticket=116 profit_pts=77.0 last_10_tick_move=-1.0
+2026.10.27 18:35:20,XAUUSD.m,DEAL | entry=1 price=4058.99 profit=2.31 commission=0.00 swap=0.00
+2026.10.27 20:00:12,XAUUSD.m,SIGNAL | BUY | boxHigh=4057.19 boxLow=4056.63 boxRangePts=56.0 displacementPts=31.0 velocityPtsSec=9.7 spreadPts=26.0 entry=4057.37 SL=4056.74 stopPts=63.0 volume=0.03 riskMoney=2.47 estimatedLoss=1.89
+2026.10.27 20:00:12,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4057.37 deal=118 order=118
+2026.10.27 20:00:12,XAUUSD.m,DEAL | entry=0 price=4057.37 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 20:00:25,XAUUSD.m,DEAL | entry=1 price=4056.63 profit=-2.22 commission=0.00 swap=0.00
+2026.10.27 20:04:33,XAUUSD.m,SIGNAL | BUY | boxHigh=4058.42 boxLow=4057.87 boxRangePts=55.0 displacementPts=28.0 velocityPtsSec=9.1 spreadPts=26.0 entry=4058.66 SL=4057.97 stopPts=69.0 volume=0.03 riskMoney=2.47 estimatedLoss=2.07
+2026.10.27 20:04:33,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4058.66 deal=120 order=120
+2026.10.27 20:04:33,XAUUSD.m,DEAL | entry=0 price=4058.66 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 20:05:07,XAUUSD.m,DEAL | entry=1 price=4057.97 profit=-2.07 commission=0.00 swap=0.00
+2026.10.27 20:12:09,XAUUSD.m,SIGNAL | BUY | boxHigh=4057.78 boxLow=4057.26 boxRangePts=52.0 displacementPts=49.0 velocityPtsSec=15.7 spreadPts=26.0 entry=4057.94 SL=4057.33 stopPts=61.0 volume=0.04 riskMoney=2.46 estimatedLoss=2.44
+2026.10.27 20:12:09,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4057.94 deal=122 order=122
+2026.10.27 20:12:09,XAUUSD.m,DEAL | entry=0 price=4057.94 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 20:12:30,XAUUSD.m,DEAL | entry=1 price=4057.29 profit=-2.60 commission=0.00 swap=0.00
+2026.10.27 20:14:26,XAUUSD.m,SIGNAL | BUY | boxHigh=4058.38 boxLow=4057.86 boxRangePts=52.0 displacementPts=27.0 velocityPtsSec=8.7 spreadPts=26.0 entry=4058.56 SL=4057.93 stopPts=63.0 volume=0.03 riskMoney=2.46 estimatedLoss=1.89
+2026.10.27 20:14:26,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4058.56 deal=124 order=124
+2026.10.27 20:14:26,XAUUSD.m,DEAL | entry=0 price=4058.56 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 20:16:46,XAUUSD.m,DEAL | entry=1 price=4057.83 profit=-2.19 commission=0.00 swap=0.00
+2026.10.27 20:21:49,XAUUSD.m,SIGNAL | BUY | boxHigh=4056.77 boxLow=4056.50 boxRangePts=27.0 displacementPts=27.0 velocityPtsSec=8.9 spreadPts=26.0 entry=4057.02 SL=4056.32 stopPts=70.0 volume=0.03 riskMoney=2.45 estimatedLoss=2.10
+2026.10.27 20:21:49,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4057.02 deal=126 order=126
+2026.10.27 20:21:49,XAUUSD.m,DEAL | entry=0 price=4057.02 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 20:22:14,XAUUSD.m,SIGNAL | SELL | boxHigh=4056.99 boxLow=4056.54 boxRangePts=45.0 displacementPts=-29.0 velocityPtsSec=-9.1 spreadPts=26.0 entry=4056.29 SL=4056.99 stopPts=70.0 volume=0.03 riskMoney=2.45 estimatedLoss=2.10
+2026.10.27 20:22:14,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4056.29 deal=128 order=128
+2026.10.27 20:22:14,XAUUSD.m,DEAL | entry=1 price=4056.29 profit=-2.19 commission=0.00 swap=0.00
+2026.10.27 20:22:14,XAUUSD.m,DEAL | entry=0 price=4056.29 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 20:22:34,XAUUSD.m,DEAL | entry=1 price=4056.02 profit=0.81 commission=0.00 swap=0.00
+2026.10.27 20:31:07,XAUUSD.m,SIGNAL | SELL | boxHigh=4056.05 boxLow=4055.49 boxRangePts=56.0 displacementPts=-26.0 velocityPtsSec=-8.5 spreadPts=26.0 entry=4055.25 SL=4055.94 stopPts=69.0 volume=0.03 riskMoney=2.45 estimatedLoss=2.07
+2026.10.27 20:31:07,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4055.25 deal=130 order=130
+2026.10.27 20:31:07,XAUUSD.m,DEAL | entry=0 price=4055.25 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 20:31:20,XAUUSD.m,DEAL | entry=1 price=4055.94 profit=-2.07 commission=0.00 swap=0.00
+2026.10.27 20:31:38,XAUUSD.m,SIGNAL | BUY | boxHigh=4055.81 boxLow=4055.38 boxRangePts=43.0 displacementPts=27.0 velocityPtsSec=8.8 spreadPts=26.0 entry=4055.97 SL=4055.36 stopPts=61.0 volume=0.04 riskMoney=2.44 estimatedLoss=2.44
+2026.10.27 20:31:38,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4055.97 deal=132 order=132
+2026.10.27 20:31:38,XAUUSD.m,DEAL | entry=0 price=4055.97 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 20:31:56,XAUUSD.m,DEAL | entry=1 price=4055.36 profit=-2.44 commission=0.00 swap=0.00
+2026.10.27 20:34:02,XAUUSD.m,SIGNAL | SELL | boxHigh=4056.40 boxLow=4055.87 boxRangePts=53.0 displacementPts=-34.0 velocityPtsSec=-9.2 spreadPts=26.0 entry=4055.68 SL=4056.32 stopPts=64.0 volume=0.03 riskMoney=2.44 estimatedLoss=1.92
+2026.10.27 20:34:02,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4055.68 deal=134 order=134
+2026.10.27 20:34:02,XAUUSD.m,DEAL | entry=0 price=4055.68 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 20:34:44,XAUUSD.m,DEAL | entry=1 price=4056.32 profit=-1.92 commission=0.00 swap=0.00
+2026.10.27 20:34:50,XAUUSD.m,SIGNAL | BUY | boxHigh=4056.40 boxLow=4055.81 boxRangePts=59.0 displacementPts=27.0 velocityPtsSec=8.3 spreadPts=26.0 entry=4056.62 SL=4055.95 stopPts=67.0 volume=0.03 riskMoney=2.43 estimatedLoss=2.01
+2026.10.27 20:34:50,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4056.62 deal=136 order=136
+2026.10.27 20:34:50,XAUUSD.m,DEAL | entry=0 price=4056.62 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 20:35:52,XAUUSD.m,DEAL | entry=1 price=4055.93 profit=-2.07 commission=0.00 swap=0.00
+2026.10.27 20:56:26,XAUUSD.m,SIGNAL | SELL | boxHigh=4057.06 boxLow=4056.49 boxRangePts=57.0 displacementPts=-50.0 velocityPtsSec=-16.0 spreadPts=26.0 entry=4056.26 SL=4056.94 stopPts=68.0 volume=0.03 riskMoney=2.43 estimatedLoss=2.04
+2026.10.27 20:56:26,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4056.26 deal=138 order=138
+2026.10.27 20:56:26,XAUUSD.m,DEAL | entry=0 price=4056.26 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 20:57:33,XAUUSD.m,DEAL | entry=1 price=4056.94 profit=-2.04 commission=0.00 swap=0.00
+2026.10.27 21:00:00,XAUUSD.m,SIGNAL | BUY | boxHigh=4056.83 boxLow=4056.25 boxRangePts=58.0 displacementPts=33.0 velocityPtsSec=10.8 spreadPts=26.0 entry=4057.05 SL=4056.38 stopPts=67.0 volume=0.03 riskMoney=2.42 estimatedLoss=2.01
+2026.10.27 21:00:00,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4057.05 deal=140 order=140
+2026.10.27 21:00:00,XAUUSD.m,DEAL | entry=0 price=4057.05 profit=0.00 commission=0.00 swap=0.00
+2026.10.27 21:00:05,XAUUSD.m,EXIT_HARVEST | ticket=140 profit_pts=95.0 last_10_tick_move=-11.0
+2026.10.27 21:00:05,XAUUSD.m,DEAL | entry=1 price=4058.00 profit=2.85 commission=0.00 swap=0.00
+2026.10.28 04:17:47,XAUUSD.m,SIGNAL | BUY | boxHigh=4046.80 boxLow=4046.21 boxRangePts=59.0 displacementPts=35.0 velocityPtsSec=11.4 spreadPts=26.0 entry=4046.96 SL=4046.35 stopPts=61.0 volume=0.03 riskMoney=2.43 estimatedLoss=1.83
+2026.10.28 04:17:47,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4046.96 deal=142 order=142
+2026.10.28 04:17:47,XAUUSD.m,DEAL | entry=0 price=4046.96 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 04:18:06,XAUUSD.m,DEAL | entry=1 price=4046.34 profit=-1.86 commission=0.00 swap=0.00
+2026.10.28 04:28:25,XAUUSD.m,SIGNAL | SELL | boxHigh=4046.13 boxLow=4045.61 boxRangePts=52.0 displacementPts=-39.0 velocityPtsSec=-13.0 spreadPts=26.0 entry=4045.44 SL=4046.06 stopPts=62.0 volume=0.03 riskMoney=2.42 estimatedLoss=1.86
+2026.10.28 04:28:25,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4045.44 deal=144 order=144
+2026.10.28 04:28:25,XAUUSD.m,DEAL | entry=0 price=4045.44 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 04:30:01,XAUUSD.m,DEAL | entry=1 price=4045.32 profit=0.36 commission=0.00 swap=0.00
+2026.10.28 04:42:47,XAUUSD.m,SIGNAL | SELL | boxHigh=4048.87 boxLow=4048.40 boxRangePts=47.0 displacementPts=-32.0 velocityPtsSec=-10.3 spreadPts=26.0 entry=4048.15 SL=4048.85 stopPts=70.0 volume=0.03 riskMoney=2.43 estimatedLoss=2.10
+2026.10.28 04:42:47,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4048.15 deal=146 order=146
+2026.10.28 04:42:47,XAUUSD.m,DEAL | entry=0 price=4048.15 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 04:43:04,XAUUSD.m,DEAL | entry=1 price=4048.87 profit=-2.16 commission=0.00 swap=0.00
+2026.10.28 04:44:32,XAUUSD.m,SIGNAL | SELL | boxHigh=4049.32 boxLow=4048.87 boxRangePts=45.0 displacementPts=-27.0 velocityPtsSec=-8.5 spreadPts=26.0 entry=4048.71 SL=4049.32 stopPts=61.0 volume=0.03 riskMoney=2.42 estimatedLoss=1.83
+2026.10.28 04:44:32,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4048.71 deal=148 order=148
+2026.10.28 04:44:32,XAUUSD.m,DEAL | entry=0 price=4048.71 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 04:45:06,XAUUSD.m,DEAL | entry=1 price=4048.66 profit=0.15 commission=0.00 swap=0.00
+2026.10.28 05:04:03,XAUUSD.m,SIGNAL | BUY | boxHigh=4047.07 boxLow=4046.60 boxRangePts=47.0 displacementPts=26.0 velocityPtsSec=8.4 spreadPts=26.0 entry=4047.29 SL=4046.62 stopPts=67.0 volume=0.03 riskMoney=2.42 estimatedLoss=2.01
+2026.10.28 05:04:03,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4047.29 deal=150 order=150
+2026.10.28 05:04:03,XAUUSD.m,DEAL | entry=0 price=4047.29 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 05:04:40,XAUUSD.m,EXIT_HARVEST | ticket=150 profit_pts=54.0 last_10_tick_move=-7.0
+2026.10.28 05:04:40,XAUUSD.m,DEAL | entry=1 price=4047.83 profit=1.62 commission=0.00 swap=0.00
+2026.10.28 05:07:19,XAUUSD.m,SIGNAL | SELL | boxHigh=4047.99 boxLow=4047.40 boxRangePts=59.0 displacementPts=-52.0 velocityPtsSec=-12.4 spreadPts=26.0 entry=4047.17 SL=4047.85 stopPts=68.0 volume=0.03 riskMoney=2.42 estimatedLoss=2.04
+2026.10.28 05:07:19,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4047.17 deal=152 order=152
+2026.10.28 05:07:19,XAUUSD.m,DEAL | entry=0 price=4047.17 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 05:07:39,XAUUSD.m,DEAL | entry=1 price=4047.85 profit=-2.04 commission=0.00 swap=0.00
+2026.10.28 05:24:06,XAUUSD.m,SIGNAL | SELL | boxHigh=4047.71 boxLow=4047.23 boxRangePts=48.0 displacementPts=-41.0 velocityPtsSec=-13.6 spreadPts=26.0 entry=4047.03 SL=4047.68 stopPts=65.0 volume=0.03 riskMoney=2.42 estimatedLoss=1.95
+2026.10.28 05:24:06,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4047.03 deal=154 order=154
+2026.10.28 05:24:06,XAUUSD.m,DEAL | entry=0 price=4047.03 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 05:24:52,XAUUSD.m,EXIT_HARVEST | ticket=154 profit_pts=112.0 last_10_tick_move=-16.0
+2026.10.28 05:24:52,XAUUSD.m,DEAL | entry=1 price=4045.91 profit=3.36 commission=0.00 swap=0.00
+2026.10.28 10:33:38,XAUUSD.m,SIGNAL | BUY | boxHigh=4050.50 boxLow=4049.92 boxRangePts=58.0 displacementPts=31.0 velocityPtsSec=10.0 spreadPts=26.0 entry=4050.69 SL=4050.05 stopPts=64.0 volume=0.03 riskMoney=2.43 estimatedLoss=1.92
+2026.10.28 10:33:38,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4050.69 deal=156 order=156
+2026.10.28 10:33:38,XAUUSD.m,DEAL | entry=0 price=4050.69 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 10:33:47,XAUUSD.m,DEAL | entry=1 price=4050.05 profit=-1.92 commission=0.00 swap=0.00
+2026.10.28 10:56:30,XAUUSD.m,SIGNAL | SELL | boxHigh=4056.55 boxLow=4055.96 boxRangePts=59.0 displacementPts=-28.0 velocityPtsSec=-8.6 spreadPts=26.0 entry=4055.71 SL=4056.41 stopPts=70.0 volume=0.03 riskMoney=2.42 estimatedLoss=2.10
+2026.10.28 10:56:30,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4055.71 deal=158 order=158
+2026.10.28 10:56:30,XAUUSD.m,DEAL | entry=0 price=4055.71 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 10:57:24,XAUUSD.m,DEAL | entry=1 price=4055.56 profit=0.45 commission=0.00 swap=0.00
+2026.10.28 11:04:06,XAUUSD.m,SIGNAL | BUY | boxHigh=4053.22 boxLow=4052.69 boxRangePts=53.0 displacementPts=41.0 velocityPtsSec=13.5 spreadPts=26.0 entry=4053.41 SL=4052.77 stopPts=64.0 volume=0.03 riskMoney=2.42 estimatedLoss=1.92
+2026.10.28 11:04:06,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4053.41 deal=160 order=160
+2026.10.28 11:04:06,XAUUSD.m,DEAL | entry=0 price=4053.41 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 11:04:42,XAUUSD.m,DEAL | entry=1 price=4053.61 profit=0.60 commission=0.00 swap=0.00
+2026.10.28 11:36:56,XAUUSD.m,SIGNAL | BUY | boxHigh=4052.67 boxLow=4052.10 boxRangePts=57.0 displacementPts=44.0 velocityPtsSec=14.6 spreadPts=26.0 entry=4052.88 SL=4052.22 stopPts=66.0 volume=0.03 riskMoney=2.43 estimatedLoss=1.98
+2026.10.28 11:36:56,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4052.88 deal=162 order=162
+2026.10.28 11:36:56,XAUUSD.m,DEAL | entry=0 price=4052.88 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 11:37:01,XAUUSD.m,DEAL | entry=1 price=4052.22 profit=-1.98 commission=0.00 swap=0.00
+2026.10.28 11:39:05,XAUUSD.m,SIGNAL | BUY | boxHigh=4054.04 boxLow=4053.44 boxRangePts=60.0 displacementPts=39.0 velocityPtsSec=12.5 spreadPts=26.0 entry=4054.28 SL=4053.59 stopPts=69.0 volume=0.03 riskMoney=2.42 estimatedLoss=2.07
+2026.10.28 11:39:05,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4054.28 deal=164 order=164
+2026.10.28 11:39:05,XAUUSD.m,DEAL | entry=0 price=4054.28 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 11:39:54,XAUUSD.m,EXIT_HARVEST | ticket=164 profit_pts=54.0 last_10_tick_move=3.0
+2026.10.28 11:39:54,XAUUSD.m,DEAL | entry=1 price=4054.82 profit=1.62 commission=0.00 swap=0.00
+2026.10.28 11:51:01,XAUUSD.m,SIGNAL | SELL | boxHigh=4053.88 boxLow=4053.37 boxRangePts=51.0 displacementPts=-39.0 velocityPtsSec=-12.8 spreadPts=26.0 entry=4053.15 SL=4053.82 stopPts=67.0 volume=0.03 riskMoney=2.42 estimatedLoss=2.01
+2026.10.28 11:51:01,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4053.15 deal=166 order=166
+2026.10.28 11:51:01,XAUUSD.m,DEAL | entry=0 price=4053.15 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 11:51:05,XAUUSD.m,DEAL | entry=1 price=4052.99 profit=0.48 commission=0.00 swap=0.00
+2026.10.28 11:53:15,XAUUSD.m,SIGNAL | SELL | boxHigh=4053.80 boxLow=4053.31 boxRangePts=49.0 displacementPts=-38.0 velocityPtsSec=-11.9 spreadPts=26.0 entry=4053.15 SL=4053.76 stopPts=61.0 volume=0.03 riskMoney=2.43 estimatedLoss=1.83
+2026.10.28 11:53:15,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4053.15 deal=168 order=168
+2026.10.28 11:53:15,XAUUSD.m,DEAL | entry=0 price=4053.15 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 11:53:18,XAUUSD.m,DEAL | entry=1 price=4053.86 profit=-2.13 commission=0.00 swap=0.00
+2026.10.28 12:26:48,XAUUSD.m,SIGNAL | SELL | boxHigh=4046.63 boxLow=4046.07 boxRangePts=56.0 displacementPts=-57.0 velocityPtsSec=-17.2 spreadPts=26.0 entry=4045.84 SL=4046.52 stopPts=68.0 volume=0.03 riskMoney=2.42 estimatedLoss=2.04
+2026.10.28 12:26:48,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4045.84 deal=170 order=170
+2026.10.28 12:26:48,XAUUSD.m,DEAL | entry=0 price=4045.84 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 12:26:59,XAUUSD.m,DEAL | entry=1 price=4046.57 profit=-2.19 commission=0.00 swap=0.00
+2026.10.28 12:31:49,XAUUSD.m,SIGNAL | SELL | boxHigh=4046.76 boxLow=4046.28 boxRangePts=48.0 displacementPts=-33.0 velocityPtsSec=-9.7 spreadPts=26.0 entry=4046.07 SL=4046.73 stopPts=66.0 volume=0.03 riskMoney=2.42 estimatedLoss=1.98
+2026.10.28 12:31:49,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4046.07 deal=172 order=172
+2026.10.28 12:31:49,XAUUSD.m,DEAL | entry=0 price=4046.07 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 12:32:17,XAUUSD.m,DEAL | entry=1 price=4046.73 profit=-1.98 commission=0.00 swap=0.00
+2026.10.28 12:39:25,XAUUSD.m,SIGNAL | BUY | boxHigh=4045.66 boxLow=4045.14 boxRangePts=52.0 displacementPts=25.0 velocityPtsSec=8.3 spreadPts=26.0 entry=4045.81 SL=4045.21 stopPts=60.0 volume=0.04 riskMoney=2.41 estimatedLoss=2.40
+2026.10.28 12:39:25,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4045.81 deal=174 order=174
+2026.10.28 12:39:25,XAUUSD.m,DEAL | entry=0 price=4045.81 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 12:39:59,XAUUSD.m,DEAL | entry=1 price=4046.04 profit=0.92 commission=0.00 swap=0.00
+2026.10.28 12:43:52,XAUUSD.m,SIGNAL | SELL | boxHigh=4047.46 boxLow=4046.95 boxRangePts=51.0 displacementPts=-35.0 velocityPtsSec=-11.3 spreadPts=26.0 entry=4046.71 SL=4047.40 stopPts=69.0 volume=0.03 riskMoney=2.41 estimatedLoss=2.07
+2026.10.28 12:43:52,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4046.71 deal=176 order=176
+2026.10.28 12:43:52,XAUUSD.m,DEAL | entry=0 price=4046.71 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 12:44:02,XAUUSD.m,DEAL | entry=1 price=4047.46 profit=-2.25 commission=0.00 swap=0.00
+2026.10.28 12:48:47,XAUUSD.m,SIGNAL | SELL | boxHigh=4047.38 boxLow=4046.86 boxRangePts=52.0 displacementPts=-31.0 velocityPtsSec=-9.7 spreadPts=26.0 entry=4046.70 SL=4047.31 stopPts=61.0 volume=0.03 riskMoney=2.41 estimatedLoss=1.83
+2026.10.28 12:48:47,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4046.70 deal=178 order=178
+2026.10.28 12:48:47,XAUUSD.m,DEAL | entry=0 price=4046.70 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 12:50:23,XAUUSD.m,EXIT_HARVEST | ticket=178 profit_pts=98.0 last_10_tick_move=-3.0
+2026.10.28 12:50:23,XAUUSD.m,DEAL | entry=1 price=4045.72 profit=2.94 commission=0.00 swap=0.00
+2026.10.28 12:51:48,XAUUSD.m,SIGNAL | BUY | boxHigh=4045.96 boxLow=4045.37 boxRangePts=59.0 displacementPts=56.0 velocityPtsSec=16.7 spreadPts=26.0 entry=4046.12 SL=4045.51 stopPts=61.0 volume=0.03 riskMoney=2.41 estimatedLoss=1.83
+2026.10.28 12:51:48,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4046.12 deal=180 order=180
+2026.10.28 12:51:48,XAUUSD.m,DEAL | entry=0 price=4046.12 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 12:51:48,XAUUSD.m,DEAL | entry=1 price=4045.49 profit=-1.89 commission=0.00 swap=0.00
+2026.10.28 12:59:43,XAUUSD.m,SIGNAL | BUY | boxHigh=4045.09 boxLow=4044.67 boxRangePts=42.0 displacementPts=27.0 velocityPtsSec=8.2 spreadPts=26.0 entry=4045.33 SL=4044.64 stopPts=69.0 volume=0.03 riskMoney=2.41 estimatedLoss=2.07
+2026.10.28 12:59:43,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4045.33 deal=182 order=182
+2026.10.28 12:59:43,XAUUSD.m,DEAL | entry=0 price=4045.33 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 13:00:04,XAUUSD.m,DEAL | entry=1 price=4044.63 profit=-2.10 commission=0.00 swap=0.00
+2026.10.28 13:05:02,XAUUSD.m,SIGNAL | BUY | boxHigh=4044.06 boxLow=4043.64 boxRangePts=42.0 displacementPts=25.0 velocityPtsSec=8.3 spreadPts=26.0 entry=4044.29 SL=4043.61 stopPts=68.0 volume=0.03 riskMoney=2.40 estimatedLoss=2.04
+2026.10.28 13:05:02,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4044.29 deal=184 order=184
+2026.10.28 13:05:02,XAUUSD.m,DEAL | entry=0 price=4044.29 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 13:05:10,XAUUSD.m,DEAL | entry=1 price=4043.60 profit=-2.07 commission=0.00 swap=0.00
+2026.10.28 13:06:17,XAUUSD.m,SIGNAL | SELL | boxHigh=4043.93 boxLow=4043.37 boxRangePts=56.0 displacementPts=-35.0 velocityPtsSec=-11.6 spreadPts=26.0 entry=4043.21 SL=4043.82 stopPts=61.0 volume=0.03 riskMoney=2.40 estimatedLoss=1.83
+2026.10.28 13:06:17,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4043.21 deal=186 order=186
+2026.10.28 13:06:17,XAUUSD.m,DEAL | entry=0 price=4043.21 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 13:06:26,XAUUSD.m,DEAL | entry=1 price=4043.83 profit=-1.86 commission=0.00 swap=0.00
+2026.10.28 13:07:18,XAUUSD.m,SIGNAL | BUY | boxHigh=4043.96 boxLow=4043.40 boxRangePts=56.0 displacementPts=33.0 velocityPtsSec=10.6 spreadPts=26.0 entry=4044.14 SL=4043.51 stopPts=63.0 volume=0.03 riskMoney=2.39 estimatedLoss=1.89
+2026.10.28 13:07:18,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4044.14 deal=188 order=188
+2026.10.28 13:07:18,XAUUSD.m,DEAL | entry=0 price=4044.14 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 13:07:48,XAUUSD.m,EXIT_HARVEST | ticket=188 profit_pts=54.0 last_10_tick_move=2.0
+2026.10.28 13:07:48,XAUUSD.m,DEAL | entry=1 price=4044.68 profit=1.62 commission=0.00 swap=0.00
+2026.10.28 17:44:48,XAUUSD.m,SIGNAL | BUY | boxHigh=4045.11 boxLow=4044.76 boxRangePts=35.0 displacementPts=27.0 velocityPtsSec=8.1 spreadPts=26.0 entry=4045.35 SL=4044.66 stopPts=69.0 volume=0.03 riskMoney=2.40 estimatedLoss=2.07
+2026.10.28 17:44:48,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4045.35 deal=190 order=190
+2026.10.28 17:44:48,XAUUSD.m,DEAL | entry=0 price=4045.35 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 17:45:18,XAUUSD.m,DEAL | entry=1 price=4044.66 profit=-2.07 commission=0.00 swap=0.00
+2026.10.28 17:46:12,XAUUSD.m,SIGNAL | BUY | boxHigh=4045.03 boxLow=4044.44 boxRangePts=59.0 displacementPts=41.0 velocityPtsSec=12.8 spreadPts=26.0 entry=4045.22 SL=4044.58 stopPts=64.0 volume=0.03 riskMoney=2.39 estimatedLoss=1.92
+2026.10.28 17:46:12,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4045.22 deal=192 order=192
+2026.10.28 17:46:12,XAUUSD.m,DEAL | entry=0 price=4045.22 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 17:46:32,XAUUSD.m,DEAL | entry=1 price=4044.49 profit=-2.19 commission=0.00 swap=0.00
+2026.10.28 18:09:16,XAUUSD.m,SIGNAL | SELL | boxHigh=4038.74 boxLow=4038.21 boxRangePts=53.0 displacementPts=-28.0 velocityPtsSec=-9.3 spreadPts=26.0 entry=4038.01 SL=4038.66 stopPts=65.0 volume=0.03 riskMoney=2.39 estimatedLoss=1.95
+2026.10.28 18:09:16,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4038.01 deal=194 order=194
+2026.10.28 18:09:16,XAUUSD.m,DEAL | entry=0 price=4038.01 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 18:09:43,XAUUSD.m,DEAL | entry=1 price=4037.78 profit=0.69 commission=0.00 swap=0.00
+2026.10.28 18:13:44,XAUUSD.m,SIGNAL | BUY | boxHigh=4038.75 boxLow=4038.23 boxRangePts=52.0 displacementPts=38.0 velocityPtsSec=12.5 spreadPts=26.0 entry=4038.91 SL=4038.30 stopPts=61.0 volume=0.03 riskMoney=2.39 estimatedLoss=1.83
+2026.10.28 18:13:44,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4038.91 deal=196 order=196
+2026.10.28 18:13:44,XAUUSD.m,DEAL | entry=0 price=4038.91 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 18:14:14,XAUUSD.m,DEAL | entry=1 price=4038.98 profit=0.21 commission=0.00 swap=0.00
+2026.10.28 18:40:09,XAUUSD.m,SIGNAL | SELL | boxHigh=4039.90 boxLow=4039.44 boxRangePts=46.0 displacementPts=-25.0 velocityPtsSec=-8.3 spreadPts=26.0 entry=4039.28 SL=4039.89 stopPts=61.0 volume=0.03 riskMoney=2.39 estimatedLoss=1.83
+2026.10.28 18:40:09,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4039.28 deal=198 order=198
+2026.10.28 18:40:09,XAUUSD.m,DEAL | entry=0 price=4039.28 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 18:40:19,XAUUSD.m,DEAL | entry=1 price=4039.89 profit=-1.83 commission=0.00 swap=0.00
+2026.10.28 18:44:29,XAUUSD.m,SIGNAL | SELL | boxHigh=4040.36 boxLow=4039.95 boxRangePts=41.0 displacementPts=-28.0 velocityPtsSec=-9.2 spreadPts=26.0 entry=4039.74 SL=4040.40 stopPts=66.0 volume=0.03 riskMoney=2.39 estimatedLoss=1.98
+2026.10.28 18:44:29,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4039.74 deal=200 order=200
+2026.10.28 18:44:29,XAUUSD.m,DEAL | entry=0 price=4039.74 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 18:44:49,XAUUSD.m,SIGNAL | BUY | boxHigh=4040.18 boxLow=4039.79 boxRangePts=39.0 displacementPts=41.0 velocityPtsSec=12.8 spreadPts=26.0 entry=4040.40 SL=4039.73 stopPts=67.0 volume=0.03 riskMoney=2.38 estimatedLoss=2.01
+2026.10.28 18:44:49,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4040.40 deal=202 order=202
+2026.10.28 18:44:49,XAUUSD.m,DEAL | entry=1 price=4040.40 profit=-1.98 commission=0.00 swap=0.00
+2026.10.28 18:44:49,XAUUSD.m,DEAL | entry=0 price=4040.40 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 18:45:37,XAUUSD.m,DEAL | entry=1 price=4040.57 profit=0.51 commission=0.00 swap=0.00
+2026.10.28 18:47:13,XAUUSD.m,SIGNAL | BUY | boxHigh=4040.14 boxLow=4039.78 boxRangePts=36.0 displacementPts=25.0 velocityPtsSec=8.3 spreadPts=26.0 entry=4040.38 SL=4039.69 stopPts=69.0 volume=0.03 riskMoney=2.38 estimatedLoss=2.07
+2026.10.28 18:47:13,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4040.38 deal=204 order=204
+2026.10.28 18:47:13,XAUUSD.m,DEAL | entry=0 price=4040.38 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 18:47:22,XAUUSD.m,EXIT_HARVEST | ticket=204 profit_pts=46.0 last_10_tick_move=2.0
+2026.10.28 18:47:22,XAUUSD.m,DEAL | entry=1 price=4040.84 profit=1.38 commission=0.00 swap=0.00
+2026.10.28 18:53:01,XAUUSD.m,SIGNAL | BUY | boxHigh=4040.00 boxLow=4039.41 boxRangePts=59.0 displacementPts=34.0 velocityPtsSec=10.6 spreadPts=26.0 entry=4040.19 SL=4039.55 stopPts=64.0 volume=0.03 riskMoney=2.39 estimatedLoss=1.92
+2026.10.28 18:53:01,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4040.19 deal=206 order=206
+2026.10.28 18:53:01,XAUUSD.m,DEAL | entry=0 price=4040.19 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 18:53:31,XAUUSD.m,EXIT_HARVEST | ticket=206 profit_pts=55.0 last_10_tick_move=0.0
+2026.10.28 18:53:31,XAUUSD.m,DEAL | entry=1 price=4040.74 profit=1.65 commission=0.00 swap=0.00
+2026.10.28 19:21:42,XAUUSD.m,SIGNAL | BUY | boxHigh=4040.30 boxLow=4039.74 boxRangePts=56.0 displacementPts=64.0 velocityPtsSec=17.8 spreadPts=26.0 entry=4040.51 SL=4039.85 stopPts=66.0 volume=0.03 riskMoney=2.39 estimatedLoss=1.98
+2026.10.28 19:21:42,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4040.51 deal=208 order=208
+2026.10.28 19:21:42,XAUUSD.m,DEAL | entry=0 price=4040.51 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 19:21:43,XAUUSD.m,DEAL | entry=1 price=4039.84 profit=-2.01 commission=0.00 swap=0.00
+2026.10.28 19:27:03,XAUUSD.m,SIGNAL | BUY | boxHigh=4039.47 boxLow=4038.91 boxRangePts=56.0 displacementPts=29.0 velocityPtsSec=9.4 spreadPts=26.0 entry=4039.64 SL=4039.02 stopPts=62.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.86
+2026.10.28 19:27:03,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4039.64 deal=210 order=210
+2026.10.28 19:27:03,XAUUSD.m,DEAL | entry=0 price=4039.64 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 19:27:42,XAUUSD.m,DEAL | entry=1 price=4039.02 profit=-1.86 commission=0.00 swap=0.00
+2026.10.28 19:30:00,XAUUSD.m,SIGNAL | SELL | boxHigh=4039.17 boxLow=4038.60 boxRangePts=57.0 displacementPts=-26.0 velocityPtsSec=-8.6 spreadPts=26.0 entry=4038.39 SL=4039.05 stopPts=66.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.98
+2026.10.28 19:30:00,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4038.39 deal=212 order=212
+2026.10.28 19:30:00,XAUUSD.m,DEAL | entry=0 price=4038.39 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 19:30:51,XAUUSD.m,DEAL | entry=1 price=4039.08 profit=-2.07 commission=0.00 swap=0.00
+2026.10.28 19:34:25,XAUUSD.m,SIGNAL | SELL | boxHigh=4041.74 boxLow=4041.14 boxRangePts=60.0 displacementPts=-45.0 velocityPtsSec=-14.7 spreadPts=26.0 entry=4040.98 SL=4041.59 stopPts=61.0 volume=0.03 riskMoney=2.37 estimatedLoss=1.83
+2026.10.28 19:34:25,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4040.98 deal=214 order=214
+2026.10.28 19:34:25,XAUUSD.m,DEAL | entry=0 price=4040.98 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 19:35:29,XAUUSD.m,DEAL | entry=1 price=4040.86 profit=0.36 commission=0.00 swap=0.00
+2026.10.28 19:36:16,XAUUSD.m,SIGNAL | SELL | boxHigh=4041.16 boxLow=4040.62 boxRangePts=54.0 displacementPts=-43.0 velocityPtsSec=-13.1 spreadPts=26.0 entry=4040.45 SL=4041.07 stopPts=62.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.86
+2026.10.28 19:36:16,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4040.45 deal=216 order=216
+2026.10.28 19:36:16,XAUUSD.m,DEAL | entry=0 price=4040.45 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 19:37:04,XAUUSD.m,EXIT_HARVEST | ticket=216 profit_pts=70.0 last_10_tick_move=0.0
+2026.10.28 19:37:04,XAUUSD.m,DEAL | entry=1 price=4039.75 profit=2.10 commission=0.00 swap=0.00
+2026.10.28 19:39:14,XAUUSD.m,SIGNAL | SELL | boxHigh=4040.05 boxLow=4039.67 boxRangePts=38.0 displacementPts=-29.0 velocityPtsSec=-8.7 spreadPts=26.0 entry=4039.50 SL=4040.12 stopPts=62.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.86
+2026.10.28 19:39:14,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4039.50 deal=218 order=218
+2026.10.28 19:39:14,XAUUSD.m,DEAL | entry=0 price=4039.50 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 19:40:20,XAUUSD.m,EXIT_HARVEST | ticket=218 profit_pts=63.0 last_10_tick_move=-5.0
+2026.10.28 19:40:20,XAUUSD.m,DEAL | entry=1 price=4038.87 profit=1.89 commission=0.00 swap=0.00
+2026.10.28 19:50:31,XAUUSD.m,SIGNAL | BUY | boxHigh=4039.98 boxLow=4039.41 boxRangePts=57.0 displacementPts=27.0 velocityPtsSec=9.0 spreadPts=26.0 entry=4040.22 SL=4039.53 stopPts=69.0 volume=0.03 riskMoney=2.39 estimatedLoss=2.07
+2026.10.28 19:50:31,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4040.22 deal=220 order=220
+2026.10.28 19:50:31,XAUUSD.m,DEAL | entry=0 price=4040.22 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 19:51:25,XAUUSD.m,DEAL | entry=1 price=4040.38 profit=0.48 commission=0.00 swap=0.00
+2026.10.28 19:53:46,XAUUSD.m,SIGNAL | SELL | boxHigh=4040.21 boxLow=4039.79 boxRangePts=42.0 displacementPts=-32.0 velocityPtsSec=-10.0 spreadPts=26.0 entry=4039.56 SL=4040.24 stopPts=68.0 volume=0.03 riskMoney=2.39 estimatedLoss=2.04
+2026.10.28 19:53:46,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4039.56 deal=222 order=222
+2026.10.28 19:53:46,XAUUSD.m,DEAL | entry=0 price=4039.56 profit=0.00 commission=0.00 swap=0.00
+2026.10.28 19:54:26,XAUUSD.m,DEAL | entry=1 price=4040.26 profit=-2.10 commission=0.00 swap=0.00
+2026.10.29 00:12:53,XAUUSD.m,SIGNAL | SELL | boxHigh=4063.99 boxLow=4063.51 boxRangePts=48.0 displacementPts=-31.0 velocityPtsSec=-9.9 spreadPts=26.0 entry=4063.31 SL=4063.96 stopPts=65.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.95
+2026.10.29 00:12:53,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.29 00:40:04,XAUUSD.m,SIGNAL | BUY | boxHigh=4054.78 boxLow=4054.35 boxRangePts=43.0 displacementPts=27.0 velocityPtsSec=8.0 spreadPts=26.0 entry=4055.01 SL=4054.33 stopPts=68.0 volume=0.03 riskMoney=2.38 estimatedLoss=2.04
+2026.10.29 00:40:04,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.29 00:40:05,XAUUSD.m,SIGNAL | BUY | boxHigh=4054.78 boxLow=4054.35 boxRangePts=43.0 displacementPts=30.0 velocityPtsSec=8.9 spreadPts=26.0 entry=4055.02 SL=4054.33 stopPts=69.0 volume=0.03 riskMoney=2.38 estimatedLoss=2.07
+2026.10.29 00:40:05,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.29 00:40:05,XAUUSD.m,SIGNAL | BUY | boxHigh=4054.78 boxLow=4054.35 boxRangePts=43.0 displacementPts=30.0 velocityPtsSec=8.4 spreadPts=26.0 entry=4055.02 SL=4054.33 stopPts=69.0 volume=0.03 riskMoney=2.38 estimatedLoss=2.07
+2026.10.29 00:40:05,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.29 00:52:13,XAUUSD.m,SIGNAL | BUY | boxHigh=4054.04 boxLow=4053.56 boxRangePts=48.0 displacementPts=25.0 velocityPtsSec=8.1 spreadPts=26.0 entry=4054.20 SL=4053.59 stopPts=61.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.83
+2026.10.29 00:52:13,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.29 00:52:16,XAUUSD.m,SIGNAL | BUY | boxHigh=4054.04 boxLow=4053.56 boxRangePts=48.0 displacementPts=27.0 velocityPtsSec=9.0 spreadPts=26.0 entry=4054.28 SL=4053.59 stopPts=69.0 volume=0.03 riskMoney=2.38 estimatedLoss=2.07
+2026.10.29 00:52:16,XAUUSD.m,ORDER_FAILED | retcode=10018 description=market closed lastError=4756
+2026.10.29 01:05:07,XAUUSD.m,SIGNAL | SELL | boxHigh=4052.96 boxLow=4052.58 boxRangePts=38.0 displacementPts=-41.0 velocityPtsSec=-11.9 spreadPts=26.0 entry=4052.39 SL=4053.03 stopPts=64.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.92
+2026.10.29 01:05:07,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4052.39 deal=224 order=224
+2026.10.29 01:05:07,XAUUSD.m,DEAL | entry=0 price=4052.39 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 01:05:22,XAUUSD.m,DEAL | entry=1 price=4053.10 profit=-2.13 commission=0.00 swap=0.00
+2026.10.29 01:21:29,XAUUSD.m,SIGNAL | SELL | boxHigh=4055.25 boxLow=4054.74 boxRangePts=51.0 displacementPts=-28.0 velocityPtsSec=-9.1 spreadPts=26.0 entry=4054.56 SL=4055.19 stopPts=63.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.89
+2026.10.29 01:21:29,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4054.56 deal=226 order=226
+2026.10.29 01:21:29,XAUUSD.m,DEAL | entry=0 price=4054.56 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 01:21:55,XAUUSD.m,EXIT_HARVEST | ticket=226 profit_pts=60.0 last_10_tick_move=2.0
+2026.10.29 01:21:55,XAUUSD.m,DEAL | entry=1 price=4053.96 profit=1.80 commission=0.00 swap=0.00
+2026.10.29 01:41:32,XAUUSD.m,SIGNAL | BUY | boxHigh=4052.77 boxLow=4052.33 boxRangePts=44.0 displacementPts=30.0 velocityPtsSec=10.0 spreadPts=26.0 entry=4052.97 SL=4052.32 stopPts=65.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.95
+2026.10.29 01:41:32,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4052.97 deal=228 order=228
+2026.10.29 01:41:32,XAUUSD.m,DEAL | entry=0 price=4052.97 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 01:42:36,XAUUSD.m,SIGNAL | SELL | boxHigh=4052.98 boxLow=4052.51 boxRangePts=47.0 displacementPts=-45.0 velocityPtsSec=-11.5 spreadPts=26.0 entry=4052.31 SL=4052.96 stopPts=65.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.95
+2026.10.29 01:42:36,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4052.31 deal=230 order=230
+2026.10.29 01:42:36,XAUUSD.m,DEAL | entry=1 price=4052.31 profit=-1.98 commission=0.00 swap=0.00
+2026.10.29 01:42:36,XAUUSD.m,DEAL | entry=0 price=4052.31 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 01:42:53,XAUUSD.m,DEAL | entry=1 price=4052.96 profit=-1.95 commission=0.00 swap=0.00
+2026.10.29 02:15:03,XAUUSD.m,SIGNAL | SELL | boxHigh=4045.06 boxLow=4044.49 boxRangePts=57.0 displacementPts=-44.0 velocityPtsSec=-14.5 spreadPts=26.0 entry=4044.31 SL=4044.94 stopPts=63.0 volume=0.03 riskMoney=2.37 estimatedLoss=1.89
+2026.10.29 02:15:03,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4044.31 deal=232 order=232
+2026.10.29 02:15:03,XAUUSD.m,DEAL | entry=0 price=4044.31 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 02:15:06,XAUUSD.m,EXIT_HARVEST | ticket=232 profit_pts=40.0 last_10_tick_move=-6.0
+2026.10.29 02:15:06,XAUUSD.m,DEAL | entry=1 price=4043.91 profit=1.20 commission=0.00 swap=0.00
+2026.10.29 05:44:55,XAUUSD.m,SIGNAL | SELL | boxHigh=4044.49 boxLow=4044.02 boxRangePts=47.0 displacementPts=-31.0 velocityPtsSec=-10.3 spreadPts=26.0 entry=4043.78 SL=4044.47 stopPts=69.0 volume=0.03 riskMoney=2.37 estimatedLoss=2.07
+2026.10.29 05:44:55,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4043.78 deal=234 order=234
+2026.10.29 05:44:55,XAUUSD.m,DEAL | entry=0 price=4043.78 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 05:45:35,XAUUSD.m,DEAL | entry=1 price=4043.63 profit=0.45 commission=0.00 swap=0.00
+2026.10.29 09:42:08,XAUUSD.m,SIGNAL | SELL | boxHigh=4029.27 boxLow=4028.74 boxRangePts=53.0 displacementPts=-28.0 velocityPtsSec=-9.2 spreadPts=26.0 entry=4028.50 SL=4029.19 stopPts=69.0 volume=0.03 riskMoney=2.37 estimatedLoss=2.07
+2026.10.29 09:42:08,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4028.50 deal=236 order=236
+2026.10.29 09:42:08,XAUUSD.m,DEAL | entry=0 price=4028.50 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 09:42:24,XAUUSD.m,EXIT_HARVEST | ticket=236 profit_pts=46.0 last_10_tick_move=0.0
+2026.10.29 09:42:24,XAUUSD.m,DEAL | entry=1 price=4028.04 profit=1.38 commission=0.00 swap=0.00
+2026.10.29 12:00:28,XAUUSD.m,SIGNAL | BUY | boxHigh=4029.71 boxLow=4029.12 boxRangePts=59.0 displacementPts=66.0 velocityPtsSec=21.9 spreadPts=26.0 entry=4029.92 SL=4029.26 stopPts=66.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.98
+2026.10.29 12:00:28,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4029.92 deal=238 order=238
+2026.10.29 12:00:28,XAUUSD.m,DEAL | entry=0 price=4029.92 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 12:00:39,XAUUSD.m,DEAL | entry=1 price=4030.07 profit=0.45 commission=0.00 swap=0.00
+2026.10.29 12:48:00,XAUUSD.m,SIGNAL | SELL | boxHigh=4028.18 boxLow=4027.68 boxRangePts=50.0 displacementPts=-32.0 velocityPtsSec=-8.9 spreadPts=26.0 entry=4027.53 SL=4028.13 stopPts=60.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.80
+2026.10.29 12:48:00,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4027.53 deal=240 order=240
+2026.10.29 12:48:00,XAUUSD.m,DEAL | entry=0 price=4027.53 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 12:48:35,XAUUSD.m,DEAL | entry=1 price=4027.54 profit=-0.03 commission=0.00 swap=0.00
+2026.10.29 12:52:34,XAUUSD.m,SIGNAL | SELL | boxHigh=4027.91 boxLow=4027.38 boxRangePts=53.0 displacementPts=-28.0 velocityPtsSec=-9.0 spreadPts=26.0 entry=4027.22 SL=4027.83 stopPts=61.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.83
+2026.10.29 12:52:34,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4027.22 deal=242 order=242
+2026.10.29 12:52:34,XAUUSD.m,DEAL | entry=0 price=4027.22 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 12:52:45,XAUUSD.m,DEAL | entry=1 price=4027.02 profit=0.60 commission=0.00 swap=0.00
+2026.10.29 13:13:12,XAUUSD.m,SIGNAL | BUY | boxHigh=4035.14 boxLow=4034.60 boxRangePts=54.0 displacementPts=38.0 velocityPtsSec=12.2 spreadPts=26.0 entry=4035.30 SL=4034.69 stopPts=61.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.83
+2026.10.29 13:13:12,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4035.30 deal=244 order=244
+2026.10.29 13:13:12,XAUUSD.m,DEAL | entry=0 price=4035.30 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 13:14:49,XAUUSD.m,EXIT_HARVEST | ticket=244 profit_pts=75.0 last_10_tick_move=0.0
+2026.10.29 13:14:49,XAUUSD.m,DEAL | entry=1 price=4036.05 profit=2.25 commission=0.00 swap=0.00
+2026.10.29 18:35:18,XAUUSD.m,SIGNAL | SELL | boxHigh=4013.32 boxLow=4012.73 boxRangePts=59.0 displacementPts=-64.0 velocityPtsSec=-20.7 spreadPts=26.0 entry=4012.50 SL=4013.18 stopPts=68.0 volume=0.03 riskMoney=2.39 estimatedLoss=2.04
+2026.10.29 18:35:18,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4012.50 deal=246 order=246
+2026.10.29 18:35:18,XAUUSD.m,DEAL | entry=0 price=4012.50 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 18:35:23,XAUUSD.m,DEAL | entry=1 price=4013.20 profit=-2.10 commission=0.00 swap=0.00
+2026.10.29 19:26:35,XAUUSD.m,SIGNAL | BUY | boxHigh=4020.59 boxLow=4020.02 boxRangePts=57.0 displacementPts=27.0 velocityPtsSec=8.5 spreadPts=26.0 entry=4020.75 SL=4020.14 stopPts=61.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.83
+2026.10.29 19:26:35,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4020.75 deal=248 order=248
+2026.10.29 19:26:35,XAUUSD.m,DEAL | entry=0 price=4020.75 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 19:26:44,XAUUSD.m,DEAL | entry=1 price=4020.14 profit=-1.83 commission=0.00 swap=0.00
+2026.10.29 20:13:00,XAUUSD.m,SIGNAL | SELL | boxHigh=4010.24 boxLow=4009.84 boxRangePts=40.0 displacementPts=-32.0 velocityPtsSec=-10.0 spreadPts=26.0 entry=4009.60 SL=4010.29 stopPts=69.0 volume=0.03 riskMoney=2.38 estimatedLoss=2.07
+2026.10.29 20:13:00,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4009.60 deal=250 order=250
+2026.10.29 20:13:00,XAUUSD.m,DEAL | entry=0 price=4009.60 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 20:14:09,XAUUSD.m,DEAL | entry=1 price=4009.65 profit=-0.15 commission=0.00 swap=0.00
+2026.10.29 20:22:51,XAUUSD.m,SIGNAL | SELL | boxHigh=4008.42 boxLow=4007.87 boxRangePts=55.0 displacementPts=-29.0 velocityPtsSec=-9.6 spreadPts=26.0 entry=4007.70 SL=4008.32 stopPts=62.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.86
+2026.10.29 20:22:51,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4007.70 deal=252 order=252
+2026.10.29 20:22:51,XAUUSD.m,DEAL | entry=0 price=4007.70 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 20:23:04,XAUUSD.m,DEAL | entry=1 price=4007.55 profit=0.45 commission=0.00 swap=0.00
+2026.10.29 20:44:52,XAUUSD.m,SIGNAL | BUY | boxHigh=4009.64 boxLow=4009.09 boxRangePts=55.0 displacementPts=34.0 velocityPtsSec=10.5 spreadPts=26.0 entry=4009.85 SL=4009.19 stopPts=66.0 volume=0.03 riskMoney=2.38 estimatedLoss=1.98
+2026.10.29 20:44:52,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4009.85 deal=254 order=254
+2026.10.29 20:44:52,XAUUSD.m,DEAL | entry=0 price=4009.85 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 20:45:02,XAUUSD.m,DEAL | entry=1 price=4009.16 profit=-2.07 commission=0.00 swap=0.00
+2026.10.29 20:58:35,XAUUSD.m,SIGNAL | SELL | boxHigh=4011.36 boxLow=4010.89 boxRangePts=47.0 displacementPts=-43.0 velocityPtsSec=-11.8 spreadPts=26.0 entry=4010.73 SL=4011.34 stopPts=61.0 volume=0.03 riskMoney=2.37 estimatedLoss=1.83
+2026.10.29 20:58:35,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4010.73 deal=256 order=256
+2026.10.29 20:58:35,XAUUSD.m,DEAL | entry=0 price=4010.73 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 20:58:39,XAUUSD.m,DEAL | entry=1 price=4011.39 profit=-1.98 commission=0.00 swap=0.00
+2026.10.29 21:04:11,XAUUSD.m,SIGNAL | BUY | boxHigh=4011.54 boxLow=4010.95 boxRangePts=59.0 displacementPts=32.0 velocityPtsSec=10.7 spreadPts=26.0 entry=4011.77 SL=4011.09 stopPts=68.0 volume=0.03 riskMoney=2.37 estimatedLoss=2.04
+2026.10.29 21:04:11,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4011.77 deal=258 order=258
+2026.10.29 21:04:11,XAUUSD.m,DEAL | entry=0 price=4011.77 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 21:04:29,XAUUSD.m,DEAL | entry=1 price=4011.95 profit=0.54 commission=0.00 swap=0.00
+2026.10.29 21:13:15,XAUUSD.m,SIGNAL | SELL | boxHigh=4011.96 boxLow=4011.45 boxRangePts=51.0 displacementPts=-50.0 velocityPtsSec=-16.4 spreadPts=26.0 entry=4011.27 SL=4011.90 stopPts=63.0 volume=0.03 riskMoney=2.37 estimatedLoss=1.89
+2026.10.29 21:13:15,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4011.27 deal=260 order=260
+2026.10.29 21:13:15,XAUUSD.m,DEAL | entry=0 price=4011.27 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 21:13:22,XAUUSD.m,DEAL | entry=1 price=4011.90 profit=-1.89 commission=0.00 swap=0.00
+2026.10.29 21:18:02,XAUUSD.m,SIGNAL | BUY | boxHigh=4010.53 boxLow=4010.01 boxRangePts=52.0 displacementPts=40.0 velocityPtsSec=12.1 spreadPts=26.0 entry=4010.72 SL=4010.08 stopPts=64.0 volume=0.03 riskMoney=2.36 estimatedLoss=1.92
+2026.10.29 21:18:02,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 4010.72 deal=262 order=262
+2026.10.29 21:18:02,XAUUSD.m,DEAL | entry=0 price=4010.72 profit=0.00 commission=0.00 swap=0.00
+2026.10.29 21:18:13,XAUUSD.m,EXIT_HARVEST | ticket=262 profit_pts=54.0 last_10_tick_move=-3.0
+2026.10.29 21:18:13,XAUUSD.m,DEAL | entry=1 price=4011.26 profit=1.62 commission=0.00 swap=0.00
+2026.10.30 04:55:17,XAUUSD.m,SIGNAL | BUY | boxHigh=3997.91 boxLow=3997.34 boxRangePts=57.0 displacementPts=31.0 velocityPtsSec=9.5 spreadPts=26.0 entry=3998.08 SL=3997.46 stopPts=62.0 volume=0.03 riskMoney=2.37 estimatedLoss=1.86
+2026.10.30 04:55:17,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3998.08 deal=264 order=264
+2026.10.30 04:55:17,XAUUSD.m,DEAL | entry=0 price=3998.08 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 04:55:35,XAUUSD.m,DEAL | entry=1 price=3997.37 profit=-2.13 commission=0.00 swap=0.00
+2026.10.30 05:35:50,XAUUSD.m,SIGNAL | SELL | boxHigh=3994.51 boxLow=3993.94 boxRangePts=57.0 displacementPts=-51.0 velocityPtsSec=-15.5 spreadPts=26.0 entry=3993.69 SL=3994.39 stopPts=70.0 volume=0.03 riskMoney=2.36 estimatedLoss=2.10
+2026.10.30 05:35:50,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3993.69 deal=266 order=266
+2026.10.30 05:35:50,XAUUSD.m,DEAL | entry=0 price=3993.69 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 05:36:05,XAUUSD.m,DEAL | entry=1 price=3994.39 profit=-2.10 commission=0.00 swap=0.00
+2026.10.30 05:39:02,XAUUSD.m,SIGNAL | SELL | boxHigh=3994.31 boxLow=3993.71 boxRangePts=60.0 displacementPts=-25.0 velocityPtsSec=-8.3 spreadPts=26.0 entry=3993.50 SL=3994.16 stopPts=66.0 volume=0.03 riskMoney=2.36 estimatedLoss=1.98
+2026.10.30 05:39:02,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3993.50 deal=268 order=268
+2026.10.30 05:39:02,XAUUSD.m,DEAL | entry=0 price=3993.50 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 05:39:19,XAUUSD.m,DEAL | entry=1 price=3994.17 profit=-2.01 commission=0.00 swap=0.00
+2026.10.30 05:39:34,XAUUSD.m,SIGNAL | BUY | boxHigh=3994.20 boxLow=3993.63 boxRangePts=57.0 displacementPts=33.0 velocityPtsSec=11.0 spreadPts=26.0 entry=3994.39 SL=3993.75 stopPts=64.0 volume=0.03 riskMoney=2.35 estimatedLoss=1.92
+2026.10.30 05:39:34,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3994.39 deal=270 order=270
+2026.10.30 05:39:34,XAUUSD.m,DEAL | entry=0 price=3994.39 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 05:39:38,XAUUSD.m,DEAL | entry=1 price=3993.75 profit=-1.92 commission=0.00 swap=0.00
+2026.10.30 05:44:17,XAUUSD.m,SIGNAL | BUY | boxHigh=3993.24 boxLow=3992.81 boxRangePts=43.0 displacementPts=26.0 velocityPtsSec=8.2 spreadPts=26.0 entry=3993.46 SL=3992.79 stopPts=67.0 volume=0.03 riskMoney=2.35 estimatedLoss=2.01
+2026.10.30 05:44:17,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3993.46 deal=272 order=272
+2026.10.30 05:44:17,XAUUSD.m,DEAL | entry=0 price=3993.46 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 05:46:01,XAUUSD.m,DEAL | entry=1 price=3992.77 profit=-2.07 commission=0.00 swap=0.00
+2026.10.30 05:54:27,XAUUSD.m,SIGNAL | BUY | boxHigh=3992.49 boxLow=3991.99 boxRangePts=50.0 displacementPts=27.0 velocityPtsSec=8.7 spreadPts=26.0 entry=3992.68 SL=3992.04 stopPts=64.0 volume=0.03 riskMoney=2.34 estimatedLoss=1.92
+2026.10.30 05:54:27,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3992.68 deal=274 order=274
+2026.10.30 05:54:27,XAUUSD.m,DEAL | entry=0 price=3992.68 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 05:54:48,XAUUSD.m,DEAL | entry=1 price=3992.69 profit=0.03 commission=0.00 swap=0.00
+2026.10.30 06:06:58,XAUUSD.m,SIGNAL | SELL | boxHigh=3989.63 boxLow=3989.18 boxRangePts=45.0 displacementPts=-26.0 velocityPtsSec=-8.4 spreadPts=26.0 entry=3988.94 SL=3989.63 stopPts=69.0 volume=0.03 riskMoney=2.34 estimatedLoss=2.07
+2026.10.30 06:06:58,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3988.94 deal=276 order=276
+2026.10.30 06:06:58,XAUUSD.m,DEAL | entry=0 price=3988.94 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 06:07:09,XAUUSD.m,DEAL | entry=1 price=3989.63 profit=-2.07 commission=0.00 swap=0.00
+2026.10.30 06:18:30,XAUUSD.m,SIGNAL | SELL | boxHigh=3992.16 boxLow=3991.85 boxRangePts=31.0 displacementPts=-27.0 velocityPtsSec=-8.1 spreadPts=26.0 entry=3991.68 SL=3992.30 stopPts=62.0 volume=0.03 riskMoney=2.34 estimatedLoss=1.86
+2026.10.30 06:18:30,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3991.68 deal=278 order=278
+2026.10.30 06:18:30,XAUUSD.m,DEAL | entry=0 price=3991.68 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 06:19:31,XAUUSD.m,DEAL | entry=1 price=3991.39 profit=0.87 commission=0.00 swap=0.00
+2026.10.30 06:21:37,XAUUSD.m,SIGNAL | BUY | boxHigh=3991.99 boxLow=3991.50 boxRangePts=49.0 displacementPts=46.0 velocityPtsSec=15.3 spreadPts=26.0 entry=3992.20 SL=3991.54 stopPts=66.0 volume=0.03 riskMoney=2.34 estimatedLoss=1.98
+2026.10.30 06:21:37,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3992.20 deal=280 order=280
+2026.10.30 06:21:37,XAUUSD.m,DEAL | entry=0 price=3992.20 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 06:22:17,XAUUSD.m,DEAL | entry=1 price=3991.42 profit=-2.34 commission=0.00 swap=0.00
+2026.10.30 06:26:53,XAUUSD.m,SIGNAL | BUY | boxHigh=3992.67 boxLow=3992.27 boxRangePts=40.0 displacementPts=27.0 velocityPtsSec=8.5 spreadPts=26.0 entry=3992.89 SL=3992.22 stopPts=67.0 volume=0.03 riskMoney=2.33 estimatedLoss=2.01
+2026.10.30 06:26:53,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3992.89 deal=282 order=282
+2026.10.30 06:26:53,XAUUSD.m,DEAL | entry=0 price=3992.89 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 06:27:33,XAUUSD.m,DEAL | entry=1 price=3993.26 profit=1.11 commission=0.00 swap=0.00
+2026.10.30 06:34:17,XAUUSD.m,SIGNAL | BUY | boxHigh=3995.73 boxLow=3995.29 boxRangePts=44.0 displacementPts=26.0 velocityPtsSec=8.4 spreadPts=26.0 entry=3995.91 SL=3995.28 stopPts=63.0 volume=0.03 riskMoney=2.34 estimatedLoss=1.89
+2026.10.30 06:34:17,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3995.91 deal=284 order=284
+2026.10.30 06:34:17,XAUUSD.m,DEAL | entry=0 price=3995.91 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 06:34:29,XAUUSD.m,DEAL | entry=1 price=3995.28 profit=-1.89 commission=0.00 swap=0.00
+2026.10.30 06:41:40,XAUUSD.m,SIGNAL | SELL | boxHigh=3991.29 boxLow=3990.92 boxRangePts=37.0 displacementPts=-26.0 velocityPtsSec=-8.2 spreadPts=26.0 entry=3990.74 SL=3991.37 stopPts=63.0 volume=0.03 riskMoney=2.33 estimatedLoss=1.89
+2026.10.30 06:41:40,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3990.74 deal=286 order=286
+2026.10.30 06:41:40,XAUUSD.m,DEAL | entry=0 price=3990.74 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 06:41:56,XAUUSD.m,EXIT_HARVEST | ticket=286 profit_pts=59.0 last_10_tick_move=-2.0
+2026.10.30 06:41:56,XAUUSD.m,DEAL | entry=1 price=3990.15 profit=1.77 commission=0.00 swap=0.00
+2026.10.30 06:50:04,XAUUSD.m,SIGNAL | BUY | boxHigh=3993.85 boxLow=3993.29 boxRangePts=56.0 displacementPts=46.0 velocityPtsSec=15.3 spreadPts=26.0 entry=3994.06 SL=3993.40 stopPts=66.0 volume=0.03 riskMoney=2.34 estimatedLoss=1.98
+2026.10.30 06:50:04,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3994.06 deal=288 order=288
+2026.10.30 06:50:04,XAUUSD.m,DEAL | entry=0 price=3994.06 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 06:50:37,XAUUSD.m,EXIT_HARVEST | ticket=288 profit_pts=50.0 last_10_tick_move=2.0
+2026.10.30 06:50:37,XAUUSD.m,DEAL | entry=1 price=3994.56 profit=1.50 commission=0.00 swap=0.00
+2026.10.30 06:58:16,XAUUSD.m,SIGNAL | SELL | boxHigh=3997.83 boxLow=3997.29 boxRangePts=54.0 displacementPts=-29.0 velocityPtsSec=-9.4 spreadPts=26.0 entry=3997.12 SL=3997.74 stopPts=62.0 volume=0.03 riskMoney=2.34 estimatedLoss=1.86
+2026.10.30 06:58:16,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3997.12 deal=290 order=290
+2026.10.30 06:58:16,XAUUSD.m,DEAL | entry=0 price=3997.12 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 06:58:39,XAUUSD.m,DEAL | entry=1 price=3996.92 profit=0.60 commission=0.00 swap=0.00
+2026.10.30 07:00:01,XAUUSD.m,SIGNAL | BUY | boxHigh=3997.08 boxLow=3996.61 boxRangePts=47.0 displacementPts=44.0 velocityPtsSec=14.0 spreadPts=26.0 entry=3997.33 SL=3996.63 stopPts=70.0 volume=0.03 riskMoney=2.34 estimatedLoss=2.10
+2026.10.30 07:00:01,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3997.33 deal=292 order=292
+2026.10.30 07:00:01,XAUUSD.m,DEAL | entry=0 price=3997.33 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 07:00:08,XAUUSD.m,EXIT_HARVEST | ticket=292 profit_pts=48.0 last_10_tick_move=-2.0
+2026.10.30 07:00:08,XAUUSD.m,DEAL | entry=1 price=3997.81 profit=1.44 commission=0.00 swap=0.00
+2026.10.30 07:21:05,XAUUSD.m,SIGNAL | BUY | boxHigh=3999.48 boxLow=3998.91 boxRangePts=57.0 displacementPts=34.0 velocityPtsSec=11.3 spreadPts=26.0 entry=3999.65 SL=3999.03 stopPts=62.0 volume=0.03 riskMoney=2.34 estimatedLoss=1.86
+2026.10.30 07:21:05,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3999.65 deal=294 order=294
+2026.10.30 07:21:05,XAUUSD.m,DEAL | entry=0 price=3999.65 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 07:22:26,XAUUSD.m,DEAL | entry=1 price=3999.91 profit=0.78 commission=0.00 swap=0.00
+2026.10.30 17:59:49,XAUUSD.m,SIGNAL | BUY | boxHigh=3898.77 boxLow=3898.25 boxRangePts=52.0 displacementPts=25.0 velocityPtsSec=8.3 spreadPts=26.0 entry=3898.99 SL=3898.32 stopPts=67.0 volume=0.03 riskMoney=2.35 estimatedLoss=2.01
+2026.10.30 17:59:49,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3898.99 deal=296 order=296
+2026.10.30 17:59:49,XAUUSD.m,DEAL | entry=0 price=3898.99 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 17:59:58,XAUUSD.m,DEAL | entry=1 price=3898.25 profit=-2.22 commission=0.00 swap=0.00
+2026.10.30 19:57:20,XAUUSD.m,SIGNAL | SELL | boxHigh=3883.92 boxLow=3883.37 boxRangePts=55.0 displacementPts=-54.0 velocityPtsSec=-16.3 spreadPts=26.0 entry=3883.17 SL=3883.82 stopPts=65.0 volume=0.03 riskMoney=2.34 estimatedLoss=1.95
+2026.10.30 19:57:20,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3883.17 deal=298 order=298
+2026.10.30 19:57:20,XAUUSD.m,DEAL | entry=0 price=3883.17 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 19:57:37,XAUUSD.m,DEAL | entry=1 price=3883.82 profit=-1.95 commission=0.00 swap=0.00
+2026.10.30 21:26:29,XAUUSD.m,SIGNAL | SELL | boxHigh=3880.64 boxLow=3880.15 boxRangePts=49.0 displacementPts=-31.0 velocityPtsSec=-10.2 spreadPts=26.0 entry=3879.92 SL=3880.60 stopPts=68.0 volume=0.03 riskMoney=2.34 estimatedLoss=2.04
+2026.10.30 21:26:29,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3879.92 deal=300 order=300
+2026.10.30 21:26:29,XAUUSD.m,DEAL | entry=0 price=3879.92 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 21:26:36,XAUUSD.m,EXIT_HARVEST | ticket=300 profit_pts=57.0 last_10_tick_move=-1.0
+2026.10.30 21:26:36,XAUUSD.m,DEAL | entry=1 price=3879.35 profit=1.71 commission=0.00 swap=0.00
+2026.10.30 22:32:16,XAUUSD.m,SIGNAL | BUY | boxHigh=3879.04 boxLow=3878.51 boxRangePts=53.0 displacementPts=32.0 velocityPtsSec=8.9 spreadPts=26.0 entry=3879.24 SL=3878.59 stopPts=65.0 volume=0.03 riskMoney=2.34 estimatedLoss=1.95
+2026.10.30 22:32:16,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3879.24 deal=302 order=302
+2026.10.30 22:32:16,XAUUSD.m,DEAL | entry=0 price=3879.24 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 22:32:29,XAUUSD.m,DEAL | entry=1 price=3878.48 profit=-2.28 commission=0.00 swap=0.00
+2026.10.30 22:41:13,XAUUSD.m,SIGNAL | BUY | boxHigh=3874.95 boxLow=3874.56 boxRangePts=39.0 displacementPts=32.0 velocityPtsSec=9.6 spreadPts=26.0 entry=3875.11 SL=3874.50 stopPts=61.0 volume=0.03 riskMoney=2.33 estimatedLoss=1.83
+2026.10.30 22:41:13,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3875.11 deal=304 order=304
+2026.10.30 22:41:13,XAUUSD.m,DEAL | entry=0 price=3875.11 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 22:41:18,XAUUSD.m,DEAL | entry=1 price=3874.45 profit=-1.98 commission=0.00 swap=0.00
+2026.10.30 22:45:00,XAUUSD.m,SIGNAL | SELL | boxHigh=3873.54 boxLow=3873.03 boxRangePts=51.0 displacementPts=-50.0 velocityPtsSec=-16.6 spreadPts=26.0 entry=3872.81 SL=3873.48 stopPts=67.0 volume=0.03 riskMoney=2.33 estimatedLoss=2.01
+2026.10.30 22:45:00,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3872.81 deal=306 order=306
+2026.10.30 22:45:00,XAUUSD.m,DEAL | entry=0 price=3872.81 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 22:45:05,XAUUSD.m,DEAL | entry=1 price=3873.57 profit=-2.28 commission=0.00 swap=0.00
+2026.10.30 22:54:19,XAUUSD.m,SIGNAL | SELL | boxHigh=3874.91 boxLow=3874.33 boxRangePts=58.0 displacementPts=-30.0 velocityPtsSec=-10.0 spreadPts=26.0 entry=3874.09 SL=3874.78 stopPts=69.0 volume=0.03 riskMoney=2.32 estimatedLoss=2.07
+2026.10.30 22:54:19,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3874.09 deal=308 order=308
+2026.10.30 22:54:19,XAUUSD.m,DEAL | entry=0 price=3874.09 profit=0.00 commission=0.00 swap=0.00
+2026.10.30 22:54:39,XAUUSD.m,DEAL | entry=1 price=3874.78 profit=-2.07 commission=0.00 swap=0.00
+2026.11.02 02:36:55,XAUUSD.m,SIGNAL | SELL | boxHigh=3897.38 boxLow=3896.92 boxRangePts=46.0 displacementPts=-26.0 velocityPtsSec=-8.5 spreadPts=26.0 entry=3896.73 SL=3897.37 stopPts=64.0 volume=0.03 riskMoney=2.32 estimatedLoss=1.92
+2026.11.02 02:36:55,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3896.73 deal=310 order=310
+2026.11.02 02:36:55,XAUUSD.m,DEAL | entry=0 price=3896.73 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 02:37:14,XAUUSD.m,EXIT_HARVEST | ticket=310 profit_pts=46.0 last_10_tick_move=2.0
+2026.11.02 02:37:14,XAUUSD.m,DEAL | entry=1 price=3896.27 profit=1.38 commission=0.00 swap=0.00
+2026.11.02 02:43:35,XAUUSD.m,SIGNAL | SELL | boxHigh=3895.74 boxLow=3895.14 boxRangePts=60.0 displacementPts=-25.0 velocityPtsSec=-8.0 spreadPts=26.0 entry=3894.97 SL=3895.59 stopPts=62.0 volume=0.03 riskMoney=2.32 estimatedLoss=1.86
+2026.11.02 02:43:35,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3894.97 deal=312 order=312
+2026.11.02 02:43:35,XAUUSD.m,DEAL | entry=0 price=3894.97 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 02:44:05,XAUUSD.m,DEAL | entry=1 price=3895.08 profit=-0.33 commission=0.00 swap=0.00
+2026.11.02 05:42:32,XAUUSD.m,SIGNAL | SELL | boxHigh=3905.29 boxLow=3904.89 boxRangePts=40.0 displacementPts=-28.0 velocityPtsSec=-8.4 spreadPts=26.0 entry=3904.69 SL=3905.34 stopPts=65.0 volume=0.03 riskMoney=2.32 estimatedLoss=1.95
+2026.11.02 05:42:32,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3904.69 deal=314 order=314
+2026.11.02 05:42:32,XAUUSD.m,DEAL | entry=0 price=3904.69 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 05:42:42,XAUUSD.m,DEAL | entry=1 price=3905.37 profit=-2.04 commission=0.00 swap=0.00
+2026.11.02 05:42:43,XAUUSD.m,SIGNAL | BUY | boxHigh=3905.29 boxLow=3904.82 boxRangePts=47.0 displacementPts=34.0 velocityPtsSec=10.2 spreadPts=26.0 entry=3905.48 SL=3904.84 stopPts=64.0 volume=0.03 riskMoney=2.32 estimatedLoss=1.92
+2026.11.02 05:42:43,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3905.48 deal=316 order=316
+2026.11.02 05:42:43,XAUUSD.m,DEAL | entry=0 price=3905.48 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 05:43:03,XAUUSD.m,DEAL | entry=1 price=3904.81 profit=-2.01 commission=0.00 swap=0.00
+2026.11.02 05:54:55,XAUUSD.m,SIGNAL | BUY | boxHigh=3902.44 boxLow=3901.96 boxRangePts=48.0 displacementPts=30.0 velocityPtsSec=9.0 spreadPts=26.0 entry=3902.65 SL=3901.99 stopPts=66.0 volume=0.03 riskMoney=2.31 estimatedLoss=1.98
+2026.11.02 05:54:55,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3902.65 deal=318 order=318
+2026.11.02 05:54:55,XAUUSD.m,DEAL | entry=0 price=3902.65 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 05:55:31,XAUUSD.m,DEAL | entry=1 price=3901.93 profit=-2.16 commission=0.00 swap=0.00
+2026.11.02 06:00:07,XAUUSD.m,SIGNAL | BUY | boxHigh=3902.58 boxLow=3902.03 boxRangePts=55.0 displacementPts=29.0 velocityPtsSec=9.4 spreadPts=26.0 entry=3902.75 SL=3902.13 stopPts=62.0 volume=0.03 riskMoney=2.31 estimatedLoss=1.86
+2026.11.02 06:00:07,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3902.75 deal=320 order=320
+2026.11.02 06:00:07,XAUUSD.m,DEAL | entry=0 price=3902.75 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 06:00:16,XAUUSD.m,EXIT_HARVEST | ticket=320 profit_pts=53.0 last_10_tick_move=1.0
+2026.11.02 06:00:16,XAUUSD.m,DEAL | entry=1 price=3903.28 profit=1.59 commission=0.00 swap=0.00
+2026.11.02 06:37:08,XAUUSD.m,SIGNAL | SELL | boxHigh=3902.74 boxLow=3902.14 boxRangePts=60.0 displacementPts=-26.0 velocityPtsSec=-8.2 spreadPts=26.0 entry=3901.90 SL=3902.59 stopPts=69.0 volume=0.03 riskMoney=2.31 estimatedLoss=2.07
+2026.11.02 06:37:08,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3901.90 deal=322 order=322
+2026.11.02 06:37:08,XAUUSD.m,DEAL | entry=0 price=3901.90 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 06:38:28,XAUUSD.m,DEAL | entry=1 price=3902.59 profit=-2.07 commission=0.00 swap=0.00
+2026.11.02 06:43:50,XAUUSD.m,SIGNAL | SELL | boxHigh=3901.36 boxLow=3900.79 boxRangePts=57.0 displacementPts=-29.0 velocityPtsSec=-9.5 spreadPts=26.0 entry=3900.58 SL=3901.24 stopPts=66.0 volume=0.03 riskMoney=2.31 estimatedLoss=1.98
+2026.11.02 06:43:50,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3900.58 deal=324 order=324
+2026.11.02 06:43:50,XAUUSD.m,DEAL | entry=0 price=3900.58 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 06:44:00,XAUUSD.m,DEAL | entry=1 price=3901.36 profit=-2.34 commission=0.00 swap=0.00
+2026.11.02 06:47:46,XAUUSD.m,SIGNAL | BUY | boxHigh=3900.43 boxLow=3899.85 boxRangePts=58.0 displacementPts=34.0 velocityPtsSec=9.1 spreadPts=26.0 entry=3900.64 SL=3899.98 stopPts=66.0 volume=0.03 riskMoney=2.30 estimatedLoss=1.98
+2026.11.02 06:47:46,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3900.64 deal=326 order=326
+2026.11.02 06:47:46,XAUUSD.m,DEAL | entry=0 price=3900.64 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 06:48:30,XAUUSD.m,DEAL | entry=1 price=3899.98 profit=-1.98 commission=0.00 swap=0.00
+2026.11.02 06:54:22,XAUUSD.m,SIGNAL | SELL | boxHigh=3899.63 boxLow=3899.21 boxRangePts=42.0 displacementPts=-48.0 velocityPtsSec=-11.2 spreadPts=26.0 entry=3899.01 SL=3899.66 stopPts=65.0 volume=0.03 riskMoney=2.29 estimatedLoss=1.95
+2026.11.02 06:54:22,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3899.01 deal=328 order=328
+2026.11.02 06:54:22,XAUUSD.m,DEAL | entry=0 price=3899.01 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 06:54:42,XAUUSD.m,DEAL | entry=1 price=3898.98 profit=0.09 commission=0.00 swap=0.00
+2026.11.02 07:20:00,XAUUSD.m,SIGNAL | SELL | boxHigh=3906.65 boxLow=3906.14 boxRangePts=51.0 displacementPts=-25.0 velocityPtsSec=-8.3 spreadPts=26.0 entry=3905.91 SL=3906.59 stopPts=68.0 volume=0.03 riskMoney=2.29 estimatedLoss=2.04
+2026.11.02 07:20:00,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3905.91 deal=330 order=330
+2026.11.02 07:20:00,XAUUSD.m,DEAL | entry=0 price=3905.91 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 07:20:31,XAUUSD.m,DEAL | entry=1 price=3906.61 profit=-2.10 commission=0.00 swap=0.00
+2026.11.02 07:20:46,XAUUSD.m,SIGNAL | BUY | boxHigh=3906.49 boxLow=3906.03 boxRangePts=46.0 displacementPts=47.0 velocityPtsSec=14.8 spreadPts=26.0 entry=3906.68 SL=3906.04 stopPts=64.0 volume=0.03 riskMoney=2.29 estimatedLoss=1.92
+2026.11.02 07:20:46,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3906.68 deal=332 order=332
+2026.11.02 07:20:46,XAUUSD.m,DEAL | entry=0 price=3906.68 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 07:20:59,XAUUSD.m,DEAL | entry=1 price=3906.93 profit=0.75 commission=0.00 swap=0.00
+2026.11.02 08:23:11,XAUUSD.m,SIGNAL | BUY | boxHigh=3911.77 boxLow=3911.24 boxRangePts=53.0 displacementPts=35.0 velocityPtsSec=11.4 spreadPts=26.0 entry=3911.99 SL=3911.32 stopPts=67.0 volume=0.03 riskMoney=2.29 estimatedLoss=2.01
+2026.11.02 08:23:11,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3911.99 deal=334 order=334
+2026.11.02 08:23:11,XAUUSD.m,DEAL | entry=0 price=3911.99 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 08:24:23,XAUUSD.m,EXIT_HARVEST | ticket=334 profit_pts=36.0 last_10_tick_move=-1.0
+2026.11.02 08:24:23,XAUUSD.m,DEAL | entry=1 price=3912.35 profit=1.08 commission=0.00 swap=0.00
+2026.11.02 08:29:28,XAUUSD.m,SIGNAL | BUY | boxHigh=3908.65 boxLow=3908.10 boxRangePts=55.0 displacementPts=48.0 velocityPtsSec=13.3 spreadPts=26.0 entry=3908.88 SL=3908.20 stopPts=68.0 volume=0.03 riskMoney=2.29 estimatedLoss=2.04
+2026.11.02 08:29:28,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3908.88 deal=336 order=336
+2026.11.02 08:29:28,XAUUSD.m,DEAL | entry=0 price=3908.88 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 08:29:34,XAUUSD.m,DEAL | entry=1 price=3908.20 profit=-2.04 commission=0.00 swap=0.00
+2026.11.02 09:25:10,XAUUSD.m,SIGNAL | SELL | boxHigh=3907.02 boxLow=3906.49 boxRangePts=53.0 displacementPts=-29.0 velocityPtsSec=-9.6 spreadPts=26.0 entry=3906.25 SL=3906.94 stopPts=69.0 volume=0.03 riskMoney=2.29 estimatedLoss=2.07
+2026.11.02 09:25:10,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3906.25 deal=338 order=338
+2026.11.02 09:25:10,XAUUSD.m,DEAL | entry=0 price=3906.25 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 09:25:27,XAUUSD.m,DEAL | entry=1 price=3906.03 profit=0.66 commission=0.00 swap=0.00
+2026.11.02 09:38:06,XAUUSD.m,SIGNAL | SELL | boxHigh=3902.98 boxLow=3902.41 boxRangePts=57.0 displacementPts=-29.0 velocityPtsSec=-9.4 spreadPts=26.0 entry=3902.24 SL=3902.86 stopPts=62.0 volume=0.03 riskMoney=2.29 estimatedLoss=1.86
+2026.11.02 09:38:06,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3902.24 deal=340 order=340
+2026.11.02 09:38:06,XAUUSD.m,DEAL | entry=0 price=3902.24 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 09:38:23,XAUUSD.m,DEAL | entry=1 price=3902.01 profit=0.69 commission=0.00 swap=0.00
+2026.11.02 09:43:02,XAUUSD.m,SIGNAL | SELL | boxHigh=3901.73 boxLow=3901.16 boxRangePts=57.0 displacementPts=-43.0 velocityPtsSec=-13.9 spreadPts=26.0 entry=3900.96 SL=3901.61 stopPts=65.0 volume=0.03 riskMoney=2.29 estimatedLoss=1.95
+2026.11.02 09:43:02,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3900.96 deal=342 order=342
+2026.11.02 09:43:02,XAUUSD.m,DEAL | entry=0 price=3900.96 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 09:43:13,XAUUSD.m,DEAL | entry=1 price=3901.68 profit=-2.16 commission=0.00 swap=0.00
+2026.11.02 11:29:29,XAUUSD.m,SIGNAL | SELL | boxHigh=3900.18 boxLow=3899.60 boxRangePts=58.0 displacementPts=-28.0 velocityPtsSec=-9.2 spreadPts=26.0 entry=3899.43 SL=3900.05 stopPts=62.0 volume=0.03 riskMoney=2.29 estimatedLoss=1.86
+2026.11.02 11:29:29,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3899.43 deal=344 order=344
+2026.11.02 11:29:29,XAUUSD.m,DEAL | entry=0 price=3899.43 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 11:30:06,XAUUSD.m,DEAL | entry=1 price=3900.05 profit=-1.86 commission=0.00 swap=0.00
+2026.11.02 11:53:42,XAUUSD.m,SIGNAL | BUY | boxHigh=3898.31 boxLow=3897.72 boxRangePts=59.0 displacementPts=31.0 velocityPtsSec=10.2 spreadPts=26.0 entry=3898.47 SL=3897.86 stopPts=61.0 volume=0.03 riskMoney=2.28 estimatedLoss=1.83
+2026.11.02 11:53:42,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3898.47 deal=346 order=346
+2026.11.02 11:53:42,XAUUSD.m,DEAL | entry=0 price=3898.47 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 11:53:54,XAUUSD.m,EXIT_HARVEST | ticket=346 profit_pts=47.0 last_10_tick_move=2.0
+2026.11.02 11:53:54,XAUUSD.m,DEAL | entry=1 price=3898.94 profit=1.41 commission=0.00 swap=0.00
+2026.11.02 12:00:04,XAUUSD.m,SIGNAL | SELL | boxHigh=3898.18 boxLow=3897.66 boxRangePts=52.0 displacementPts=-28.0 velocityPtsSec=-9.3 spreadPts=26.0 entry=3897.50 SL=3898.11 stopPts=61.0 volume=0.03 riskMoney=2.29 estimatedLoss=1.83
+2026.11.02 12:00:04,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3897.50 deal=348 order=348
+2026.11.02 12:00:04,XAUUSD.m,DEAL | entry=0 price=3897.50 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 12:00:05,XAUUSD.m,DEAL | entry=1 price=3898.20 profit=-2.10 commission=0.00 swap=0.00
+2026.11.02 12:27:36,XAUUSD.m,SIGNAL | BUY | boxHigh=3896.19 boxLow=3895.61 boxRangePts=58.0 displacementPts=34.0 velocityPtsSec=11.3 spreadPts=26.0 entry=3896.36 SL=3895.74 stopPts=62.0 volume=0.03 riskMoney=2.28 estimatedLoss=1.86
+2026.11.02 12:27:36,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3896.36 deal=350 order=350
+2026.11.02 12:27:36,XAUUSD.m,DEAL | entry=0 price=3896.36 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 12:28:12,XAUUSD.m,DEAL | entry=1 price=3895.71 profit=-1.95 commission=0.00 swap=0.00
+2026.11.02 12:37:04,XAUUSD.m,SIGNAL | BUY | boxHigh=3897.45 boxLow=3896.85 boxRangePts=60.0 displacementPts=40.0 velocityPtsSec=12.9 spreadPts=26.0 entry=3897.65 SL=3897.00 stopPts=65.0 volume=0.03 riskMoney=2.28 estimatedLoss=1.95
+2026.11.02 12:37:04,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3897.65 deal=352 order=352
+2026.11.02 12:37:04,XAUUSD.m,DEAL | entry=0 price=3897.65 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 12:37:18,XAUUSD.m,DEAL | entry=1 price=3897.71 profit=0.18 commission=0.00 swap=0.00
+2026.11.02 13:03:34,XAUUSD.m,SIGNAL | BUY | boxHigh=3900.69 boxLow=3900.10 boxRangePts=59.0 displacementPts=35.0 velocityPtsSec=10.0 spreadPts=26.0 entry=3900.91 SL=3900.24 stopPts=67.0 volume=0.03 riskMoney=2.28 estimatedLoss=2.01
+2026.11.02 13:03:34,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3900.91 deal=354 order=354
+2026.11.02 13:03:34,XAUUSD.m,DEAL | entry=0 price=3900.91 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 13:03:52,XAUUSD.m,DEAL | entry=1 price=3900.40 profit=-1.53 commission=0.00 swap=0.00
+2026.11.02 13:11:12,XAUUSD.m,SIGNAL | SELL | boxHigh=3900.06 boxLow=3899.53 boxRangePts=53.0 displacementPts=-30.0 velocityPtsSec=-9.8 spreadPts=26.0 entry=3899.29 SL=3899.98 stopPts=69.0 volume=0.03 riskMoney=2.27 estimatedLoss=2.07
+2026.11.02 13:11:12,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3899.29 deal=356 order=356
+2026.11.02 13:11:12,XAUUSD.m,DEAL | entry=0 price=3899.29 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 13:11:25,XAUUSD.m,DEAL | entry=1 price=3900.00 profit=-2.13 commission=0.00 swap=0.00
+2026.11.02 13:12:27,XAUUSD.m,SIGNAL | BUY | boxHigh=3899.84 boxLow=3899.27 boxRangePts=57.0 displacementPts=45.0 velocityPtsSec=10.2 spreadPts=26.0 entry=3900.02 SL=3899.39 stopPts=63.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.89
+2026.11.02 13:12:27,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3900.02 deal=358 order=358
+2026.11.02 13:12:27,XAUUSD.m,DEAL | entry=0 price=3900.02 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 13:12:59,XAUUSD.m,DEAL | entry=1 price=3899.74 profit=-0.84 commission=0.00 swap=0.00
+2026.11.02 13:16:11,XAUUSD.m,SIGNAL | BUY | boxHigh=3901.24 boxLow=3900.64 boxRangePts=60.0 displacementPts=31.0 velocityPtsSec=9.9 spreadPts=26.0 entry=3901.42 SL=3900.79 stopPts=63.0 volume=0.03 riskMoney=2.26 estimatedLoss=1.89
+2026.11.02 13:16:11,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3901.42 deal=360 order=360
+2026.11.02 13:16:11,XAUUSD.m,DEAL | entry=0 price=3901.42 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 13:17:23,XAUUSD.m,DEAL | entry=1 price=3901.57 profit=0.45 commission=0.00 swap=0.00
+2026.11.02 14:26:14,XAUUSD.m,SIGNAL | SELL | boxHigh=3905.73 boxLow=3905.30 boxRangePts=43.0 displacementPts=-30.0 velocityPtsSec=-9.3 spreadPts=26.0 entry=3905.08 SL=3905.75 stopPts=67.0 volume=0.03 riskMoney=2.27 estimatedLoss=2.01
+2026.11.02 14:26:14,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3905.08 deal=362 order=362
+2026.11.02 14:26:14,XAUUSD.m,DEAL | entry=0 price=3905.08 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 14:26:58,XAUUSD.m,DEAL | entry=1 price=3904.83 profit=0.75 commission=0.00 swap=0.00
+2026.11.02 14:47:26,XAUUSD.m,SIGNAL | BUY | boxHigh=3900.93 boxLow=3900.35 boxRangePts=58.0 displacementPts=27.0 velocityPtsSec=8.7 spreadPts=26.0 entry=3901.09 SL=3900.48 stopPts=61.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.83
+2026.11.02 14:47:26,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3901.09 deal=364 order=364
+2026.11.02 14:47:26,XAUUSD.m,DEAL | entry=0 price=3901.09 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 14:47:59,XAUUSD.m,EXIT_HARVEST | ticket=364 profit_pts=68.0 last_10_tick_move=-1.0
+2026.11.02 14:47:59,XAUUSD.m,DEAL | entry=1 price=3901.77 profit=2.04 commission=0.00 swap=0.00
+2026.11.02 19:40:06,XAUUSD.m,SIGNAL | SELL | boxHigh=3959.03 boxLow=3958.43 boxRangePts=60.0 displacementPts=-38.0 velocityPtsSec=-11.2 spreadPts=26.0 entry=3958.21 SL=3958.88 stopPts=67.0 volume=0.03 riskMoney=2.27 estimatedLoss=2.01
+2026.11.02 19:40:06,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3958.21 deal=366 order=366
+2026.11.02 19:40:06,XAUUSD.m,DEAL | entry=0 price=3958.21 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 19:40:58,XAUUSD.m,DEAL | entry=1 price=3958.09 profit=0.36 commission=0.00 swap=0.00
+2026.11.02 20:18:32,XAUUSD.m,SIGNAL | SELL | boxHigh=3962.89 boxLow=3962.35 boxRangePts=54.0 displacementPts=-34.0 velocityPtsSec=-9.1 spreadPts=26.0 entry=3962.15 SL=3962.80 stopPts=65.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.95
+2026.11.02 20:18:32,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3962.15 deal=368 order=368
+2026.11.02 20:18:32,XAUUSD.m,DEAL | entry=0 price=3962.15 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 20:18:52,XAUUSD.m,DEAL | entry=1 price=3962.81 profit=-1.98 commission=0.00 swap=0.00
+2026.11.02 20:24:03,XAUUSD.m,SIGNAL | SELL | boxHigh=3962.99 boxLow=3962.46 boxRangePts=53.0 displacementPts=-26.0 velocityPtsSec=-8.6 spreadPts=26.0 entry=3962.23 SL=3962.91 stopPts=68.0 volume=0.03 riskMoney=2.27 estimatedLoss=2.04
+2026.11.02 20:24:03,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3962.23 deal=370 order=370
+2026.11.02 20:24:03,XAUUSD.m,DEAL | entry=0 price=3962.23 profit=0.00 commission=0.00 swap=0.00
+2026.11.02 20:24:18,XAUUSD.m,EXIT_HARVEST | ticket=370 profit_pts=52.0 last_10_tick_move=3.0
+2026.11.02 20:24:18,XAUUSD.m,DEAL | entry=1 price=3961.71 profit=1.56 commission=0.00 swap=0.00
+2026.11.03 04:23:18,XAUUSD.m,SIGNAL | BUY | boxHigh=3944.41 boxLow=3943.86 boxRangePts=55.0 displacementPts=32.0 velocityPtsSec=10.5 spreadPts=26.0 entry=3944.61 SL=3943.96 stopPts=65.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.95
+2026.11.03 04:23:18,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3944.61 deal=372 order=372
+2026.11.03 04:23:18,XAUUSD.m,DEAL | entry=0 price=3944.61 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 04:23:28,XAUUSD.m,DEAL | entry=1 price=3943.94 profit=-2.01 commission=0.00 swap=0.00
+2026.11.03 05:48:01,XAUUSD.m,SIGNAL | SELL | boxHigh=3928.86 boxLow=3928.45 boxRangePts=41.0 displacementPts=-44.0 velocityPtsSec=-14.1 spreadPts=26.0 entry=3928.24 SL=3928.90 stopPts=66.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.98
+2026.11.03 05:48:01,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3928.24 deal=374 order=374
+2026.11.03 05:48:01,XAUUSD.m,DEAL | entry=0 price=3928.24 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 05:48:06,XAUUSD.m,DEAL | entry=1 price=3928.44 profit=-0.60 commission=0.00 swap=0.00
+2026.11.03 06:25:06,XAUUSD.m,SIGNAL | BUY | boxHigh=3926.53 boxLow=3926.07 boxRangePts=46.0 displacementPts=29.0 velocityPtsSec=9.1 spreadPts=26.0 entry=3926.74 SL=3926.08 stopPts=66.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.98
+2026.11.03 06:25:06,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3926.74 deal=376 order=376
+2026.11.03 06:25:06,XAUUSD.m,DEAL | entry=0 price=3926.74 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 06:25:27,XAUUSD.m,DEAL | entry=1 price=3926.85 profit=0.33 commission=0.00 swap=0.00
+2026.11.03 06:35:04,XAUUSD.m,SIGNAL | SELL | boxHigh=3925.47 boxLow=3925.01 boxRangePts=46.0 displacementPts=-38.0 velocityPtsSec=-12.6 spreadPts=26.0 entry=3924.86 SL=3925.46 stopPts=60.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.80
+2026.11.03 06:35:04,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3924.86 deal=378 order=378
+2026.11.03 06:35:04,XAUUSD.m,DEAL | entry=0 price=3924.86 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 06:35:35,XAUUSD.m,DEAL | entry=1 price=3924.63 profit=0.69 commission=0.00 swap=0.00
+2026.11.03 07:00:00,XAUUSD.m,SIGNAL | SELL | boxHigh=3924.21 boxLow=3923.63 boxRangePts=58.0 displacementPts=-28.0 velocityPtsSec=-8.8 spreadPts=26.0 entry=3923.46 SL=3924.08 stopPts=62.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.86
+2026.11.03 07:00:00,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3923.46 deal=380 order=380
+2026.11.03 07:00:00,XAUUSD.m,DEAL | entry=0 price=3923.46 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 07:01:00,XAUUSD.m,DEAL | entry=1 price=3922.97 profit=1.47 commission=0.00 swap=0.00
+2026.11.03 07:24:10,XAUUSD.m,SIGNAL | BUY | boxHigh=3926.18 boxLow=3925.61 boxRangePts=57.0 displacementPts=39.0 velocityPtsSec=12.2 spreadPts=26.0 entry=3926.35 SL=3925.73 stopPts=62.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.86
+2026.11.03 07:24:10,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3926.35 deal=382 order=382
+2026.11.03 07:24:10,XAUUSD.m,DEAL | entry=0 price=3926.35 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 07:24:24,XAUUSD.m,DEAL | entry=1 price=3925.71 profit=-1.92 commission=0.00 swap=0.00
+2026.11.03 07:28:48,XAUUSD.m,SIGNAL | SELL | boxHigh=3924.94 boxLow=3924.51 boxRangePts=43.0 displacementPts=-34.0 velocityPtsSec=-10.7 spreadPts=26.0 entry=3924.34 SL=3924.96 stopPts=62.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.86
+2026.11.03 07:28:48,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3924.34 deal=384 order=384
+2026.11.03 07:28:48,XAUUSD.m,DEAL | entry=0 price=3924.34 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 07:29:34,XAUUSD.m,EXIT_HARVEST | ticket=384 profit_pts=51.0 last_10_tick_move=2.0
+2026.11.03 07:29:34,XAUUSD.m,DEAL | entry=1 price=3923.83 profit=1.53 commission=0.00 swap=0.00
+2026.11.03 08:57:31,XAUUSD.m,SIGNAL | SELL | boxHigh=3913.24 boxLow=3912.71 boxRangePts=53.0 displacementPts=-47.0 velocityPtsSec=-14.8 spreadPts=26.0 entry=3912.48 SL=3913.16 stopPts=68.0 volume=0.03 riskMoney=2.27 estimatedLoss=2.04
+2026.11.03 08:57:31,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3912.48 deal=386 order=386
+2026.11.03 08:57:31,XAUUSD.m,DEAL | entry=0 price=3912.48 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 08:57:35,XAUUSD.m,DEAL | entry=1 price=3912.37 profit=0.33 commission=0.00 swap=0.00
+2026.11.03 09:38:19,XAUUSD.m,SIGNAL | SELL | boxHigh=3909.54 boxLow=3909.09 boxRangePts=45.0 displacementPts=-26.0 velocityPtsSec=-8.6 spreadPts=26.0 entry=3908.91 SL=3909.54 stopPts=63.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.89
+2026.11.03 09:38:19,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3908.91 deal=388 order=388
+2026.11.03 09:38:19,XAUUSD.m,DEAL | entry=0 price=3908.91 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 09:38:36,XAUUSD.m,DEAL | entry=1 price=3909.55 profit=-1.92 commission=0.00 swap=0.00
+2026.11.03 09:40:51,XAUUSD.m,SIGNAL | BUY | boxHigh=3908.64 boxLow=3908.13 boxRangePts=51.0 displacementPts=26.0 velocityPtsSec=8.5 spreadPts=26.0 entry=3908.89 SL=3908.19 stopPts=70.0 volume=0.03 riskMoney=2.27 estimatedLoss=2.10
+2026.11.03 09:40:51,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3908.89 deal=390 order=390
+2026.11.03 09:40:51,XAUUSD.m,DEAL | entry=0 price=3908.89 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 09:41:37,XAUUSD.m,DEAL | entry=1 price=3908.80 profit=-0.27 commission=0.00 swap=0.00
+2026.11.03 11:49:06,XAUUSD.m,SIGNAL | SELL | boxHigh=3908.02 boxLow=3907.55 boxRangePts=47.0 displacementPts=-25.0 velocityPtsSec=-8.3 spreadPts=26.0 entry=3907.40 SL=3908.00 stopPts=60.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.80
+2026.11.03 11:49:06,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3907.40 deal=392 order=392
+2026.11.03 11:49:06,XAUUSD.m,DEAL | entry=0 price=3907.40 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 11:50:04,XAUUSD.m,DEAL | entry=1 price=3908.04 profit=-1.92 commission=0.00 swap=0.00
+2026.11.03 11:59:57,XAUUSD.m,SIGNAL | BUY | boxHigh=3909.28 boxLow=3908.85 boxRangePts=43.0 displacementPts=34.0 velocityPtsSec=11.3 spreadPts=26.0 entry=3909.47 SL=3908.83 stopPts=64.0 volume=0.03 riskMoney=2.26 estimatedLoss=1.92
+2026.11.03 11:59:57,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3909.47 deal=394 order=394
+2026.11.03 11:59:57,XAUUSD.m,DEAL | entry=0 price=3909.47 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 12:00:07,XAUUSD.m,EXIT_HARVEST | ticket=394 profit_pts=45.0 last_10_tick_move=-5.0
+2026.11.03 12:00:07,XAUUSD.m,DEAL | entry=1 price=3909.92 profit=1.35 commission=0.00 swap=0.00
+2026.11.03 12:25:11,XAUUSD.m,SIGNAL | BUY | boxHigh=3904.24 boxLow=3903.76 boxRangePts=48.0 displacementPts=27.0 velocityPtsSec=8.7 spreadPts=26.0 entry=3904.39 SL=3903.79 stopPts=60.0 volume=0.03 riskMoney=2.27 estimatedLoss=1.80
+2026.11.03 12:25:11,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3904.39 deal=396 order=396
+2026.11.03 12:25:11,XAUUSD.m,DEAL | entry=0 price=3904.39 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 12:25:21,XAUUSD.m,DEAL | entry=1 price=3903.77 profit=-1.86 commission=0.00 swap=0.00
+2026.11.03 12:28:02,XAUUSD.m,SIGNAL | SELL | boxHigh=3904.47 boxLow=3903.93 boxRangePts=54.0 displacementPts=-42.0 velocityPtsSec=-13.0 spreadPts=26.0 entry=3903.78 SL=3904.38 stopPts=60.0 volume=0.03 riskMoney=2.26 estimatedLoss=1.80
+2026.11.03 12:28:02,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3903.78 deal=398 order=398
+2026.11.03 12:28:02,XAUUSD.m,DEAL | entry=0 price=3903.78 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 12:28:16,XAUUSD.m,DEAL | entry=1 price=3904.38 profit=-1.80 commission=0.00 swap=0.00
+2026.11.03 12:40:06,XAUUSD.m,SIGNAL | BUY | boxHigh=3901.70 boxLow=3901.10 boxRangePts=60.0 displacementPts=27.0 velocityPtsSec=9.0 spreadPts=26.0 entry=3901.95 SL=3901.25 stopPts=70.0 volume=0.03 riskMoney=2.26 estimatedLoss=2.10
+2026.11.03 12:40:06,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3901.95 deal=400 order=400
+2026.11.03 12:40:06,XAUUSD.m,DEAL | entry=0 price=3901.95 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 12:40:24,XAUUSD.m,EXIT_HARVEST | ticket=400 profit_pts=38.0 last_10_tick_move=1.0
+2026.11.03 12:40:24,XAUUSD.m,DEAL | entry=1 price=3902.33 profit=1.14 commission=0.00 swap=0.00
+2026.11.03 14:09:39,XAUUSD.m,SIGNAL | BUY | boxHigh=3901.62 boxLow=3901.04 boxRangePts=58.0 displacementPts=48.0 velocityPtsSec=11.2 spreadPts=26.0 entry=3901.82 SL=3901.17 stopPts=65.0 volume=0.03 riskMoney=2.26 estimatedLoss=1.95
+2026.11.03 14:09:39,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3901.82 deal=402 order=402
+2026.11.03 14:09:39,XAUUSD.m,DEAL | entry=0 price=3901.82 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 14:09:47,XAUUSD.m,DEAL | entry=1 price=3901.05 profit=-2.31 commission=0.00 swap=0.00
+2026.11.03 14:13:51,XAUUSD.m,SIGNAL | BUY | boxHigh=3903.31 boxLow=3902.73 boxRangePts=58.0 displacementPts=62.0 velocityPtsSec=20.1 spreadPts=26.0 entry=3903.48 SL=3902.86 stopPts=62.0 volume=0.03 riskMoney=2.25 estimatedLoss=1.86
+2026.11.03 14:13:51,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3903.48 deal=404 order=404
+2026.11.03 14:13:51,XAUUSD.m,DEAL | entry=0 price=3903.48 profit=0.00 commission=0.00 swap=0.00
+2026.11.03 14:13:52,XAUUSD.m,EXIT_HARVEST | ticket=404 profit_pts=56.0 last_10_tick_move=-21.0
+2026.11.03 14:13:52,XAUUSD.m,DEAL | entry=1 price=3904.04 profit=1.68 commission=0.00 swap=0.00
+2026.11.12 19:10:07,XAUUSD.m,SIGNAL | BUY | boxHigh=3874.74 boxLow=3874.17 boxRangePts=57.0 displacementPts=25.0 velocityPtsSec=8.0 spreadPts=26.0 entry=3874.94 SL=3874.29 stopPts=65.0 volume=0.03 riskMoney=2.26 estimatedLoss=1.95
+2026.11.12 19:10:07,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3874.94 deal=406 order=406
+2026.11.12 19:10:07,XAUUSD.m,DEAL | entry=0 price=3874.94 profit=0.00 commission=0.00 swap=0.00
+2026.11.12 19:10:32,XAUUSD.m,DEAL | entry=1 price=3874.28 profit=-1.98 commission=0.00 swap=0.00
+2026.11.12 19:10:49,XAUUSD.m,SIGNAL | SELL | boxHigh=3874.87 boxLow=3874.39 boxRangePts=48.0 displacementPts=-29.0 velocityPtsSec=-9.6 spreadPts=26.0 entry=3874.16 SL=3874.84 stopPts=68.0 volume=0.03 riskMoney=2.25 estimatedLoss=2.04
+2026.11.12 19:10:49,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3874.16 deal=408 order=408
+2026.11.12 19:10:49,XAUUSD.m,DEAL | entry=0 price=3874.16 profit=0.00 commission=0.00 swap=0.00
+2026.11.12 19:11:19,XAUUSD.m,DEAL | entry=1 price=3874.90 profit=-2.22 commission=0.00 swap=0.00
+2026.11.12 19:18:33,XAUUSD.m,SIGNAL | SELL | boxHigh=3875.39 boxLow=3874.85 boxRangePts=54.0 displacementPts=-52.0 velocityPtsSec=-17.3 spreadPts=26.0 entry=3874.63 SL=3875.30 stopPts=67.0 volume=0.03 riskMoney=2.25 estimatedLoss=2.01
+2026.11.12 19:18:33,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3874.63 deal=410 order=410
+2026.11.12 19:18:33,XAUUSD.m,DEAL | entry=0 price=3874.63 profit=0.00 commission=0.00 swap=0.00
+2026.11.12 19:18:44,XAUUSD.m,DEAL | entry=1 price=3875.38 profit=-2.25 commission=0.00 swap=0.00
+2026.11.12 19:19:57,XAUUSD.m,SIGNAL | BUY | boxHigh=3875.57 boxLow=3875.16 boxRangePts=41.0 displacementPts=28.0 velocityPtsSec=8.1 spreadPts=26.0 entry=3875.81 SL=3875.12 stopPts=69.0 volume=0.03 riskMoney=2.24 estimatedLoss=2.07
+2026.11.12 19:19:57,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3875.81 deal=412 order=412
+2026.11.12 19:19:57,XAUUSD.m,DEAL | entry=0 price=3875.81 profit=0.00 commission=0.00 swap=0.00
+2026.11.12 19:20:12,XAUUSD.m,DEAL | entry=1 price=3875.12 profit=-2.07 commission=0.00 swap=0.00
+2026.11.12 22:16:28,XAUUSD.m,SIGNAL | SELL | boxHigh=3885.36 boxLow=3884.77 boxRangePts=59.0 displacementPts=-43.0 velocityPtsSec=-13.3 spreadPts=26.0 entry=3884.60 SL=3885.22 stopPts=62.0 volume=0.03 riskMoney=2.24 estimatedLoss=1.86
+2026.11.12 22:16:28,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3884.60 deal=414 order=414
+2026.11.12 22:16:28,XAUUSD.m,DEAL | entry=0 price=3884.60 profit=0.00 commission=0.00 swap=0.00
+2026.11.12 22:16:36,XAUUSD.m,DEAL | entry=1 price=3884.32 profit=0.84 commission=0.00 swap=0.00
+2026.11.12 22:21:04,XAUUSD.m,SIGNAL | BUY | boxHigh=3885.67 boxLow=3885.21 boxRangePts=46.0 displacementPts=27.0 velocityPtsSec=8.7 spreadPts=26.0 entry=3885.90 SL=3885.22 stopPts=68.0 volume=0.03 riskMoney=2.24 estimatedLoss=2.04
+2026.11.12 22:21:04,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3885.90 deal=416 order=416
+2026.11.12 22:21:04,XAUUSD.m,DEAL | entry=0 price=3885.90 profit=0.00 commission=0.00 swap=0.00
+2026.11.12 22:21:22,XAUUSD.m,DEAL | entry=1 price=3886.19 profit=0.87 commission=0.00 swap=0.00
+2026.11.12 22:26:09,XAUUSD.m,SIGNAL | BUY | boxHigh=3886.83 boxLow=3886.45 boxRangePts=38.0 displacementPts=26.0 velocityPtsSec=8.5 spreadPts=26.0 entry=3887.00 SL=3886.38 stopPts=62.0 volume=0.03 riskMoney=2.24 estimatedLoss=1.86
+2026.11.12 22:26:09,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3887.00 deal=418 order=418
+2026.11.12 22:26:09,XAUUSD.m,DEAL | entry=0 price=3887.00 profit=0.00 commission=0.00 swap=0.00
+2026.11.12 22:26:17,XAUUSD.m,DEAL | entry=1 price=3886.38 profit=-1.86 commission=0.00 swap=0.00
+2026.11.12 22:26:36,XAUUSD.m,SIGNAL | SELL | boxHigh=3886.87 boxLow=3886.34 boxRangePts=53.0 displacementPts=-38.0 velocityPtsSec=-11.1 spreadPts=26.0 entry=3886.18 SL=3886.79 stopPts=61.0 volume=0.03 riskMoney=2.24 estimatedLoss=1.83
+2026.11.12 22:26:36,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3886.18 deal=420 order=420
+2026.11.12 22:26:36,XAUUSD.m,DEAL | entry=0 price=3886.18 profit=0.00 commission=0.00 swap=0.00
+2026.11.12 22:26:40,XAUUSD.m,EXIT_HARVEST | ticket=420 profit_pts=81.0 last_10_tick_move=-6.0
+2026.11.12 22:26:40,XAUUSD.m,DEAL | entry=1 price=3885.37 profit=2.43 commission=0.00 swap=0.00
+2026.11.13 02:46:40,XAUUSD.m,SIGNAL | BUY | boxHigh=3888.45 boxLow=3888.02 boxRangePts=43.0 displacementPts=25.0 velocityPtsSec=8.0 spreadPts=26.0 entry=3888.69 SL=3888.00 stopPts=69.0 volume=0.03 riskMoney=2.24 estimatedLoss=2.07
+2026.11.13 02:46:40,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3888.69 deal=422 order=422
+2026.11.13 02:46:40,XAUUSD.m,DEAL | entry=0 price=3888.69 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 02:47:30,XAUUSD.m,DEAL | entry=1 price=3888.81 profit=0.36 commission=0.00 swap=0.00
+2026.11.13 04:27:43,XAUUSD.m,SIGNAL | BUY | boxHigh=3905.63 boxLow=3905.21 boxRangePts=42.0 displacementPts=39.0 velocityPtsSec=10.8 spreadPts=26.0 entry=3905.81 SL=3905.18 stopPts=63.0 volume=0.03 riskMoney=2.24 estimatedLoss=1.89
+2026.11.13 04:27:43,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3905.81 deal=424 order=424
+2026.11.13 04:27:43,XAUUSD.m,DEAL | entry=0 price=3905.81 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 04:27:54,XAUUSD.m,DEAL | entry=1 price=3905.16 profit=-1.95 commission=0.00 swap=0.00
+2026.11.13 04:28:02,XAUUSD.m,SIGNAL | SELL | boxHigh=3905.80 boxLow=3905.21 boxRangePts=59.0 displacementPts=-29.0 velocityPtsSec=-9.5 spreadPts=26.0 entry=3905.00 SL=3905.66 stopPts=66.0 volume=0.03 riskMoney=2.24 estimatedLoss=1.98
+2026.11.13 04:28:02,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3905.00 deal=426 order=426
+2026.11.13 04:28:02,XAUUSD.m,DEAL | entry=0 price=3905.00 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 04:28:07,XAUUSD.m,DEAL | entry=1 price=3905.68 profit=-2.04 commission=0.00 swap=0.00
+2026.11.13 05:59:53,XAUUSD.m,SIGNAL | SELL | boxHigh=3921.10 boxLow=3920.71 boxRangePts=39.0 displacementPts=-41.0 velocityPtsSec=-8.5 spreadPts=26.0 entry=3920.54 SL=3921.16 stopPts=62.0 volume=0.03 riskMoney=2.23 estimatedLoss=1.86
+2026.11.13 05:59:53,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3920.54 deal=428 order=428
+2026.11.13 05:59:53,XAUUSD.m,DEAL | entry=0 price=3920.54 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 06:01:41,XAUUSD.m,DEAL | entry=1 price=3920.29 profit=0.75 commission=0.00 swap=0.00
+2026.11.13 06:33:09,XAUUSD.m,SIGNAL | SELL | boxHigh=3910.85 boxLow=3910.28 boxRangePts=57.0 displacementPts=-25.0 velocityPtsSec=-8.3 spreadPts=26.0 entry=3910.09 SL=3910.73 stopPts=64.0 volume=0.03 riskMoney=2.23 estimatedLoss=1.92
+2026.11.13 06:33:09,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3910.09 deal=430 order=430
+2026.11.13 06:33:09,XAUUSD.m,DEAL | entry=0 price=3910.09 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 06:33:30,XAUUSD.m,DEAL | entry=1 price=3910.73 profit=-1.92 commission=0.00 swap=0.00
+2026.11.13 06:37:27,XAUUSD.m,SIGNAL | SELL | boxHigh=3909.39 boxLow=3909.05 boxRangePts=34.0 displacementPts=-25.0 velocityPtsSec=-8.2 spreadPts=26.0 entry=3908.83 SL=3909.50 stopPts=67.0 volume=0.03 riskMoney=2.23 estimatedLoss=2.01
+2026.11.13 06:37:27,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3908.83 deal=432 order=432
+2026.11.13 06:37:27,XAUUSD.m,DEAL | entry=0 price=3908.83 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 06:38:20,XAUUSD.m,DEAL | entry=1 price=3909.50 profit=-2.01 commission=0.00 swap=0.00
+2026.11.13 06:39:29,XAUUSD.m,SIGNAL | SELL | boxHigh=3909.55 boxLow=3909.01 boxRangePts=54.0 displacementPts=-34.0 velocityPtsSec=-10.8 spreadPts=26.0 entry=3908.79 SL=3909.46 stopPts=67.0 volume=0.03 riskMoney=2.22 estimatedLoss=2.01
+2026.11.13 06:39:29,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3908.79 deal=434 order=434
+2026.11.13 06:39:29,XAUUSD.m,DEAL | entry=0 price=3908.79 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 06:39:36,XAUUSD.m,DEAL | entry=1 price=3909.48 profit=-2.07 commission=0.00 swap=0.00
+2026.11.13 06:59:49,XAUUSD.m,SIGNAL | SELL | boxHigh=3913.17 boxLow=3912.72 boxRangePts=45.0 displacementPts=-48.0 velocityPtsSec=-11.8 spreadPts=26.0 entry=3912.56 SL=3913.17 stopPts=61.0 volume=0.03 riskMoney=2.22 estimatedLoss=1.83
+2026.11.13 06:59:49,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3912.56 deal=436 order=436
+2026.11.13 06:59:49,XAUUSD.m,DEAL | entry=0 price=3912.56 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 07:00:01,XAUUSD.m,DEAL | entry=1 price=3913.23 profit=-2.01 commission=0.00 swap=0.00
+2026.11.13 07:00:01,XAUUSD.m,SIGNAL | BUY | boxHigh=3913.17 boxLow=3912.62 boxRangePts=55.0 displacementPts=60.0 velocityPtsSec=19.4 spreadPts=26.0 entry=3913.35 SL=3912.72 stopPts=63.0 volume=0.03 riskMoney=2.21 estimatedLoss=1.89
+2026.11.13 07:00:01,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3913.35 deal=438 order=438
+2026.11.13 07:00:01,XAUUSD.m,DEAL | entry=0 price=3913.35 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 07:00:02,XAUUSD.m,DEAL | entry=1 price=3912.63 profit=-2.16 commission=0.00 swap=0.00
+2026.11.13 09:30:03,XAUUSD.m,SIGNAL | BUY | boxHigh=3895.24 boxLow=3894.79 boxRangePts=45.0 displacementPts=49.0 velocityPtsSec=15.8 spreadPts=26.0 entry=3895.44 SL=3894.79 stopPts=65.0 volume=0.03 riskMoney=2.21 estimatedLoss=1.95
+2026.11.13 09:30:03,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3895.44 deal=440 order=440
+2026.11.13 09:30:03,XAUUSD.m,DEAL | entry=0 price=3895.44 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 09:30:05,XAUUSD.m,DEAL | entry=1 price=3894.77 profit=-2.01 commission=0.00 swap=0.00
+2026.11.13 10:47:58,XAUUSD.m,SIGNAL | SELL | boxHigh=3895.21 boxLow=3894.66 boxRangePts=55.0 displacementPts=-31.0 velocityPtsSec=-10.1 spreadPts=26.0 entry=3894.50 SL=3895.11 stopPts=61.0 volume=0.03 riskMoney=2.20 estimatedLoss=1.83
+2026.11.13 10:47:58,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3894.50 deal=442 order=442
+2026.11.13 10:47:58,XAUUSD.m,DEAL | entry=0 price=3894.50 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 10:48:22,XAUUSD.m,DEAL | entry=1 price=3894.45 profit=0.15 commission=0.00 swap=0.00
+2026.11.13 10:51:50,XAUUSD.m,SIGNAL | BUY | boxHigh=3894.44 boxLow=3893.90 boxRangePts=54.0 displacementPts=34.0 velocityPtsSec=11.0 spreadPts=26.0 entry=3894.68 SL=3893.99 stopPts=69.0 volume=0.03 riskMoney=2.20 estimatedLoss=2.07
+2026.11.13 10:51:50,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3894.68 deal=444 order=444
+2026.11.13 10:51:50,XAUUSD.m,DEAL | entry=0 price=3894.68 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 10:52:06,XAUUSD.m,DEAL | entry=1 price=3894.88 profit=0.60 commission=0.00 swap=0.00
+2026.11.13 11:40:12,XAUUSD.m,SIGNAL | BUY | boxHigh=3900.67 boxLow=3900.17 boxRangePts=50.0 displacementPts=28.0 velocityPtsSec=8.1 spreadPts=26.0 entry=3900.87 SL=3900.22 stopPts=65.0 volume=0.03 riskMoney=2.21 estimatedLoss=1.95
+2026.11.13 11:40:12,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3900.87 deal=446 order=446
+2026.11.13 11:40:12,XAUUSD.m,DEAL | entry=0 price=3900.87 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 11:40:35,XAUUSD.m,DEAL | entry=1 price=3900.19 profit=-2.04 commission=0.00 swap=0.00
+2026.11.13 11:52:13,XAUUSD.m,SIGNAL | BUY | boxHigh=3896.34 boxLow=3895.80 boxRangePts=54.0 displacementPts=33.0 velocityPtsSec=11.0 spreadPts=26.0 entry=3896.52 SL=3895.89 stopPts=63.0 volume=0.03 riskMoney=2.20 estimatedLoss=1.89
+2026.11.13 11:52:13,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3896.52 deal=448 order=448
+2026.11.13 11:52:13,XAUUSD.m,DEAL | entry=0 price=3896.52 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 11:52:17,XAUUSD.m,DEAL | entry=1 price=3896.23 profit=-0.87 commission=0.00 swap=0.00
+2026.11.13 12:37:48,XAUUSD.m,SIGNAL | BUY | boxHigh=3894.99 boxLow=3894.50 boxRangePts=49.0 displacementPts=32.0 velocityPtsSec=8.8 spreadPts=26.0 entry=3895.15 SL=3894.54 stopPts=61.0 volume=0.03 riskMoney=2.20 estimatedLoss=1.83
+2026.11.13 12:37:48,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3895.15 deal=450 order=450
+2026.11.13 12:37:48,XAUUSD.m,DEAL | entry=0 price=3895.15 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 12:38:05,XAUUSD.m,EXIT_HARVEST | ticket=450 profit_pts=38.0 last_10_tick_move=1.0
+2026.11.13 12:38:05,XAUUSD.m,DEAL | entry=1 price=3895.53 profit=1.14 commission=0.00 swap=0.00
+2026.11.13 12:55:24,XAUUSD.m,SIGNAL | SELL | boxHigh=3892.28 boxLow=3891.77 boxRangePts=51.0 displacementPts=-28.0 velocityPtsSec=-8.5 spreadPts=26.0 entry=3891.54 SL=3892.22 stopPts=68.0 volume=0.03 riskMoney=2.20 estimatedLoss=2.04
+2026.11.13 12:55:24,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3891.54 deal=452 order=452
+2026.11.13 12:55:24,XAUUSD.m,DEAL | entry=0 price=3891.54 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 12:56:20,XAUUSD.m,DEAL | entry=1 price=3892.31 profit=-2.31 commission=0.00 swap=0.00
+2026.11.13 13:10:01,XAUUSD.m,SIGNAL | BUY | boxHigh=3890.24 boxLow=3889.68 boxRangePts=56.0 displacementPts=30.0 velocityPtsSec=9.9 spreadPts=26.0 entry=3890.40 SL=3889.79 stopPts=61.0 volume=0.03 riskMoney=2.20 estimatedLoss=1.83
+2026.11.13 13:10:01,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3890.40 deal=454 order=454
+2026.11.13 13:10:01,XAUUSD.m,DEAL | entry=0 price=3890.40 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 13:10:08,XAUUSD.m,EXIT_HARVEST | ticket=454 profit_pts=60.0 last_10_tick_move=2.0
+2026.11.13 13:10:08,XAUUSD.m,DEAL | entry=1 price=3891.00 profit=1.80 commission=0.00 swap=0.00
+2026.11.13 13:31:20,XAUUSD.m,SIGNAL | SELL | boxHigh=3889.00 boxLow=3888.55 boxRangePts=45.0 displacementPts=-44.0 velocityPtsSec=-13.1 spreadPts=26.0 entry=3888.39 SL=3889.00 stopPts=61.0 volume=0.03 riskMoney=2.20 estimatedLoss=1.83
+2026.11.13 13:31:20,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3888.39 deal=456 order=456
+2026.11.13 13:31:20,XAUUSD.m,DEAL | entry=0 price=3888.39 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 13:31:26,XAUUSD.m,DEAL | entry=1 price=3887.80 profit=1.77 commission=0.00 swap=0.00
+2026.11.13 14:16:29,XAUUSD.m,SIGNAL | BUY | boxHigh=3894.91 boxLow=3894.46 boxRangePts=45.0 displacementPts=29.0 velocityPtsSec=8.8 spreadPts=26.0 entry=3895.10 SL=3894.46 stopPts=64.0 volume=0.03 riskMoney=2.20 estimatedLoss=1.92
+2026.11.13 14:16:29,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3895.10 deal=458 order=458
+2026.11.13 14:16:29,XAUUSD.m,DEAL | entry=0 price=3895.10 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 14:16:44,XAUUSD.m,DEAL | entry=1 price=3894.45 profit=-1.95 commission=0.00 swap=0.00
+2026.11.13 14:22:08,XAUUSD.m,SIGNAL | BUY | boxHigh=3894.82 boxLow=3894.27 boxRangePts=55.0 displacementPts=31.0 velocityPtsSec=9.7 spreadPts=26.0 entry=3895.00 SL=3894.37 stopPts=63.0 volume=0.03 riskMoney=2.20 estimatedLoss=1.89
+2026.11.13 14:22:08,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3895.00 deal=460 order=460
+2026.11.13 14:22:08,XAUUSD.m,DEAL | entry=0 price=3895.00 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 14:23:48,XAUUSD.m,DEAL | entry=1 price=3895.22 profit=0.66 commission=0.00 swap=0.00
+2026.11.13 14:26:17,XAUUSD.m,SIGNAL | BUY | boxHigh=3894.49 boxLow=3893.90 boxRangePts=59.0 displacementPts=26.0 velocityPtsSec=8.5 spreadPts=26.0 entry=3894.70 SL=3894.04 stopPts=66.0 volume=0.03 riskMoney=2.20 estimatedLoss=1.98
+2026.11.13 14:26:17,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3894.70 deal=462 order=462
+2026.11.13 14:26:17,XAUUSD.m,DEAL | entry=0 price=3894.70 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 14:26:42,XAUUSD.m,EXIT_HARVEST | ticket=462 profit_pts=49.0 last_10_tick_move=-1.0
+2026.11.13 14:26:42,XAUUSD.m,DEAL | entry=1 price=3895.19 profit=1.47 commission=0.00 swap=0.00
+2026.11.13 14:32:59,XAUUSD.m,SIGNAL | BUY | boxHigh=3891.98 boxLow=3891.52 boxRangePts=46.0 displacementPts=38.0 velocityPtsSec=12.5 spreadPts=26.0 entry=3892.16 SL=3891.53 stopPts=63.0 volume=0.03 riskMoney=2.21 estimatedLoss=1.89
+2026.11.13 14:32:59,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3892.16 deal=464 order=464
+2026.11.13 14:32:59,XAUUSD.m,DEAL | entry=0 price=3892.16 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 14:33:21,XAUUSD.m,DEAL | entry=1 price=3891.51 profit=-1.95 commission=0.00 swap=0.00
+2026.11.13 14:34:26,XAUUSD.m,SIGNAL | SELL | boxHigh=3891.83 boxLow=3891.35 boxRangePts=48.0 displacementPts=-28.0 velocityPtsSec=-8.7 spreadPts=26.0 entry=3891.12 SL=3891.80 stopPts=68.0 volume=0.03 riskMoney=2.20 estimatedLoss=2.04
+2026.11.13 14:34:26,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3891.12 deal=466 order=466
+2026.11.13 14:34:26,XAUUSD.m,DEAL | entry=0 price=3891.12 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 14:34:31,XAUUSD.m,DEAL | entry=1 price=3891.80 profit=-2.04 commission=0.00 swap=0.00
+2026.11.13 19:12:58,XAUUSD.m,SIGNAL | BUY | boxHigh=3885.29 boxLow=3884.72 boxRangePts=57.0 displacementPts=33.0 velocityPtsSec=10.3 spreadPts=26.0 entry=3885.53 SL=3884.84 stopPts=69.0 volume=0.03 riskMoney=2.20 estimatedLoss=2.07
+2026.11.13 19:12:58,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3885.53 deal=468 order=468
+2026.11.13 19:12:58,XAUUSD.m,DEAL | entry=0 price=3885.53 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 19:13:35,XAUUSD.m,DEAL | entry=1 price=3884.83 profit=-2.10 commission=0.00 swap=0.00
+2026.11.13 19:17:03,XAUUSD.m,SIGNAL | BUY | boxHigh=3882.26 boxLow=3881.87 boxRangePts=39.0 displacementPts=26.0 velocityPtsSec=8.6 spreadPts=26.0 entry=3882.43 SL=3881.81 stopPts=62.0 volume=0.03 riskMoney=2.19 estimatedLoss=1.86
+2026.11.13 19:17:03,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3882.43 deal=470 order=470
+2026.11.13 19:17:03,XAUUSD.m,DEAL | entry=0 price=3882.43 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 19:17:52,XAUUSD.m,DEAL | entry=1 price=3881.81 profit=-1.86 commission=0.00 swap=0.00
+2026.11.13 19:23:12,XAUUSD.m,SIGNAL | SELL | boxHigh=3880.97 boxLow=3880.48 boxRangePts=49.0 displacementPts=-43.0 velocityPtsSec=-13.3 spreadPts=26.0 entry=3880.31 SL=3880.93 stopPts=62.0 volume=0.03 riskMoney=2.19 estimatedLoss=1.86
+2026.11.13 19:23:12,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3880.31 deal=472 order=472
+2026.11.13 19:23:12,XAUUSD.m,DEAL | entry=0 price=3880.31 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 19:23:39,XAUUSD.m,DEAL | entry=1 price=3880.00 profit=0.93 commission=0.00 swap=0.00
+2026.11.13 19:28:12,XAUUSD.m,SIGNAL | BUY | boxHigh=3881.43 boxLow=3880.85 boxRangePts=58.0 displacementPts=38.0 velocityPtsSec=12.1 spreadPts=26.0 entry=3881.68 SL=3880.98 stopPts=70.0 volume=0.03 riskMoney=2.19 estimatedLoss=2.10
+2026.11.13 19:28:12,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3881.68 deal=474 order=474
+2026.11.13 19:28:12,XAUUSD.m,DEAL | entry=0 price=3881.68 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 19:28:35,XAUUSD.m,DEAL | entry=1 price=3881.73 profit=0.15 commission=0.00 swap=0.00
+2026.11.13 19:32:25,XAUUSD.m,SIGNAL | BUY | boxHigh=3881.47 boxLow=3880.91 boxRangePts=56.0 displacementPts=43.0 velocityPtsSec=13.6 spreadPts=26.0 entry=3881.63 SL=3881.02 stopPts=61.0 volume=0.03 riskMoney=2.19 estimatedLoss=1.83
+2026.11.13 19:32:25,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3881.63 deal=476 order=476
+2026.11.13 19:32:25,XAUUSD.m,DEAL | entry=0 price=3881.63 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 19:32:48,XAUUSD.m,EXIT_HARVEST | ticket=476 profit_pts=67.0 last_10_tick_move=1.0
+2026.11.13 19:32:48,XAUUSD.m,DEAL | entry=1 price=3882.30 profit=2.01 commission=0.00 swap=0.00
+2026.11.13 19:54:43,XAUUSD.m,SIGNAL | SELL | boxHigh=3890.11 boxLow=3889.69 boxRangePts=42.0 displacementPts=-31.0 velocityPtsSec=-9.0 spreadPts=26.0 entry=3889.53 SL=3890.14 stopPts=61.0 volume=0.03 riskMoney=2.19 estimatedLoss=1.83
+2026.11.13 19:54:43,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3889.53 deal=478 order=478
+2026.11.13 19:54:43,XAUUSD.m,DEAL | entry=0 price=3889.53 profit=0.00 commission=0.00 swap=0.00
+2026.11.13 19:54:59,XAUUSD.m,DEAL | entry=1 price=3888.96 profit=1.71 commission=0.00 swap=0.00
+2026.11.16 02:00:01,XAUUSD.m,SIGNAL | SELL | boxHigh=3900.81 boxLow=3900.29 boxRangePts=52.0 displacementPts=-26.0 velocityPtsSec=-8.6 spreadPts=26.0 entry=3900.04 SL=3900.74 stopPts=70.0 volume=0.03 riskMoney=2.20 estimatedLoss=2.10
+2026.11.16 02:00:01,XAUUSD.m,ORDER_ACCEPTED | retcode=10009 description=done at 3900.04 deal=480 order=480
+2026.11.16 02:00:01,XAUUSD.m,DEAL | entry=0 price=3900.04 profit=0.00 commission=0.00 swap=0.00
+2026.11.16 02:00:03,XAUUSD.m,EXIT_HARVEST | ticket=480 profit_pts=40.0 last_10_tick_move=-7.0
+2026.11.16 02:00:03,XAUUSD.m,DEAL | entry=1 price=3899.64 profit=1.20 commission=0.00 swap=0.00
