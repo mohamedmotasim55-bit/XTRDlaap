@@ -477,10 +477,6 @@ jobs:
             }
           }
           Write-Host "summary files found: $($summaryCsv.Count)"
-          if ((Test-Path "$env:REPORT_BASE.htm") -or ($summaryCsv.Count -gt 0)) { break }
-          Write-Host '----- no result yet, retrying after a short pause -----'
-          Start-Sleep -Seconds 15
-          }
 
           if ((-not (Test-Path "$env:REPORT_BASE.htm")) -and ($summaryCsv.Count -eq 0)) {
             Write-Host '----- terminal log tail -----'
