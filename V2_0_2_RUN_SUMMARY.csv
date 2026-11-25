@@ -1,0 +1,15 @@
+metric,value
+ticks_received,1349273
+ticks_written,1349273
+ticks_rejected_bad_quote,0
+ticks_out_of_order,0
+ticks_equal_timestamp,45
+ticks_trimmed_from_ram,1162056
+signals_emitted,3271
+signals_dropped_no_stop,0
+ref_samples,60
+sigma60_last,9.6162
+sigma300_last,8.6066
+median_spread60_last,26.00
+utc_offset_sec,0
+feature_version,2.0.2
