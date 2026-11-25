@@ -1,0 +1,28 @@
+nohup: ignoring input
+
+===== m1 =====
+  ORACLE zigzag K=100: legs=37,317  avg=249 pts  total=9,299,857  net after cost=8,329,615
+  ORACLE zigzag K=200: legs=12,936  avg=455 pts  total=5,890,023  net after cost=5,553,687
+  ORACLE zigzag K=300: legs=6,695  avg=652 pts  total=4,361,855  net after cost=4,187,785
+  MM stop S=100 T=26 H=900: n=5,292 WR=46.2% net=-221,130 pt/tr=-41.8 dur=25s
+  MM stop S=200 T=26 H=900: n=5,292 WR=66.8% net=-259,656 pt/tr=-49.1 dur=57s
+  MM stop S=400 T=26 H=900: n=5,292 WR=80.6% net=-288,906 pt/tr=-54.6 dur=118s
+  DONCHIAN 60/20 S=200: n=587 WR=22.7% net=17,063 pt/tr=29
+
+===== m2 =====
+  ORACLE zigzag K=100: legs=29,477  avg=232 pts  total=6,848,581  net after cost=6,082,179
+  ORACLE zigzag K=200: legs=9,436  avg=433 pts  total=4,086,305  net after cost=3,840,969
+  ORACLE zigzag K=300: legs=4,581  avg=636 pts  total=2,914,001  net after cost=2,794,895
+  MM stop S=100 T=26 H=900: n=5,364 WR=48.6% net=-207,666 pt/tr=-38.7 dur=34s
+  MM stop S=200 T=26 H=900: n=5,364 WR=68.7% net=-239,582 pt/tr=-44.7 dur=78s
+  MM stop S=400 T=26 H=900: n=5,364 WR=81.0% net=-262,253 pt/tr=-48.9 dur=152s
+  DONCHIAN 60/20 S=200: n=575 WR=20.7% net=-7,855 pt/tr=-14
+
+===== m3 =====
+  ORACLE zigzag K=100: legs=33,556  avg=240 pts  total=8,069,283  net after cost=7,196,827
+  ORACLE zigzag K=200: legs=11,248  avg=443 pts  total=4,981,933  net after cost=4,689,485
+  ORACLE zigzag K=300: legs=5,520  avg=649 pts  total=3,582,535  net after cost=3,439,015
+  MM stop S=100 T=26 H=900: n=4,984 WR=48.9% net=-191,590 pt/tr=-38.4 dur=28s
+  MM stop S=200 T=26 H=900: n=4,984 WR=67.1% net=-240,182 pt/tr=-48.2 dur=64s
+  MM stop S=400 T=26 H=900: n=4,984 WR=80.3% net=-267,986 pt/tr=-53.8 dur=132s
+  DONCHIAN 60/20 S=200: n=522 WR=24.3% net=25,826 pt/tr=49
