@@ -545,6 +545,22 @@ jobs:
             Write-Warning 'No artifacts directory to analyse.'
           }
 
+      - name: Package tick dump
+        if: always()
+        shell: pwsh
+        run: |
+          $common = Join-Path $env:APPDATA 'MetaQuotes\Terminal\Common\Files'
+          $src = Join-Path $common 'XTRD_TICKS_1S.csv'
+          if (Test-Path $src) {
+            $out = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
+            New-Item -ItemType Directory -Force -Path $out | Out-Null
+            $dst = Join-Path $out 'XTRD_TICKS_1S.zip'
+            Compress-Archive -Path $src -DestinationPath $dst -Force
+            Write-Host "tick dump packaged: $((Get-Item $dst).Length) bytes"
+          } else {
+            Write-Host "no tick dump at $src"
+          }
+
       - name: Upload backtest artifacts
         if: always()
         uses: actions/upload-artifact@v4
