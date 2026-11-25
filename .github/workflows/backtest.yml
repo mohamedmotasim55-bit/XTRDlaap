@@ -396,7 +396,7 @@ jobs:
             "Report=$report.htm",
             'ReplaceReport=1',
             'Visual=0',
-            'ShutdownTerminal=1'
+            'ShutdownTerminal=0'
           )
           if ($env:OPT -ne '0') { $lines += "OptimizationCriterion=$env:OPTCRIT" }
           if ($env:SET_FILE -ne '') {
@@ -417,6 +417,9 @@ jobs:
             if ($env:INPUT_EXTRA -ne '') { $env:INPUT_EXTRA.Split(',') | ForEach-Object { if ($_.Trim() -ne '') { $lines += $_.Trim() } } }
           }
           $lines | Set-Content -Path $ini -Encoding ASCII
+          $iniRel = Join-Path $env:MT5_DIR 'tester_rel.ini'
+          ($lines | ForEach-Object { if ($_ -match '^Report=') { 'Report=report' } else { $_ } }) | Set-Content -Path $iniRel -Encoding ASCII
+          "TESTER_INI_REL=$iniRel" | Out-File -FilePath $env:GITHUB_ENV -Append
           Write-Host "----- tester.ini (password masked) -----"
           Get-Content $ini | ForEach-Object { $_ -replace '^Password=.*', 'Password=***' }
           "TESTER_INI=$ini" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -427,26 +430,38 @@ jobs:
         run: |
           # MT5 sometimes cancels the tick download on a cold start and then
           # aborts with "no history data"; a retry reuses the cached ticks.
-          for ($attempt = 1; $attempt -le 1; $attempt++) {
-          Write-Host "===== tester attempt $attempt ====="
-          $p = Start-Process -FilePath $env:TERMINAL -ArgumentList '/portable', "/config:$env:TESTER_INI" -PassThru
-          $deadline = (Get-Date).AddMinutes(25)
-          $lastCpu = -1
-          $stall = 0
-          while (-not $p.HasExited -and (Get-Date) -lt $deadline) {
-            Start-Sleep -Seconds 20
-            $p.Refresh()
-            $cpu = 0
-            try { $cpu = [int]((Get-Process -Id $p.Id).CPU) } catch { }
-            Write-Host ("[{0:HH:mm:ss}] terminal alive, cpu={1}s" -f (Get-Date), $cpu)
-            if ($cpu -eq $lastCpu) { $stall++ } else { $stall = 0; $lastCpu = $cpu }
-            if ($stall -ge 9) { Write-Warning 'CPU idle for 3 minutes; treating as hung.'; break }
-          }
-          if (-not $p.HasExited) {
-            Write-Warning 'Tester exceeded the time budget; stopping terminal.'
-            Stop-Process -Id $p.Id -Force
-          } else {
-            Write-Host "Terminal exited with code $($p.ExitCode)"
+          $reportFile = "$env:REPORT_BASE.htm"
+          $configs = @($env:TESTER_INI, $env:TESTER_INI_REL)
+          for ($attempt = 0; $attempt -lt $configs.Count; $attempt++) {
+            if (Test-Path $reportFile) { break }
+            Write-Host "===== tester attempt $($attempt+1) using $($configs[$attempt]) ====="
+            if ($attempt -gt 0) {
+              Get-Process terminal64 -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+              Start-Sleep -Seconds 5
+            }
+            $p = Start-Process -FilePath $env:TERMINAL -ArgumentList '/portable', "/config:$($configs[$attempt])" -PassThru
+            $deadline = (Get-Date).AddMinutes(22)
+            $lastCpu = -1
+            $stall = 0
+            while (-not $p.HasExited -and (Get-Date) -lt $deadline) {
+              Start-Sleep -Seconds 15
+              if (Test-Path $reportFile) { Write-Host 'HTML report appeared.'; break }
+              $p.Refresh()
+              $cpu = 0
+              try { $cpu = [int]((Get-Process -Id $p.Id).CPU) } catch { }
+              if ($cpu -eq $lastCpu) { $stall++ } else { $stall = 0; $lastCpu = $cpu }
+              if ($stall -ge 8) { Write-Warning 'CPU idle for 2 minutes; test looks finished.'; break }
+            }
+            if (-not (Test-Path $reportFile) -and -not $p.HasExited) {
+              Write-Host 'Closing terminal gracefully so it can flush the report.'
+              try { $p.CloseMainWindow() | Out-Null } catch { }
+              for ($i = 0; $i -lt 20; $i++) {
+                Start-Sleep -Seconds 2
+                if (Test-Path $reportFile -or $p.HasExited) { break }
+              }
+            }
+            if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+            Write-Host "report present after attempt $($attempt+1): $(Test-Path $reportFile)"
           }
           Write-Host '----- report/csv files produced -----'
           Get-ChildItem -Path $env:MT5_DIR -Include '*.htm','*.html','*.csv','*.xml' -Recurse -ErrorAction SilentlyContinue |
