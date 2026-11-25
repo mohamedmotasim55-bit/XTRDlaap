@@ -58,6 +58,7 @@ input double InpH3MaxStallEfficiency = 0.30;
 input double InpH3MinStallScore      = 0.50;
 input double InpH3ReclaimSpreadFrac  = 0.15;
 input double InpH3StopSpreadMult     = 1.0;
+input int    InpH3MaxReclaimAgeSec   = 30;        // signal must follow the reclaim within this many seconds
 
 // Reference sampling
 input int    InpRefSampleSeconds     = 60;        // push one sigma300 sample per minute
@@ -566,16 +567,27 @@ void DetectH3(const TickRec &r)
    Diag(D_H3_PEN,(pen>=penMin && pen<=penMax));
    if(pen<penMin || pen>penMax) return;
 
-   double effStall=0.0;
-   int iAfter=iExt;
-   if(g_n-1>iAfter)
+   // Phase model: sweep -> stall -> reclaim -> micro-BOS.
+   // The stall efficiency is measured on [extreme .. reclaim], never on the
+   // whole path (which would include the reclaim move itself and make the
+   // two conditions mutually exclusive).
+   double reclaim_thr=(upSweep ? hi-InpH3ReclaimSpreadFrac*r.spread*g_point
+                               : lo+InpH3ReclaimSpreadFrac*r.spread*g_point);
+   int iRec=-1;
+   for(int i=iExt+1;i<=g_n-1;i++)
    {
-      double path=WndPathPts(iAfter,g_n-1);
-      double net=MathAbs(g_ticks[g_n-1].mid-g_ticks[iExt].mid);
-      effStall=(path>0.0 ? Pts(net)/path : 0.0);
+      bool hit=(upSweep ? (g_ticks[i].mid<reclaim_thr) : (g_ticks[i].mid>reclaim_thr));
+      if(hit) { iRec=i; break; }
    }
-   double secs=MathMax(0.001,(double)(r.t-g_ticks[iExt].t)/1000.0);
-   double rateStall=(double)(g_n-1-iExt)/secs;
+   Diag(D_H3_RECLAIM,(iRec>0));
+   if(iRec<=iExt) return;
+   if(r.t-g_ticks[iRec].t>(long)InpH3MaxReclaimAgeSec*1000) return;
+
+   double pathStall=WndPathPts(iExt,iRec);
+   double netStall=MathAbs(g_ticks[iRec].mid-g_ticks[iExt].mid);
+   double effStall=(pathStall>0.0 ? Pts(netStall)/pathStall : 0.0);
+   double secs=MathMax(0.001,(double)(g_ticks[iRec].t-g_ticks[iExt].t)/1000.0);
+   double rateStall=(double)(iRec-iExt)/secs;
    double rateRef=MathMax(0.01,g_quote_rate60);
    double stallScore=0.5*(1.0-MathMin(1.0,effStall/MathMax(0.01,InpH3MaxStallEfficiency)))
                    + 0.5*(1.0-MathMin(1.0,rateStall/rateRef));
@@ -585,15 +597,13 @@ void DetectH3(const TickRec &r)
    Diag(D_H3_EFF,(effStall<InpH3MaxStallEfficiency));
    if(effStall>=InpH3MaxStallEfficiency) return;
 
-   bool reclaim=(upSweep ? (r.mid<hi-InpH3ReclaimSpreadFrac*r.spread*g_point)
-                         : (r.mid>lo+InpH3ReclaimSpreadFrac*r.spread*g_point));
-   Diag(D_H3_RECLAIM,reclaim);
-   if(!reclaim) return;
-
-   // Micro break of structure: break the 3s extreme formed after the sweep extreme.
-   int iBos=IdxGE(r.t-3000);
-   if(iBos<0) iBos=iExt;
-   bool bos=(upSweep ? (r.mid<WndLow(iBos,g_n-1)) : (r.mid>WndHigh(iBos,g_n-1)));
+   // Micro break of structure after the reclaim: the current tick must break
+   // the 3 s extreme formed between the reclaim and the previous tick.
+   int iBos=MathMax(iRec,IdxGE(r.t-3000));
+   if(iBos<0) iBos=iRec;
+   bool bos=false;
+   if(g_n-2>=iBos)
+      bos=(upSweep ? (r.mid<WndLow(iBos,g_n-2)) : (r.mid>WndHigh(iBos,g_n-2)));
    Diag(D_H3_BOS,bos);
    if(!bos) return;
 
