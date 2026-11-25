@@ -13,3 +13,10 @@ sigma300_last,8.6066
 median_spread60_last,26.00
 utc_offset_sec,0
 feature_version,2.0.2
+input_h3_stall_eff_weight,0.50
+input_h3_max_stall_eff,0.30
+input_h3_min_stall_score,0.50
+input_h3_reclaim_spread_frac,0.15
+input_h3_max_reclaim_age_sec,30
+input_random_seed,20261125
+input_ref_min_samples,20

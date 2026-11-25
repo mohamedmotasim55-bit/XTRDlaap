@@ -105,17 +105,29 @@ efficiency window).
 | 1 | history | >= 20 ticks in `[t-900s, t-10s]` |
 | 2 | sweep present | `high[sweep] > hi` or `low[sweep] < lo`, sweep window `<= 15 s` |
 | 3 | penetration | `0.20 x spread <= pen <= 1.5 x sigma60` |
-| 4 | stall score | `>= 0.50` |
+| 4 | stall score | `>= 0.50`, which is equivalent to `eff/0.30 + rate_stall/rate60 <= 1` |
 | 5 | stall efficiency | `eff(sweep extreme -> t) < 0.30` |
 | 6 | reclaim | `mid[t] < hi - 0.15 x spread` (up sweep) |
 | 7 | micro-BOS | `mid[t] < low[mid in [t-3s, t-1 tick]]` (up sweep) |
 | 8 | stop | sweep extreme `+ 1.0 x spread` |
 
 ```
-StallScore = 0.5 * (1 - min(1, eff_stall / 0.30))
-           + 0.5 * (1 - min(1, rate_stall / max(0.01, rate60)))
-rate_stall = ticks between the sweep extreme and t / elapsed seconds
+StallScore = w * (1 - min(1, eff_stall / 0.30))
+           + (1 - w) * (1 - min(1, rate_stall / max(0.01, rate60)))     w = InpH3StallEffWeight (default 0.50)
+rate_stall = ticks between the sweep extreme and the reclaim tick / elapsed seconds
 ```
+
+**Passing `eff_stall < 0.30` and `rate_stall < rate60` is necessary but NOT
+sufficient.** With `w = 0.50` the gate `StallScore >= 0.50` reduces to
+
+```
+eff_stall / 0.30 + rate_stall / rate60 <= 1
+```
+
+so the two normalised terms must sum to one or less. A candidate can satisfy
+both sub-gates and still score below 0.50 (e.g. 0.253333/0.30 = 0.844 plus
+2.893/3.593 = 0.805 sums to 1.65). See `V2_0_2_H3_STALL_AUDIT.md` for the
+per-case arithmetic of every rejection in the audited run.
 
 `raw_move_pts = pen`, `raw_move_window_ms = t - t[sweep extreme]`.
 

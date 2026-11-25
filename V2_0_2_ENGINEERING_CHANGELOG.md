@@ -190,6 +190,22 @@ three are counted separately.
 * H1 emitted 528 signals (v2.0.1: 0). The binding filters are impulse efficiency
   (16.5% pass) and the trigger break (11.5% pass), both specification values.
 
+
+### RC-15 Documentation gap on the StallScore gate (no code defect)
+
+The review question "if efficiency and activity both pass, the score must
+exceed 0.50" is not algebraically true. With `w=0.50` the gate
+`score >= 0.50` is equivalent to `eff/0.30 + rate/rate_ref <= 1`, which is
+strictly stronger than passing both sub-gates individually. The five candidates
+that reached the score had normalised sums of 1.33-1.80 and were rejected
+correctly.
+
+Action taken: the feature document now states the equivalent inequality, and the
+Expert Advisor writes `H3_Stall_Audit.csv` with eff/rate/reference/weight/score
+for every H3 candidate that reaches the reclaim stage. An independent Python
+re-implementation reproduces all 858 rows with a maximum absolute difference of
+0.000000. **No threshold in H1, H2 or H3 was changed.**
+
 ---
 
 ## 2. What was changed, file by file
