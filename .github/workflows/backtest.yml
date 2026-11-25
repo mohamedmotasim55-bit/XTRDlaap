@@ -42,6 +42,9 @@ on:
       set_file:
         description: "Optional .set file at repository root, applied as ExpertParameters"
         default: ""
+      period:
+        description: "Chart period for the test (M1, M5, M15, H1)"
+        default: "M1"
       optimize:
         description: "0=off, 1=slow complete, 2=fast genetic"
         default: "0"
@@ -72,6 +75,7 @@ env:
   INPUT_EXTRA: ${{ github.event.inputs.extra_inputs }}
   SPREAD_PTS: ${{ github.event.inputs.spread_pts }}
   SET_FILE: ${{ github.event.inputs.set_file }}
+  PERIOD: ${{ github.event.inputs.period || 'M1' }}
   MT5_DIR: C:\mt5
 
 jobs:
@@ -379,7 +383,7 @@ jobs:
             '[Tester]',
             "Expert=$env:EA_NAME.ex5",
             "Symbol=$env:SYMBOL",
-            'Period=M1',
+            "Period=$env:PERIOD",
             "Model=$env:MODEL",
             "ExecutionMode=$env:EXECMODE",
             "Optimization=$env:OPT",
