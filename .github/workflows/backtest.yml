@@ -431,7 +431,7 @@ jobs:
           # MT5 sometimes cancels the tick download on a cold start and then
           # aborts with "no history data"; a retry reuses the cached ticks.
           $reportFile = "$env:REPORT_BASE.htm"
-          $configs = @($env:TESTER_INI, $env:TESTER_INI_REL)
+          $configs = @($env:TESTER_INI_REL, $env:TESTER_INI)
           for ($attempt = 0; $attempt -lt $configs.Count; $attempt++) {
             if (Test-Path $reportFile) { break }
             Write-Host "===== tester attempt $($attempt+1) using $($configs[$attempt]) ====="
@@ -440,17 +440,21 @@ jobs:
               Start-Sleep -Seconds 5
             }
             $p = Start-Process -FilePath $env:TERMINAL -ArgumentList '/portable', "/config:$($configs[$attempt])" -PassThru
-            $deadline = (Get-Date).AddMinutes(22)
+            $deadline = (Get-Date).AddMinutes(8)
             $lastCpu = -1
             $stall = 0
             while (-not $p.HasExited -and (Get-Date) -lt $deadline) {
-              Start-Sleep -Seconds 15
+              Start-Sleep -Seconds 10
               if (Test-Path $reportFile) { Write-Host 'HTML report appeared.'; break }
+              $done = $false
+              Get-ChildItem (Join-Path $env:MT5_DIR 'Tester') -Filter '*.log' -Recurse -ErrorAction SilentlyContinue |
+                ForEach-Object { if (Select-String -Path $_.FullName -Pattern 'automatic testing finished','final balance' -Quiet -ErrorAction SilentlyContinue) { $done = $true } }
+              if ($done) { Write-Host 'Tester reported completion.'; Start-Sleep -Seconds 12; break }
               $p.Refresh()
               $cpu = 0
               try { $cpu = [int]((Get-Process -Id $p.Id).CPU) } catch { }
               if ($cpu -eq $lastCpu) { $stall++ } else { $stall = 0; $lastCpu = $cpu }
-              if ($stall -ge 8) { Write-Warning 'CPU idle for 2 minutes; test looks finished.'; break }
+              if ($stall -ge 10) { Write-Warning 'CPU idle for 100s; treating as finished.'; break }
             }
             if (-not (Test-Path $reportFile) -and -not $p.HasExited) {
               Write-Host 'Closing terminal gracefully so it can flush the report.'
