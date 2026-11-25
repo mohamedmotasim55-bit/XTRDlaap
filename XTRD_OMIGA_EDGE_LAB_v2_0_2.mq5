@@ -90,6 +90,7 @@ int     g_fh_ticks   = INVALID_HANDLE;
 int     g_fh_sig     = INVALID_HANDLE;
 int     g_fh_rnd     = INVALID_HANDLE;
 int     g_fh_diag    = INVALID_HANDLE;
+int     g_fh_audit   = INVALID_HANDLE;   // H3 stall arithmetic audit (diagnostics only)
 
 string  g_sym         = "";
 double  g_point       = 0.0;
@@ -147,6 +148,8 @@ double Pts(const double price_delta)
 string F2(const double v) { return DoubleToString(v,2); }
 string F3(const double v) { return DoubleToString(v,3); }
 string F4(const double v) { return DoubleToString(v,4); }
+string F5(const double v) { return DoubleToString(v,5); }
+string F6(const double v) { return DoubleToString(v,6); }
 
 int DiagSlot(const string name)
 {
@@ -348,6 +351,13 @@ void DumpRunSummary()
    FileWrite(h,"median_spread60_last",F2(g_medspread60));
    FileWrite(h,"utc_offset_sec",g_utc_offset);
    FileWrite(h,"feature_version",FEATURE_VERSION);
+   FileWrite(h,"input_h3_stall_eff_weight",F2(InpH3StallEffWeight));
+   FileWrite(h,"input_h3_max_stall_eff",F2(InpH3MaxStallEfficiency));
+   FileWrite(h,"input_h3_min_stall_score",F2(InpH3MinStallScore));
+   FileWrite(h,"input_h3_reclaim_spread_frac",F2(InpH3ReclaimSpreadFrac));
+   FileWrite(h,"input_h3_max_reclaim_age_sec",InpH3MaxReclaimAgeSec);
+   FileWrite(h,"input_random_seed",(long)InpRandomSeed);
+   FileWrite(h,"input_ref_min_samples",InpRefMinSamples);
    FileClose(h);
 }
 
@@ -593,6 +603,11 @@ void DetectH3(const TickRec &r)
    double wEff=MathMin(1.0,MathMax(0.0,InpH3StallEffWeight));
    double stallScore=wEff*(1.0-MathMin(1.0,effStall/MathMax(0.01,InpH3MaxStallEfficiency)))
                    + (1.0-wEff)*(1.0-MathMin(1.0,rateStall/rateRef));
+   string verdict=(effStall>=InpH3MaxStallEfficiency ? "EFF_REJECT"
+                  : (stallScore<InpH3MinStallScore ? "SCORE_REJECT" : "PASS"));
+   if(g_fh_audit!=INVALID_HANDLE)
+      FileWrite(g_fh_audit,r.t,(long)r.seq,(upSweep?-1:1),(upSweep?"UP":"DN"),F2(pen),F4(g_sigma60),
+                F6(effStall),F3(rateStall),F3(rateRef),F2(wEff),F5(stallScore),verdict);
    Diag(D_H3_EFF,(effStall<InpH3MaxStallEfficiency));
    if(effStall>=InpH3MaxStallEfficiency) return;
 
@@ -677,7 +692,9 @@ int OnInit()
    g_fh_sig  =FileOpen(prefix+"Signal_Snapshot.csv",FILE_WRITE|FILE_READ|FILE_CSV|FILE_ANSI|FILE_SHARE_READ,',');
    g_fh_rnd  =FileOpen(prefix+"RND_Baseline.csv",FILE_WRITE|FILE_READ|FILE_CSV|FILE_ANSI|FILE_SHARE_READ,',');
    g_fh_diag =FileOpen(prefix+"Signal_Diagnostics.csv",FILE_WRITE|FILE_READ|FILE_CSV|FILE_ANSI|FILE_SHARE_READ,',');
-   if(g_fh_ticks==INVALID_HANDLE || g_fh_sig==INVALID_HANDLE || g_fh_rnd==INVALID_HANDLE || g_fh_diag==INVALID_HANDLE)
+   g_fh_audit=FileOpen(prefix+"H3_Stall_Audit.csv",FILE_WRITE|FILE_READ|FILE_CSV|FILE_ANSI|FILE_SHARE_READ,',');
+   if(g_fh_ticks==INVALID_HANDLE || g_fh_sig==INVALID_HANDLE || g_fh_rnd==INVALID_HANDLE ||
+      g_fh_diag==INVALID_HANDLE || g_fh_audit==INVALID_HANDLE)
    {
       Print("ERROR opening CSV files. code=",GetLastError());
       return INIT_FAILED;
@@ -688,10 +705,14 @@ int OnInit()
 
    if(FileSize(g_fh_sig)==0) WriteSignalHeader(g_fh_sig);
    if(FileSize(g_fh_rnd)==0) WriteSignalHeader(g_fh_rnd);
+   if(FileSize(g_fh_audit)==0)
+      FileWrite(g_fh_audit,"time_msc","tick_seq","direction","sweep_side","penetration_pts",
+         "sigma60_pts","eff_stall","rate_stall_s","rate_ref_s","eff_weight","stall_score","verdict");
 
    FileSeek(g_fh_ticks,0,SEEK_END);
    FileSeek(g_fh_sig,0,SEEK_END);
    FileSeek(g_fh_rnd,0,SEEK_END);
+   FileSeek(g_fh_audit,0,SEEK_END);
 
    D_H1_HIST=DiagSlot("H1_01_history");
    D_H1_WIN =DiagSlot("H1_02_window_ready");
@@ -744,7 +765,9 @@ void OnDeinit(const int reason)
    if(g_fh_sig!=INVALID_HANDLE)   FileClose(g_fh_sig);
    if(g_fh_rnd!=INVALID_HANDLE)   FileClose(g_fh_rnd);
    if(g_fh_diag!=INVALID_HANDLE)  FileClose(g_fh_diag);
-   g_fh_ticks=INVALID_HANDLE; g_fh_sig=INVALID_HANDLE; g_fh_rnd=INVALID_HANDLE; g_fh_diag=INVALID_HANDLE;
+   if(g_fh_audit!=INVALID_HANDLE) { FileFlush(g_fh_audit); FileClose(g_fh_audit); }
+   g_fh_ticks=INVALID_HANDLE; g_fh_sig=INVALID_HANDLE; g_fh_rnd=INVALID_HANDLE;
+   g_fh_diag=INVALID_HANDLE; g_fh_audit=INVALID_HANDLE;
    Print("XTRD EDGE LAB v",COLLECTOR_VERSION," stopped. reason=",reason,
          " received=",g_ticks_received," written=",g_ticks_written,
          " out_of_order=",g_ticks_out_order," trimmed=",g_ticks_trimmed,
