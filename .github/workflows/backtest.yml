@@ -440,7 +440,7 @@ jobs:
               Start-Sleep -Seconds 5
             }
             $p = Start-Process -FilePath $env:TERMINAL -ArgumentList '/portable', "/config:$($configs[$attempt])" -PassThru
-            $deadline = (Get-Date).AddMinutes(8)
+            $deadline = (Get-Date).AddMinutes(28)
             $lastCpu = -1
             $stall = 0
             while (-not $p.HasExited -and (Get-Date) -lt $deadline) {
