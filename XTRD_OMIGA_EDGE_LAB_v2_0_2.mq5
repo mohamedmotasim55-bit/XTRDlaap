@@ -406,6 +406,7 @@ void DetectH1(const TickRec &r)
 {
    if(!InpEnableH1) return;
    if(g_last_h1_ms>0 && r.t-g_last_h1_ms<1000) return;
+   g_last_h1_ms=r.t;                    // throttle advances on every evaluation
 
    int i60=IdxGE(r.t-60000);
    int i1 =IdxLE(r.t-1);
@@ -475,7 +476,6 @@ void DetectH1(const TickRec &r)
    double vel=(window_ms>0 ? disp/((double)window_ms/1000.0) : 0.0);
    Diag(D_H1_EMIT,true);
    EmitSignal("SIG","H1_IMP_PB",(up?1:-1),r,disp,window_ms,"IMPULSE",vel,effImp,sigImp,pct,g_quote_rate60,sl,dq);
-   g_last_h1_ms=r.t;
 }
 
 //====================== H2 ==========================================
@@ -484,6 +484,7 @@ void DetectH2(const TickRec &r)
 {
    if(!InpEnableH2) return;
    if(g_last_h2_ms>0 && r.t-g_last_h2_ms<1000) return;
+   g_last_h2_ms=r.t;
 
    Diag(D_H2_HIST,(g_ref_n>=MathMax(5,InpRefMinSamples)));
    if(g_ref_n<MathMax(5,InpRefMinSamples)) return;
@@ -526,7 +527,6 @@ void DetectH2(const TickRec &r)
    double vel=(window_ms>0 ? move/((double)window_ms/1000.0) : 0.0);
    Diag(D_H2_EMIT,true);
    EmitSignal("SIG","H2_VOL_EXP",(up?1:-1),r,move,window_ms,"BREAKOUT",vel,eff,g_sigma300,pct,rateNow,sl,"OK");
-   g_last_h2_ms=r.t;
 }
 
 //====================== H3 ==========================================
@@ -535,6 +535,7 @@ void DetectH3(const TickRec &r)
 {
    if(!InpEnableH3) return;
    if(g_last_h3_ms>0 && r.t-g_last_h3_ms<1000) return;
+   g_last_h3_ms=r.t;
 
    long from=r.t-(long)InpH3LookbackSeconds*1000;
    int iLb=IdxGE(from);
@@ -605,7 +606,6 @@ void DetectH3(const TickRec &r)
    double vel=(window_ms>0 ? pen/((double)window_ms/1000.0) : 0.0);
    Diag(D_H3_EMIT,true);
    EmitSignal("SIG","H3_SWEEP",(upSweep?-1:1),r,pen,window_ms,"SWEEP",vel,effStall,g_sigma60,pct,rateStall,sl,dq);
-   g_last_h3_ms=r.t;
 }
 
 //====================== RANDOM CONTROL ==============================
