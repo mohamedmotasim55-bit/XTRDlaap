@@ -1,0 +1,31 @@
+nohup: ignoring input
+=== ULTRA-FAST SYSTEM (fade 120pts/5s, T=80, S=30, H=60s) ===
+m1: n= 3185 win= 530 loss=2655 WR= 16.6% net=  -43,607 pts | wins/day= 24.1 | dur=    7s | avgW=  77.9 avgL= -32.0
+m2: n= 2430 win= 416 loss=2014 WR= 17.1% net=  -32,357 pts | wins/day= 18.9 | dur=    7s | avgW=  76.9 avgL= -32.0
+m3: n= 2609 win= 412 loss=2197 WR= 15.8% net=  -38,017 pts | wins/day= 20.6 | dur=    7s | avgW=  78.1 avgL= -31.9
+ALL: n=8224 net=-113,981 WR=16.5%
+
+=== WRONG-DIRECTION ANALYSIS ===
+losers: 6866 | would have WON if direction flipped: 1309 (19.1%) | their avg = -11.0 pts
+winners: 1358 | would have LOST if flipped: 1358 (100.0%)
+=> direction carries some information
+
+=== EXIT REASONS ===
+  SL: n=6852 net=-219,264 avg=-32.0
+  TIME: n=88 net=2,563 avg=29.1
+  TP: n=1284 net=102,720 avg=80.0
+
+=== OOS (m3, never used for tuning) ===
+  n=2609 WR=15.8% net=-38,017 pt/tr=-14.6
+
+=== LOT SIZE TABLE (1000-cent account: 1 oz/lot, 1 pt = 1 USC per lot) ===
+  lots  margin USC  loss@SL USC  % of 1000  3 losses  net 3mo USC
+  0.01        1.17         0.32      0.03%      0.96       -1,140
+  0.02        2.33         0.64      0.06%      1.92       -2,280
+  0.03        3.50         0.96      0.10%      2.88       -3,419
+  0.04        4.67         1.28      0.13%      3.84       -4,559
+  0.05        5.83         1.60      0.16%      4.80       -5,699
+  0.06        7.00         1.92      0.19%      5.76       -6,839
+  0.07        8.17         2.24      0.22%      6.72       -7,979
+  0.08        9.33         2.56      0.26%      7.68       -9,118
+  0.09       10.50         2.88      0.29%      8.64      -10,258

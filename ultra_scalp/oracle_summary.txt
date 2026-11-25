@@ -1,0 +1,10 @@
+nohup: ignoring input
+ORACLE legs >= 106 pts (net of 26): 91,551 over 3 months
+  m1: 34,156 perfect scalps | avg 237 pts | median dur 28s
+  m2: 26,725 perfect scalps | avg 219 pts | median dur 37s
+  m3: 30,670 perfect scalps | avg 227 pts | median dur 28s
+
+TOTAL net if all captured: 20,909,184 pts  (at 0.01 lots = 209,092 USC)
+
+System caught: 1,358 winners of 91,551 perfect scalps = 1.48%
+System also took 6,866 losers.
