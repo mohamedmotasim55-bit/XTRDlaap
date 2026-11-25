@@ -685,7 +685,7 @@ int OnInit()
           " | minLot=" + DoubleToString(SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN),VolumeDigits()) +
           " | lotStep=" + DoubleToString(SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_STEP),VolumeDigits()) +
           " | stopsLevel=" + IntegerToString((int)SymbolInfoInteger(_Symbol,SYMBOL_TRADE_STOPS_LEVEL)) +
-          " | freezeLevel=" + IntegerToString((int)SymbolInfoInteger(_Symbol,SYMBOL_TRADE_FREEZE_LEVEL));
+          " | freezeLevel=" + IntegerToString((int)SymbolInfoInteger(_Symbol,SYMBOL_TRADE_FREEZE_LEVEL)));
    return INIT_SUCCEEDED;
 }
 

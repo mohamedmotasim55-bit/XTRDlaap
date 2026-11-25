@@ -67,6 +67,7 @@ MQL5_BUILTINS = {
     "PositionGetDouble", "PositionGetInteger", "PositionGetString", "PositionsTotal",
     "HistorySelect", "HistorySelectByPosition", "HistoryDealGetTicket",
     "HistoryDealGetDouble", "HistoryDealGetInteger", "HistoryDealGetString",
+    "HistoryDealSelect",
     "HistoryDealsTotal", "HistoryOrderGetDouble", "HistoryOrderGetInteger",
     "HistoryOrderGetString", "HistoryOrdersTotal", "HistoryOrderSelect",
     "iATR", "iRSI", "iMA", "iCustom", "iClose", "iOpen", "iHigh", "iLow",
