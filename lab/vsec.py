@@ -1,17 +1,24 @@
 import numpy as np, sys
 P=0.01
 def load(m):
+    import numpy as _np
+    _msc=_np.load(f'/home/openhands/data/{m}_msc.npy')
+    _sec=_msc//1000; _u=np.unique(_sec); _cnt=_np.diff(_np.append(_np.searchsorted(_sec,_u,'left'),len(_sec)))
+    _n=len(_u); _nb=_n//60; _cps=_np.add.reduceat(_cnt[:_nb*60],np.arange(0,_nb*60,60))
+    globals()['_CPS']=_cps
     msc=np.load(f'/home/openhands/data/{m}_msc.npy')
     bid=np.load(f'/home/openhands/data/{m}_bid.npy').astype(np.float64)/P
     ask=np.load(f'/home/openhands/data/{m}_ask.npy').astype(np.float64)/P
     sec=msc//1000; u=np.unique(sec); last=np.searchsorted(sec,u,side='right')-1
     return u,bid[last],ask[last]
-def run(m,L1=40,EXT=50,S=30,HOLD=45,COOL=5,BE1=12,TR=8,HOURS=(1,),DL=0,TFMAX=0,TGT=0,KSTREAK=0,MPAUSE=0,ERMAX=0,DT=0):
+def run(m,L1=40,EXT=50,S=30,HOLD=45,COOL=5,BE1=12,TR=8,HOURS=(1,),DL=0,TFMAX=0,TGT=0,KSTREAK=0,MPAUSE=0,ERMAX=0,DT=0,PULSE=0):
     u,B,A=load(m); n=len(B); bpm=60; nb=n//bpm
     ix=np.arange(0,nb*bpm,bpm)
     bhi=np.maximum.reduceat(B[:nb*bpm],ix); blo=np.minimum.reduceat(B[:nb*bpm],ix); bcl=B[bpm-1:nb*bpm:bpm]
     ahi=np.maximum.reduceat(A[:nb*bpm],ix); alo=np.minimum.reduceat(A[:nb*bpm],ix); acl=A[bpm-1:nb*bpm:bpm]
     hr=((u[ix]%86400)//3600)
+    import pandas as _pd
+    cps=_CPS; cpsavg=_pd.Series(cps).rolling(60).mean().values
     pos=0;ent=0.0;stop=0.0;best=0.0;rec=[];last_exit=-10**9;et=0;cur=-1;dn_=0;blk=False;streak=0;paused=0
     for t in range(L1*bpm,nb*bpm):
         if pos==0:
@@ -28,6 +35,7 @@ def run(m,L1=40,EXT=50,S=30,HOLD=45,COOL=5,BE1=12,TR=8,HOURS=(1,),DL=0,TFMAX=0,T
             if TFMAX>0:
                 r240=bcl[mi-1]-bcl[max(0,mi-241)]
                 if abs(r240)>TFMAX: continue
+            if PULSE>0 and not (cps[mi-1]>PULSE*np.nan_to_num(cpsavg[mi-1])): continue
             if DT>0:
                 tr=bcl[mi-1]-bcl[max(0,mi-1-DT)]
                 if bcl[mi-1]>hh+EXT and tr>=0: continue
