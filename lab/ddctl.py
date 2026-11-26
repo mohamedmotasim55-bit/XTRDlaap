@@ -14,11 +14,12 @@ def prep(m):
         ahi=np.maximum.reduceat(As[:N],ix),alo=np.minimum.reduceat(As[:N],ix),acl=As[bpm-1:N:bpm],
         nb=nb,day=(t//86400).astype(np.int32),hour=((t%86400)//3600).astype(np.int32))
     CACHE[m]=d; return d
-def run(m,L1=40,EXITL=4,S=75,COOL=10,DL=0,HOURS=None):
+def run(m,L1=40,EXITL=4,S=75,COOL=10,DL=0,HOURS=None,EQ=0):
     d=prep(m); bhi,blo,bcl,ahi,alo,acl,nb,day,hr=d['bhi'],d['blo'],d['bcl'],d['ahi'],d['alo'],d['acl'],d['nb'],d['day'],d['hour']
     pos=0;ent=0.0;stop=0.0;rec=[];last_exit=-10**9;et=0
-    cur=-1;dn_=0;blocked=False
+    cur=-1;dn_=0;blocked=False;eq=0.0;peak=0.0;killed=False
     for i in range(L1+1,nb):
+        if killed: break
         if day[i]!=cur: cur=day[i]; dn_=0; blocked=False
         if pos==0:
             if blocked or i-last_exit<COOL: continue
@@ -38,6 +39,8 @@ def run(m,L1=40,EXITL=4,S=75,COOL=10,DL=0,HOURS=None):
                 elif i>et and acl[i]>ahi[max(0,i-EXITL):i].max(): pnl=ent-acl[i]
             if pnl is not None:
                 rec.append(pnl); pos=0; last_exit=i
+                eq+=pnl; peak=max(peak,eq)
+                if EQ>0 and peak-eq>=EQ: killed=True
                 if pnl<0: dn_+=1
                 if DL>0 and dn_>=DL: blocked=True
     return np.array(rec) if rec else np.array([])
