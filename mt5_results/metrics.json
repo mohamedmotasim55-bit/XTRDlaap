@@ -1,0 +1,28 @@
+{
+  "iteration": "live_v4",
+  "summary": {},
+  "deals": 0,
+  "report_attribution": {
+    "per_strategy": {},
+    "per_exit_reason": {}
+  },
+  "telemetry": {
+    "rows": 30,
+    "events": {
+      "ENTRY": 26,
+      "EXIT": 4
+    },
+    "avg_slippage_pts": null,
+    "max_slippage_pts": null,
+    "avg_latency_ms": null,
+    "rejects": 0
+  },
+  "ledger": {},
+  "sources": {
+    "report": "artifacts/backtest_report.htm",
+    "telemetry": "artifacts\\X13_Omega_Telemetry.csv",
+    "ledger": null,
+    "summary": null
+  },
+  "findings": []
+}
