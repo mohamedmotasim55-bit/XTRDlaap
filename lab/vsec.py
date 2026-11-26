@@ -6,7 +6,7 @@ def load(m):
     ask=np.load(f'/home/openhands/data/{m}_ask.npy').astype(np.float64)/P
     sec=msc//1000; u=np.unique(sec); last=np.searchsorted(sec,u,side='right')-1
     return u,bid[last],ask[last]
-def run(m,L1=40,EXT=50,S=30,HOLD=45,COOL=5,BE1=12,TR=8,HOURS=(1,),DL=0,TFMAX=0):
+def run(m,L1=40,EXT=50,S=30,HOLD=45,COOL=5,BE1=12,TR=8,HOURS=(1,),DL=0,TFMAX=0,TGT=0):
     u,B,A=load(m); n=len(B); bpm=60; nb=n//bpm
     ix=np.arange(0,nb*bpm,bpm)
     bhi=np.maximum.reduceat(B[:nb*bpm],ix); blo=np.minimum.reduceat(B[:nb*bpm],ix); bcl=B[bpm-1:nb*bpm:bpm]
@@ -22,8 +22,8 @@ def run(m,L1=40,EXT=50,S=30,HOLD=45,COOL=5,BE1=12,TR=8,HOURS=(1,),DL=0,TFMAX=0):
             if TFMAX>0:
                 r240=bcl[mi-1]-bcl[max(0,mi-241)]
                 if abs(r240)>TFMAX: continue
-            if bcl[mi-1]>hh+EXT:   pos=-1; ent=B[t]; stop=ent+S; best=ent; et=mi
-            elif bcl[mi-1]<ll-EXT: pos=1; ent=A[t]; stop=ent-S; best=ent; et=mi
+            if bcl[mi-1]>hh+EXT:   pos=-1; ent=B[t]; stop=ent+S; best=ent; et=mi; tg=ent-TGT
+            elif bcl[mi-1]<ll-EXT: pos=1; ent=A[t]; stop=ent-S; best=ent; et=mi; tg=ent+TGT
             else: continue
         if pos!=0:
             pnl=None
@@ -33,6 +33,7 @@ def run(m,L1=40,EXT=50,S=30,HOLD=45,COOL=5,BE1=12,TR=8,HOURS=(1,),DL=0,TFMAX=0):
                 if BE1>0 and pr>=BE1: stop=max(stop,ent)
                 if pr>=BE1 and TR>0: stop=max(stop,best-TR)
                 if B[t]<=stop: pnl=stop-ent
+                elif TGT and B[t]>=tg: pnl=TGT
                 elif (t//60)-et>=HOLD: pnl=B[t]-ent
             else:
                 if A[t]<best: best=A[t]
@@ -40,6 +41,7 @@ def run(m,L1=40,EXT=50,S=30,HOLD=45,COOL=5,BE1=12,TR=8,HOURS=(1,),DL=0,TFMAX=0):
                 if BE1>0 and pr>=BE1: stop=min(stop,ent)
                 if pr>=BE1 and TR>0: stop=min(stop,best+TR)
                 if A[t]>=stop: pnl=ent-stop
+                elif TGT and A[t]<=tg: pnl=TGT
                 elif (t//60)-et>=HOLD: pnl=ent-A[t]
             if pnl is not None:
                 rec.append(pnl); pos=0; last_exit=t//60
