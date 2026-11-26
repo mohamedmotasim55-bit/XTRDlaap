@@ -1,0 +1,27 @@
+=== الثبات الشهري (كل شهر على حدة) ===
+engine              m1$    m2$    m3$  كلها+?  صفقات   WR%
+TREND_PULLBACK    -0.45  18.64  32.84      ⚠️     39  20.5
+FADE              -1.30  29.53  16.29      ⚠️     63  17.5
+MOMENTUM           8.01  -4.80  -1.74      ⚠️     32   9.4
+
+=== دمج TREND_PULLBACK + FADE ===
+  m1: n=38 net=$-1.75 WR=7.9% DD=$12.80
+  m2: n=36 net=$48.17 WR=27.8% DD=$5.60
+  m3: n=28 net=$49.13 WR=21.4% DD=$8.00
+
+=== حساسية المعلمات (robustness) — TREND_PULLBACK ===
+  stop=60 hold=30: n=40 net=$44 EV=109.9
+  stop=60 hold=45: n=39 net=$45 EV=115.6
+  stop=60 hold=60: n=38 net=$29 EV=76.2
+  stop=70 hold=30: n=40 net=$51 EV=126.9
+  stop=70 hold=45: n=39 net=$54 EV=138.8
+  stop=70 hold=60: n=38 net=$37 EV=97.8
+  stop=80 hold=30: n=40 net=$48 EV=119.2
+  stop=80 hold=45: n=39 net=$51 EV=130.8
+  stop=80 hold=60: n=38 net=$34 EV=89.6
+  stop=90 hold=30: n=40 net=$60 EV=149.7
+  stop=90 hold=45: n=39 net=$57 EV=146.9
+  stop=90 hold=60: n=38 net=$42 EV=110.9
+  stop=100 hold=30: n=40 net=$57 EV=142.7
+  stop=100 hold=45: n=39 net=$54 EV=139.5
+  stop=100 hold=60: n=38 net=$39 EV=103.3

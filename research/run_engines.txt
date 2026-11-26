@@ -1,0 +1,7 @@
+=== FOUR-COUNT FRAMEWORK — 5 engines × 3 months ===
+engine           raw_events candidates executable net_profit   WR%     EV   $/mo
+TREND_PULLBACK    5,034,984         85         39          8  20.5  130.8     17
+MOMENTUM          5,034,984         76         32          3   9.4    4.6      0
+FADE              5,034,984        148         63         11  17.5   70.7     15
+VOL_BURST         5,034,984          1          1          0   0.0  -50.0     -0
+RANGE_EXP         5,034,984        232         75          2   2.7  -46.9    -12
