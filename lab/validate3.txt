@@ -1,0 +1,9 @@
+m1 hybrid S200: n= 542 WR= 16.1% net= -5,321 DD= -11,430 RF=-0.47
+m1 S250 EXITL30: n= 468 WR= 16.5% net= -6,039 DD= -13,402 RF=-0.45
+m1 S300 EXITL30: n= 432 WR= 19.2% net= -4,230 DD= -12,254 RF=-0.35
+m2 hybrid S200: n= 521 WR= 12.7% net=-26,683 DD= -27,314 RF=-0.98
+m2 S250 EXITL30: n= 440 WR= 14.5% net=-24,603 DD= -30,888 RF=-0.80
+m2 S300 EXITL30: n= 396 WR= 17.2% net=-24,752 DD= -30,696 RF=-0.81
+m3 hybrid S200: n= 485 WR= 14.2% net=  4,640 DD= -14,391 RF= 0.32
+m3 S250 EXITL30: n= 424 WR= 14.9% net=  3,457 DD= -19,160 RF= 0.18
+m3 S300 EXITL30: n= 401 WR= 16.2% net= -4,870 DD= -22,288 RF=-0.22
