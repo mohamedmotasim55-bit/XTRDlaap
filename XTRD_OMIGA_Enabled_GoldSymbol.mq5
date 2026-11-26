@@ -186,7 +186,9 @@ void OnTick()
 
    if(CountOurPositions() >= InpMaxConcurrentPositions) return;
    if((long)(TimeCurrent() - g_lastExit) < (long)InpCooldownMin * 60) return;
-   if(TimeHour(TimeCurrent()) != InpTradeHour) return;
+   MqlDateTime dtNow;
+   TimeToStruct(TimeCurrent(), dtNow);
+   if(dtNow.hour != InpTradeHour) return;
    if(SpreadPts() > (double)InpMaxSpreadPts) return;
    if(PulseRatio() < InpPulseRatio) return;
 
