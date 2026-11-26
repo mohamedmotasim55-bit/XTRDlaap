@@ -34,6 +34,7 @@ input string          InpTelemetryFile       = "X13_Omega_Telemetry.csv";
 CTrade   g_trade;
 datetime g_lastExit      = 0;
 bool     g_hadPosition   = false;
+datetime g_blockUntil    = 0;
 double   g_point         = 0.0;
 
 int OnInit()
@@ -184,6 +185,7 @@ void OnTick()
       if(g_lastExit == 0) g_lastExit = TimeCurrent();
    }
 
+   if(TimeCurrent() < g_blockUntil) return;
    if(CountOurPositions() >= InpMaxConcurrentPositions) return;
    if((long)(TimeCurrent() - g_lastExit) < (long)InpCooldownMin * 60) return;
    MqlDateTime dtNow;
@@ -218,13 +220,13 @@ void OnTick()
    {
       double sl = ask - (double)InpStopPts * g_point;
       if(g_trade.Buy(InpLot, _Symbol, 0.0, sl, 0.0, "XTRD-PB"))
-         Telemetry("ENTRY", 1, ask, InpLot, 0, "pullback-buy");
+      { g_blockUntil = TimeCurrent() + 180; Telemetry("ENTRY", 1, ask, InpLot, 0, "pullback-buy"); }
    }
    else
    {
       double sl = bid + (double)InpStopPts * g_point;
       if(g_trade.Sell(InpLot, _Symbol, 0.0, sl, 0.0, "XTRD-PB"))
-         Telemetry("ENTRY", -1, bid, InpLot, 0, "pullback-sell");
+      { g_blockUntil = TimeCurrent() + 180; Telemetry("ENTRY", -1, bid, InpLot, 0, "pullback-sell"); }
    }
 }
 //+------------------------------------------------------------------+
