@@ -1,0 +1,38 @@
+base 34.6% | breakeven 33.3% | n=160,018
+
+=== win rate by combined score (0-5) ===
+           n    wr
+score             
+0      67132  33.4
+1      52525  34.7
+2      25812  35.5
+3      11013  37.5
+4       3457  38.8
+5         79  38.0
+
+=== individual combos ===
+  s_rng+s_rev                            n= 13675 WR= 37.8%  (+ 3.2 vs base)
+  s_rng+s_nt                             n= 11353 WR= 37.2%  (+ 2.6 vs base)
+  s_rev+s_pos                            n= 17837 WR= 36.6%  (+ 2.0 vs base)
+  s_rng+s_rev+s_nt                       n=  4782 WR= 37.8%  (+ 3.2 vs base)
+  s_rng+s_rev+s_nt+s_pos                 n=  2471 WR= 38.9%  (+ 4.3 vs base)
+
+=== same, but SHORT side (sell) ===
+  (short win rate = 1 - long win rate on the same label is NOT valid; measuring separately is needed)
+
+=== volatility-only: top decile rng30 ===
+  rng30 > q50: n= 79939 WR= 35.7%
+  rng30 > q70: n= 47569 WR= 36.4%
+  rng30 > q80: n= 31964 WR= 37.0%
+  rng30 > q90: n= 15963 WR= 37.6%
+  rng30 > q95: n=  7948 WR= 38.7%
+
+=== best cell: high rng30 + recent drop ===
+  n=14799 WR=37.7% | avg r30=-192 | avg rng30=269
+
+=== what does the spread do to these ===
+  WR(mid)=34.6% -> E(mid)= +1.5 | with 26 spread the same WR gives E=-24.5
+  WR(mid)=37.1% -> E(mid)= +4.5 | with 26 spread the same WR gives E=-21.5
+  WR(mid)=40.0% -> E(mid)= +8.0 | with 26 spread the same WR gives E=-18.0
+  WR(mid)=45.0% -> E(mid)=+14.0 | with 26 spread the same WR gives E=-12.0
+  WR(mid)=50.0% -> E(mid)=+20.0 | with 26 spread the same WR gives E= -6.0
