@@ -6,22 +6,32 @@ def load(m):
     ask=np.load(f'/home/openhands/data/{m}_ask.npy').astype(np.float64)/P
     sec=msc//1000; u=np.unique(sec); last=np.searchsorted(sec,u,side='right')-1
     return u,bid[last],ask[last]
-def run(m,L1=40,EXT=50,S=30,HOLD=45,COOL=5,BE1=12,TR=8,HOURS=(1,),DL=0,TFMAX=0,TGT=0):
+def run(m,L1=40,EXT=50,S=30,HOLD=45,COOL=5,BE1=12,TR=8,HOURS=(1,),DL=0,TFMAX=0,TGT=0,KSTREAK=0,MPAUSE=0,ERMAX=0,DT=0):
     u,B,A=load(m); n=len(B); bpm=60; nb=n//bpm
     ix=np.arange(0,nb*bpm,bpm)
     bhi=np.maximum.reduceat(B[:nb*bpm],ix); blo=np.minimum.reduceat(B[:nb*bpm],ix); bcl=B[bpm-1:nb*bpm:bpm]
     ahi=np.maximum.reduceat(A[:nb*bpm],ix); alo=np.minimum.reduceat(A[:nb*bpm],ix); acl=A[bpm-1:nb*bpm:bpm]
     hr=((u[ix]%86400)//3600)
-    pos=0;ent=0.0;stop=0.0;best=0.0;rec=[];last_exit=-10**9;et=0;cur=-1;dn_=0;blk=False
+    pos=0;ent=0.0;stop=0.0;best=0.0;rec=[];last_exit=-10**9;et=0;cur=-1;dn_=0;blk=False;streak=0;paused=0
     for t in range(L1*bpm,nb*bpm):
         if pos==0:
             if t%60: continue
             mi=t//60
             if mi<L1+1 or mi-last_exit<COOL or hr[mi] not in HOURS or blk: continue
+            if paused>0: paused-=1; continue
             hh=bhi[mi-1-L1:mi-1].max(); ll=blo[mi-1-L1:mi-1].min()
+            if ERMAX>0:
+                seg=bcl[max(0,mi-241):mi-1]
+                if len(seg)>10:
+                    net=abs(seg[-1]-seg[0]); path=np.abs(np.diff(seg)).sum()
+                    if path>0 and net/path>ERMAX: continue
             if TFMAX>0:
                 r240=bcl[mi-1]-bcl[max(0,mi-241)]
                 if abs(r240)>TFMAX: continue
+            if DT>0:
+                tr=bcl[mi-1]-bcl[max(0,mi-1-DT)]
+                if bcl[mi-1]>hh+EXT and tr>=0: continue
+                if bcl[mi-1]<ll-EXT and tr<=0: continue
             if bcl[mi-1]>hh+EXT:   pos=-1; ent=B[t]; stop=ent+S; best=ent; et=mi; tg=ent-TGT
             elif bcl[mi-1]<ll-EXT: pos=1; ent=A[t]; stop=ent-S; best=ent; et=mi; tg=ent+TGT
             else: continue
@@ -47,8 +57,10 @@ def run(m,L1=40,EXT=50,S=30,HOLD=45,COOL=5,BE1=12,TR=8,HOURS=(1,),DL=0,TFMAX=0,T
                 rec.append(pnl); pos=0; last_exit=t//60
                 d0=int(u[t]//86400)
                 if d0!=cur: cur=d0; dn_=0; blk=False
-                if pnl<0: dn_+=1
+                if pnl<0: dn_+=1; streak+=1
+                else: streak=0
                 if DL>0 and dn_>=DL: blk=True
+                if KSTREAK>0 and streak>=KSTREAK: paused=MPAUSE; streak=0
     return np.array(rec) if rec else np.array([])
 if __name__=="__main__":
     for cfg in [dict(BE1=12,TR=8,S=30),dict(BE1=12,TR=15,S=35),dict(BE1=20,TR=15,S=35),dict(BE1=0,TR=0,S=35)]:
