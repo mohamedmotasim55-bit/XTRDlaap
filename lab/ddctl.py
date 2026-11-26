@@ -14,7 +14,7 @@ def prep(m):
         ahi=np.maximum.reduceat(As[:N],ix),alo=np.minimum.reduceat(As[:N],ix),acl=As[bpm-1:N:bpm],
         nb=nb,day=(t//86400).astype(np.int32),hour=((t%86400)//3600).astype(np.int32))
     CACHE[m]=d; return d
-def run(m,L1=40,EXITL=4,S=75,COOL=10,DL=0,HOURS=None,EQ=0):
+def run(m,L1=40,EXITL=4,S=75,COOL=10,DL=0,HOURS=None,EQ=0,EXT=0):
     d=prep(m); bhi,blo,bcl,ahi,alo,acl,nb,day,hr=d['bhi'],d['blo'],d['bcl'],d['ahi'],d['alo'],d['acl'],d['nb'],d['day'],d['hour']
     pos=0;ent=0.0;stop=0.0;rec=[];last_exit=-10**9;et=0
     cur=-1;dn_=0;blocked=False;eq=0.0;peak=0.0;killed=False
@@ -25,8 +25,8 @@ def run(m,L1=40,EXITL=4,S=75,COOL=10,DL=0,HOURS=None,EQ=0):
             if blocked or i-last_exit<COOL: continue
             if HOURS and hr[i] not in HOURS: continue
             hh=bhi[i-1-L1:i-1].max(); ll=blo[i-1-L1:i-1].min()
-            if bcl[i-1]>hh:   pos=-1; ent=bcl[i-1]; stop=ent+S
-            elif bcl[i-1]<ll: pos=1; ent=acl[i-1]; stop=ent-S
+            if bcl[i-1]>hh+EXT:   pos=-1; ent=bcl[i-1]; stop=ent+S
+            elif bcl[i-1]<ll-EXT: pos=1; ent=acl[i-1]; stop=ent-S
             else: continue
             et=i
         if pos!=0:
