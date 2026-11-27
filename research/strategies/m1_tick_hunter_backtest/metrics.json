@@ -1,0 +1,18 @@
+{
+  "iteration": "tick59",
+  "summary": {},
+  "deals": 0,
+  "report_attribution": {
+    "per_strategy": {},
+    "per_exit_reason": {}
+  },
+  "telemetry": {},
+  "ledger": {},
+  "sources": {
+    "report": "artifacts/backtest_report.htm",
+    "telemetry": null,
+    "ledger": null,
+    "summary": null
+  },
+  "findings": []
+}
