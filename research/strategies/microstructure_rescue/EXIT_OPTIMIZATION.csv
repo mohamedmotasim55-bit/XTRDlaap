@@ -1,0 +1,13 @@
+scope,combo,side,n,mean_pnl,win_rate,pctpos,ci_lo,ci_hi,verdict
+all,T2_S1,BUY,34886,-26.01,0.0,0.0,-26.01,-26.0,negative
+all,T2_S1,SELL,34886,-26.01,0.0,0.0,-26.01,-26.0,negative
+all,T3_S1,BUY,34886,-26.01,0.0,0.0,-26.01,-26.0,negative
+all,T3_S1,SELL,34886,-26.01,0.0,0.0,-26.01,-26.0,negative
+all,T3_S2,BUY,34886,-22.59,22.3,22.7,-23.17,-21.9,negative
+all,T3_S2,SELL,34886,-20.89,23.6,24.0,-21.59,-20.23,negative
+strong_imb,T2_S1,BUY,16755,-26.01,0.0,0.0,-26.02,-26.0,negative
+strong_imb,T2_S1,SELL,16755,-26.01,0.0,0.0,-26.02,-26.0,negative
+strong_imb,T3_S1,BUY,16755,-26.01,0.0,0.0,-26.02,-26.0,negative
+strong_imb,T3_S1,SELL,16755,-26.01,0.0,0.0,-26.02,-26.0,negative
+strong_imb,T3_S2,BUY,16755,-23.27,21.7,22.2,-24.1,-22.36,negative
+strong_imb,T3_S2,SELL,16755,-20.96,23.4,24.0,-21.8,-19.99,negative

@@ -1,0 +1,23 @@
+hypothesis,detail,result
+dist_low@60s,IG=0.00090,No Predictive Information
+dist_high@60s,IG=0.00063,No Predictive Information
+z@60s,IG=0.00051,No Predictive Information
+v5s@60s,IG=0.00035,No Predictive Information
+v500ms@60s,IG=0.00032,No Predictive Information
+accel@60s,IG=0.00032,No Predictive Information
+atr60_pts@60s,IG=0.00030,No Predictive Information
+v10s@60s,IG=0.00029,No Predictive Information
+v100ms@60s,IG=0.00020,No Predictive Information
+v3s@60s,IG=0.00020,No Predictive Information
+comp_ratio@60s,IG=0.00018,No Predictive Information
+v250ms@60s,IG=0.00014,No Predictive Information
+v1s@60s,IG=0.00014,No Predictive Information
+range60_pts@60s,IG=0.00014,No Predictive Information
+reversals@60s,IG=0.00009,No Predictive Information
+atr300_pts@60s,IG=0.00007,No Predictive Information
+efficiency@60s,IG=0.00007,No Predictive Information
+spread_avg60@60s,IG=0.00000,No Predictive Information
+spread_change@60s,IG=0.00000,No Predictive Information
+bid_upd_rate@60s,IG=0.00000,No Predictive Information
+ask_upd_rate@60s,IG=0.00000,No Predictive Information
+sync@60s,IG=0.00000,No Predictive Information

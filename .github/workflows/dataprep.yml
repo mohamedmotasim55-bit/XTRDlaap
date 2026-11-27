@@ -1,0 +1,203 @@
+name: MT5 Data Prep
+
+on:
+  push:
+    paths:
+      - '.github/workflows/dataprep.yml'
+      - 'tools/DataPrep.mq5'
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: "Symbol to prepare"
+        default: "XAUUSD.m"
+      window_days:
+        description: "Tick window in days to request"
+        default: "365"
+      download_ticks:
+        description: "true = request real ticks"
+        default: "true"
+
+concurrency:
+  group: dataprep-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  INSTALLER_URL: https://download.mql5.com/cdn/web/just.global.markets/mt5/justmarkets5setup.exe
+  MT5_DIR: C:\mt5
+  SYMBOL: ${{ github.event.inputs.symbol || 'XAUUSD.m' }}
+  WINDOW_DAYS: ${{ github.event.inputs.window_days || '365' }}
+  DL_TICKS: ${{ github.event.inputs.download_ticks || 'true' }}
+
+jobs:
+  dataprep:
+    runs-on: windows-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        shell: pwsh
+        env:
+          MT5_LOGIN: ${{ secrets.MT5_LOGIN }}
+          MT5_PASSWORD: ${{ secrets.MT5_PASSWORD }}
+          MT5_SERVER: ${{ secrets.MT5_SERVER }}
+        run: |
+          $missing = @()
+          if ([string]::IsNullOrWhiteSpace($env:MT5_LOGIN))    { $missing += 'MT5_LOGIN' }
+          if ([string]::IsNullOrWhiteSpace($env:MT5_PASSWORD)) { $missing += 'MT5_PASSWORD' }
+          if ([string]::IsNullOrWhiteSpace($env:MT5_SERVER))   { $missing += 'MT5_SERVER' }
+          if ($missing.Count -gt 0) { Write-Error ("Missing secrets: " + ($missing -join ', ')); exit 1 }
+
+      - name: Restore MT5 installation cache
+        id: mt5cache
+        uses: actions/cache@v4
+        with:
+          path: C:\mt5
+          key: mt5-justmarkets-v2
+
+      - name: Install JustMarkets MT5 (silent)
+        if: steps.mt5cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP 'justmarkets5setup.exe'
+          Invoke-WebRequest -Uri $env:INSTALLER_URL -OutFile $installer -UseBasicParsing
+          $p = Start-Process -FilePath $installer -ArgumentList '/auto' -Wait -PassThru
+          Write-Host "Installer exit code: $($p.ExitCode)"
+          $found = @()
+          foreach ($root in @('C:\Program Files', 'C:\Program Files (x86)', $env:LOCALAPPDATA)) {
+            if (Test-Path $root) {
+              $found += Get-ChildItem -Path $root -Filter 'terminal64.exe' -Recurse -ErrorAction SilentlyContinue |
+                        Where-Object { Test-Path (Join-Path $_.DirectoryName 'metaeditor64.exe') }
+            }
+          }
+          if ($found.Count -eq 0) { Write-Error 'MT5 not found after install.'; exit 1 }
+          New-Item -ItemType Directory -Force -Path $env:MT5_DIR | Out-Null
+          Copy-Item -Path (Join-Path $found[0].DirectoryName '*') -Destination $env:MT5_DIR -Recurse -Force
+
+      - name: Save MT5 installation cache
+        if: always() && steps.mt5cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: C:\mt5
+          key: mt5-justmarkets-v2
+
+      - name: Restore downloaded data cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\mt5\bases
+            C:\mt5\Tester
+          key: mt5data-${{ github.event.inputs.symbol || 'XAUUSD.m' }}-${{ github.event.inputs.window_days || '365' }}-v1
+
+      - name: Resolve MT5 paths
+        shell: pwsh
+        run: |
+          $terminal = Join-Path $env:MT5_DIR 'terminal64.exe'
+          $metaeditor = Join-Path $env:MT5_DIR 'metaeditor64.exe'
+          if (-not (Test-Path $terminal))   { Write-Error "terminal64.exe missing"; exit 1 }
+          if (-not (Test-Path $metaeditor)) { Write-Error "metaeditor64.exe missing"; exit 1 }
+          "TERMINAL=$terminal"     | Out-File -FilePath $env:GITHUB_ENV -Append
+          "METAEDITOR=$metaeditor" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $experts = Join-Path $env:MT5_DIR 'MQL5\Experts'
+          New-Item -ItemType Directory -Force -Path $experts | Out-Null
+          "EXPERTS_DIR=$experts" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Compile DataPrep
+        shell: pwsh
+        run: |
+          $src = Join-Path $env:EXPERTS_DIR 'DataPrep.mq5'
+          Copy-Item 'tools/DataPrep.mq5' $src -Force
+          $log = Join-Path $env:RUNNER_TEMP 'dataprep-compile.log'
+          Start-Process -FilePath $env:METAEDITOR -ArgumentList "/portable","/compile:$src","/log:$log" -Wait | Out-Null
+          if (-not (Test-Path $log)) { Write-Error 'no compile log'; exit 1 }
+          $text = Get-Content $log -Encoding Unicode -Raw
+          Write-Host $text
+          if ($text -match '(\d+)\s+errors?') { if ([int]$Matches[1] -gt 0) { Write-Error "compile errors: $($Matches[1])"; exit 1 } }
+          if (-not (Test-Path (Join-Path $env:EXPERTS_DIR 'DataPrep.ex5'))) { Write-Error 'no ex5'; exit 1 }
+
+      - name: Run DataPrep inside MT5
+        shell: pwsh
+        env:
+          MT5_LOGIN: ${{ secrets.MT5_LOGIN }}
+          MT5_PASSWORD: ${{ secrets.MT5_PASSWORD }}
+          MT5_SERVER: ${{ secrets.MT5_SERVER }}
+        run: |
+          $ini = Join-Path $env:MT5_DIR 'dataprep.ini'
+          @(
+            '[Common]',
+            "Login=$env:MT5_LOGIN",
+            "Password=$env:MT5_PASSWORD",
+            "Server=$env:MT5_SERVER",
+            'KeepPrivate=0',
+            '[StartUp]',
+            'Expert=DataPrep.ex5',
+            "Symbol=$env:SYMBOL",
+            'Period=M1',
+            'ExpertParameters=DataPrep.set'
+          ) | Set-Content -Path $ini -Encoding ASCII
+
+          $presets = Join-Path $env:MT5_DIR 'MQL5\Presets'
+          New-Item -ItemType Directory -Force -Path $presets | Out-Null
+          $setLines = @(
+            "InpSymbol=$env:SYMBOL",
+            "InpWindowDays=$env:WINDOW_DAYS",
+            "InpDownloadTicks=$env:DL_TICKS",
+            'InpChunkDays=7'
+          )
+          $setLines | Set-Content -Path (Join-Path $presets 'DataPrep.set') -Encoding ASCII
+          $setLines | Set-Content -Path (Join-Path $env:EXPERTS_DIR 'DataPrep.set') -Encoding ASCII
+
+          $p = Start-Process -FilePath $env:TERMINAL -ArgumentList '/portable',"/config:$ini" -PassThru
+          Write-Host "terminal pid $($p.Id)"
+
+          $cands = @(
+            (Join-Path $env:MT5_DIR 'Common\Files\dataprep.csv'),
+            (Join-Path $env:APPDATA 'MetaQuotes\Terminal\Common\Files\dataprep.csv')
+          )
+          $deadline = (Get-Date).AddMinutes(240)
+          $done = $false
+          while ((Get-Date) -lt $deadline) {
+            Start-Sleep -Seconds 20
+            foreach ($c in $cands) {
+              if (Test-Path $c) {
+                $txt = Get-Content $c -Raw -ErrorAction SilentlyContinue
+                if ($txt -match 'done') { $done = $true; break }
+              }
+            }
+            if ($done) { break }
+            if ($p.HasExited) { Write-Host 'terminal exited early'; break }
+          }
+          try { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue } catch {}
+          if (-not $done) { Write-Error 'DataPrep did not finish in time.'; exit 1 }
+
+      - name: Show coverage
+        shell: pwsh
+        run: |
+          foreach ($c in @((Join-Path $env:MT5_DIR 'Common\Files\dataprep.csv'),
+                           (Join-Path $env:APPDATA 'MetaQuotes\Terminal\Common\Files\dataprep.csv'))) {
+            if (Test-Path $c) { Write-Host "=== $c ==="; Get-Content $c; Copy-Item $c 'dataprep.csv' -Force }
+          }
+          $bytes = 0
+          foreach ($d in @((Join-Path $env:MT5_DIR 'bases'), (Join-Path $env:MT5_DIR 'Tester'))) {
+            if (Test-Path $d) { $bytes += (Get-ChildItem $d -Recurse -File | Measure-Object Length -Sum).Sum }
+          }
+          Write-Host ("data size: {0:N2} GB" -f ($bytes/1GB))
+
+      - name: Save downloaded data cache
+        if: success()
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            C:\mt5\bases
+            C:\mt5\Tester
+          key: mt5data-${{ github.event.inputs.symbol || 'XAUUSD.m' }}-${{ github.event.inputs.window_days || '365' }}-v1
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dataprep-${{ github.event.inputs.symbol || 'XAUUSD.m' }}-${{ github.event.inputs.window_days || '365' }}d
+          path: dataprep.csv
+          if-no-files-found: warn

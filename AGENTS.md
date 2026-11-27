@@ -1,35 +1,36 @@
-# Agent notes — XTRDlaap
+# AGENTS.md — repository memory
 
-## What this repo is
-One MQL5 expert advisor (`XTRD_OMIGA_Enabled_GoldSymbol.mq5`) plus the CI/tooling to
-stress-test it on JustMarkets Standard XAUUSD (spread 25-35 pts, no commission,
-100 USD deposit, 1:1000 leverage).
+## Purpose
+This repository is an MT5 backtest laboratory. It contains no trading bots by design.
+The owner supplies one EA file at a time; only that EA is tested.
 
-## Hard constraints discovered
-- **MetaEditor cannot run under wine here.** `MetaEditor64.exe` is protected and
-  aborts with "A debugger has been found running in your system". `terminal64.exe`
-  installs fine under wine, but there is no offline compiler. So local compilation
-  is impossible; `tools/mql5_lint.py` is the local proxy, CI is authoritative.
-- **The GitHub credential in this environment has no `contents` write permission**
-  (`403 Resource not accessible by integration` on push and on the contents API),
-  so workflow files cannot be pushed and runs cannot be dispatched.
-- **No MT5 credentials** (`MT5_LOGIN`, `MT5_PASSWORD`, `MT5_SERVER`); without a login
-  the tester cannot download XAUUSD tick history, so no backtest can run anywhere.
-- A backtest also needs a **hedging** account: `OnInit` returns `INIT_FAILED` on
-  netting (`InpRequireHedgingAccount = true`).
+## Infrastructure
+- `.github/workflows/backtest.yml` — installs JustMarkets MT5 on windows-latest,
+  compiles the EA (fails on any compile error), runs the strategy tester, and
+  uploads artifacts (report HTML, telemetry, summary, logs).
+- `tools/SymbolScan.mq5` — utility EA used by the workflow to enumerate symbols.
+- `tools/analyze_backtest.py`, `tools/mql5_lint.py` — used by the workflow.
 
-## Conventions
-- Unit system: 2-digit gold, `point = 0.01`, 1 point on 0.01 lot = 0.01 USD.
-  A 30-point spread costs 0.30 USD per 0.01 lot per round trip.
-- All trade geometry must be expressed in **multiples of the live spread**, never in
-  absolute points tuned for a low-spread ECN account. See `docs/DIAGNOSIS.md`.
-- Any change that touches `BuildSignal`/`ManagePositions` must keep the break-even
-  and trailing locks above `1 * spread`, otherwise the trade cannot close green.
-- Run `python3 tools/mql5_lint.py XTRD_OMIGA_Enabled_GoldSymbol.mq5` before every
-  commit; it catches undefined calls, wrong argument counts and undeclared
-  `Inp*`/`g_*` identifiers.
+## How to run a backtest
+```
+gh workflow run backtest.yml --ref <branch> -f ea=<EAName> -f deposit=<usd> -f days=<n> -f tag=<label>
+```
+Optional: `-f spread_pts=<n>` forces a fixed spread; `-f extra_inputs="InpA=1,InpB=2"`.
 
-## Loop
-`tools/run_iteration.sh <tag> [days] [model] [exec_ms]` → lint, push, dispatch,
-`gh run watch`, download artifacts, `tools/analyze_backtest.py`, append the row to
-`CHANGELOG.md`. Revert when the new score is below the best previous score.
+The EA file must sit in the repository root as `<EAName>.mq5`.
+
+## Locked test conditions
+- Broker: JustMarkets, Standard account
+- Symbol: XAUUSD.m, M1, Model=4 (every tick based on real ticks)
+- Leverage 1:3000, no commission, spread ~26 points
+- Verified data coverage (from dataprep run 45383070437):
+  - real ticks: 2025.11.24 -> 2026.11.24, 85,471,198 ticks (1 year)
+  - M5: from 2025.06.27, M15: 2022.08.25, M30/H1/H4/D1: 2011.11.02
+  - M1 via CopyRates caps at 100,000 bars (chart limit); the tester loads
+    641,830 M1 bars from 2025.01.02 on its own
+  - data size 0.61 GB, cached under key mt5data-XAUUSD.m-365-v1
+
+## Rules
+- Never modify the user's EA beyond fixing trivial compile errors.
+- Never enable min-lot override or raise risk without explicit approval.
+- Run only the EA the user names.

@@ -1,0 +1,7 @@
+rank,kind,best_side,best_horizon,n,mean_net,verdict
+1,SWEEP_SW_HIGH,SELL,60m,1468,71.83,inconclusive
+2,SWEEP_PD_HIGH,SELL,30m,217,42.77,inconclusive
+3,WICK_HIGH,SELL,60m,1433,12.2,inconclusive
+4,SWEEP_PD_LOW,BUY,5m,236,-26.35,inconclusive
+5,SWEEP_SW_LOW,BUY,10m,1910,-28.3,negative
+6,WICK_LOW,BUY,1m,1513,-32.25,negative

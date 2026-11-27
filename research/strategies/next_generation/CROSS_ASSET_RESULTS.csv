@@ -1,0 +1,5 @@
+asset,status,note
+DXY,NOT_TESTED,no external data in MT5 XAUUSD.m tick feed
+XAGUSD,NOT_TESTED,not collected
+BONDS,NOT_TESTED,not collected
+NEWS,NOT_TESTED,no calendar data collected

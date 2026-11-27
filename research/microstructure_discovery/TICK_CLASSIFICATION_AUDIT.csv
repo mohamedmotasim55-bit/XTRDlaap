@@ -1,0 +1,16 @@
+rule,metric,value
+tick_rule_1s,mean_tickdir_up,0.3763
+tick_rule_1s,mean_tickdir_dn,0.3761
+tick_rule_1s,mean_tickdir_zero,0.2476
+tick_rule_up_tercile_500ms,bin0_P_up,0.3443
+tick_rule_up_tercile_500ms,bin1_P_up,0.4147
+tick_rule_up_tercile_500ms,bin2_P_up,0.4574
+tick_rule_up_tercile_500ms,base_P_up,0.3998
+tick_rule_up_tercile_1s,bin0_P_up,0.4038
+tick_rule_up_tercile_1s,bin1_P_up,0.4548
+tick_rule_up_tercile_1s,bin2_P_up,0.4884
+tick_rule_up_tercile_1s,base_P_up,0.4447
+tick_rule_up_tercile_5s,bin0_P_up,0.4714
+tick_rule_up_tercile_5s,bin1_P_up,0.4887
+tick_rule_up_tercile_5s,bin2_P_up,0.5106
+tick_rule_up_tercile_5s,base_P_up,0.4879

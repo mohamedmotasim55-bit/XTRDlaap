@@ -1,0 +1,7 @@
+kind,side,horizon,n,mean_gross,mean_net,pctpos,verdict
+SWEEP_PD_HIGH,SELL,5m,217,16.21,-42.21,49.3,negative
+SWEEP_PD_LOW,BUY,5m,236,-0.35,-26.35,43.2,inconclusive
+SWEEP_SW_HIGH,SELL,5m,1468,1.22,-27.24,44.6,negative
+SWEEP_SW_LOW,BUY,5m,1910,-6.08,-32.08,42.1,negative
+WICK_HIGH,SELL,5m,1433,-6.67,-19.33,47.4,negative
+WICK_LOW,BUY,5m,1513,-16.64,-42.65,41.6,negative

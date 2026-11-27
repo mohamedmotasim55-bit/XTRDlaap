@@ -19,8 +19,8 @@ on:
         description: "Override the auto-detected gold symbol (empty = auto-detect)"
         default: ""
       ea:
-        description: "Expert file base name to test (no extension)"
-        default: "XTRD_OMIGA_Enabled_GoldSymbol"
+        description: "Expert file base name to test (no extension). Required."
+        default: ""
       deposit:
         description: "Starting deposit in USD"
         default: "10"
@@ -39,6 +39,12 @@ on:
       to_date:
         description: "End date yyyy-MM-dd (empty = yesterday), for month-by-month validation"
         default: ""
+      set_file:
+        description: "Optional .set file at repository root, applied as ExpertParameters"
+        default: ""
+      period:
+        description: "Chart period for the test (M1, M5, M15, H1)"
+        default: "M1"
       optimize:
         description: "0=off, 1=slow complete, 2=fast genetic"
         default: "0"
@@ -58,16 +64,18 @@ permissions:
   contents: read
 
 concurrency:
-  group: backtest-${{ github.ref }}
+  group: backtest-${{ github.ref }}-${{ github.event.inputs.tag || 'push' }}
   cancel-in-progress: false
 
 env:
   INSTALLER_URL: https://download.mql5.com/cdn/web/just.global.markets/mt5/justmarkets5setup.exe
-  EA_NAME: ${{ github.event.inputs.ea || 'XTRD_OMIGA_Enabled_GoldSymbol' }}
+  EA_NAME: ${{ github.event.inputs.ea }}
   INPUT_RISK: ${{ github.event.inputs.risk_pct }}
   INPUT_POS: ${{ github.event.inputs.max_positions }}
   INPUT_EXTRA: ${{ github.event.inputs.extra_inputs }}
   SPREAD_PTS: ${{ github.event.inputs.spread_pts }}
+  SET_FILE: ${{ github.event.inputs.set_file }}
+  PERIOD: ${{ github.event.inputs.period || 'M1' }}
   MT5_DIR: C:\mt5
 
 jobs:
@@ -77,6 +85,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate EA file
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:EA_NAME)) {
+            Write-Error "No EA given. Run with -f ea=<FileName> (file must exist at repository root as <FileName>.mq5)."
+            exit 1
+          }
+          $src = Join-Path $env:GITHUB_WORKSPACE "$env:EA_NAME.mq5"
+          $bin = Join-Path $env:GITHUB_WORKSPACE "$env:EA_NAME.ex5"
+          if (-not (Test-Path $src) -and -not (Test-Path $bin)) {
+            Write-Error "Neither $env:EA_NAME.mq5 nor $env:EA_NAME.ex5 found at the repository root."
+            exit 1
+          }
+          if (Test-Path $src) { Write-Host "EA validated (source): $env:EA_NAME.mq5" }
+          else { Write-Host "EA validated (pre-compiled): $env:EA_NAME.ex5" }
 
       - name: Validate required secrets
         shell: pwsh
@@ -170,6 +194,19 @@ jobs:
           }
           Write-Warning 'MQL5 standard library unavailable on this runner'
 
+      # Reuse ticks/rates downloaded by the dataprep workflow so backtests do
+      # not re-download a year of real ticks on every run.
+      - name: Restore downloaded data cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\mt5\bases
+            C:\mt5\Tester
+          key: mt5data-XAUUSD.m-365-v1
+          restore-keys: |
+            mt5data-XAUUSD.m-
+            mt5data-
+
       - name: Resolve MT5 paths
         shell: pwsh
         run: |
@@ -188,7 +225,12 @@ jobs:
       - name: Copy expert source
         shell: pwsh
         run: |
-          Copy-Item -Path "$env:EA_NAME.mq5" -Destination (Join-Path $env:EXPERTS_DIR "$env:EA_NAME.mq5") -Force
+          if (Test-Path "$env:EA_NAME.mq5") {
+            Copy-Item -Path "$env:EA_NAME.mq5" -Destination (Join-Path $env:EXPERTS_DIR "$env:EA_NAME.mq5") -Force
+          }
+          if (Test-Path "$env:EA_NAME.ex5") {
+            Copy-Item -Path "$env:EA_NAME.ex5" -Destination (Join-Path $env:EXPERTS_DIR "$env:EA_NAME.ex5") -Force
+          }
           Get-ChildItem $env:EXPERTS_DIR | Select-Object Name, Length | Format-Table
 
       - name: Static MQL5 checks
@@ -203,6 +245,14 @@ jobs:
         run: |
           $log = Join-Path $env:RUNNER_TEMP 'compile.log'
           $src = Join-Path $env:EXPERTS_DIR "$env:EA_NAME.mq5"
+          $prebuilt = Join-Path $env:EXPERTS_DIR "$env:EA_NAME.ex5"
+          if (-not (Test-Path $src)) {
+            if (-not (Test-Path $prebuilt)) { Write-Error 'Neither source nor pre-compiled expert is available.'; exit 1 }
+            if ((Get-Item $prebuilt).Length -lt 1024) { Write-Error 'Pre-compiled EX5 looks truncated.'; exit 1 }
+            "Pre-compiled expert supplied; MetaEditor compile skipped." | Set-Content -Path (Join-Path $env:RUNNER_TEMP 'compile-artifact.log')
+            Write-Host "Using pre-compiled expert: $prebuilt ($((Get-Item $prebuilt).Length) bytes)"
+            exit 0
+          }
           Write-Host "Compiling $src"
           $p = Start-Process -FilePath $env:METAEDITOR -ArgumentList "/portable","/compile:$src","/log:$log" -Wait -PassThru
           # metaeditor64.exe returns 1 even on a clean build, so the log text and
@@ -333,7 +383,7 @@ jobs:
             '[Tester]',
             "Expert=$env:EA_NAME.ex5",
             "Symbol=$env:SYMBOL",
-            'Period=M1',
+            "Period=$env:PERIOD",
             "Model=$env:MODEL",
             "ExecutionMode=$env:EXECMODE",
             "Optimization=$env:OPT",
@@ -343,12 +393,22 @@ jobs:
             'Leverage=1:3000',
             "FromDate=$($from.ToString('yyyy.MM.dd'))",
             "ToDate=$($to.ToString('yyyy.MM.dd'))",
-            "Report=$report",
+            "Report=$report.htm",
             'ReplaceReport=1',
             'Visual=0',
-            'ShutdownTerminal=1'
+            'ShutdownTerminal=0'
           )
           if ($env:OPT -ne '0') { $lines += "OptimizationCriterion=$env:OPTCRIT" }
+          if ($env:SET_FILE -ne '') {
+            $setSrc = Join-Path $env:GITHUB_WORKSPACE $env:SET_FILE
+            if (Test-Path $setSrc) {
+              $prof = Join-Path $env:MT5_DIR 'MQL5\Profiles\Tester'
+              New-Item -ItemType Directory -Force -Path $prof | Out-Null
+              Copy-Item $setSrc (Join-Path $prof $env:SET_FILE) -Force
+              $lines += "ExpertParameters=$env:SET_FILE"
+              Write-Host "Expert parameters file: $env:SET_FILE"
+            } else { Write-Warning "set file not found: $setSrc" }
+          }
           if ($env:SPREAD_PTS -ne '') { $lines += "Spread=$env:SPREAD_PTS" }
           if ($env:INPUT_RISK -ne '' -or $env:INPUT_POS -ne '' -or $env:INPUT_EXTRA -ne '') {
             $lines += '[TesterInputs]'
@@ -357,6 +417,9 @@ jobs:
             if ($env:INPUT_EXTRA -ne '') { $env:INPUT_EXTRA.Split(',') | ForEach-Object { if ($_.Trim() -ne '') { $lines += $_.Trim() } } }
           }
           $lines | Set-Content -Path $ini -Encoding ASCII
+          $iniRel = Join-Path $env:MT5_DIR 'tester_rel.ini'
+          ($lines | ForEach-Object { if ($_ -match '^Report=') { 'Report=report' } else { $_ } }) | Set-Content -Path $iniRel -Encoding ASCII
+          "TESTER_INI_REL=$iniRel" | Out-File -FilePath $env:GITHUB_ENV -Append
           Write-Host "----- tester.ini (password masked) -----"
           Get-Content $ini | ForEach-Object { $_ -replace '^Password=.*', 'Password=***' }
           "TESTER_INI=$ini" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -367,26 +430,42 @@ jobs:
         run: |
           # MT5 sometimes cancels the tick download on a cold start and then
           # aborts with "no history data"; a retry reuses the cached ticks.
-          for ($attempt = 1; $attempt -le 3; $attempt++) {
-          Write-Host "===== tester attempt $attempt ====="
-          $p = Start-Process -FilePath $env:TERMINAL -ArgumentList '/portable', "/config:$env:TESTER_INI" -PassThru
-          $deadline = (Get-Date).AddMinutes(25)
-          $lastCpu = -1
-          $stall = 0
-          while (-not $p.HasExited -and (Get-Date) -lt $deadline) {
-            Start-Sleep -Seconds 20
-            $p.Refresh()
-            $cpu = 0
-            try { $cpu = [int]((Get-Process -Id $p.Id).CPU) } catch { }
-            Write-Host ("[{0:HH:mm:ss}] terminal alive, cpu={1}s" -f (Get-Date), $cpu)
-            if ($cpu -eq $lastCpu) { $stall++ } else { $stall = 0; $lastCpu = $cpu }
-            if ($stall -ge 9) { Write-Warning 'CPU idle for 3 minutes; treating as hung.'; break }
-          }
-          if (-not $p.HasExited) {
-            Write-Warning 'Tester exceeded the time budget; stopping terminal.'
-            Stop-Process -Id $p.Id -Force
-          } else {
-            Write-Host "Terminal exited with code $($p.ExitCode)"
+          $reportFile = "$env:REPORT_BASE.htm"
+          $configs = @($env:TESTER_INI_REL, $env:TESTER_INI)
+          for ($attempt = 0; $attempt -lt $configs.Count; $attempt++) {
+            if (Test-Path $reportFile) { break }
+            Write-Host "===== tester attempt $($attempt+1) using $($configs[$attempt]) ====="
+            if ($attempt -gt 0) {
+              Get-Process terminal64 -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+              Start-Sleep -Seconds 5
+            }
+            $p = Start-Process -FilePath $env:TERMINAL -ArgumentList '/portable', "/config:$($configs[$attempt])" -PassThru
+            $deadline = (Get-Date).AddMinutes(95)
+            $lastCpu = -1
+            $stall = 0
+            while (-not $p.HasExited -and (Get-Date) -lt $deadline) {
+              Start-Sleep -Seconds 10
+              if (Test-Path $reportFile) { Write-Host 'HTML report appeared.'; break }
+              $done = $false
+              Get-ChildItem (Join-Path $env:MT5_DIR 'Tester') -Filter '*.log' -Recurse -ErrorAction SilentlyContinue |
+                ForEach-Object { if (Select-String -Path $_.FullName -Pattern 'automatic testing finished','final balance' -Quiet -ErrorAction SilentlyContinue) { $done = $true } }
+              if ($done) { Write-Host 'Tester reported completion.'; Start-Sleep -Seconds 12; break }
+              $p.Refresh()
+              $cpu = 0
+              try { $cpu = [int]((Get-Process -Id $p.Id).CPU) } catch { }
+              if ($cpu -eq $lastCpu) { $stall++ } else { $stall = 0; $lastCpu = $cpu }
+              if ($stall -ge 10) { Write-Warning 'CPU idle for 100s; treating as finished.'; break }
+            }
+            if (-not (Test-Path $reportFile) -and -not $p.HasExited) {
+              Write-Host 'Closing terminal gracefully so it can flush the report.'
+              try { $p.CloseMainWindow() | Out-Null } catch { }
+              for ($i = 0; $i -lt 20; $i++) {
+                Start-Sleep -Seconds 2
+                if (Test-Path $reportFile -or $p.HasExited) { break }
+              }
+            }
+            if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+            Write-Host "report present after attempt $($attempt+1): $(Test-Path $reportFile)"
           }
           Write-Host '----- report/csv files produced -----'
           Get-ChildItem -Path $env:MT5_DIR -Include '*.htm','*.html','*.csv','*.xml' -Recurse -ErrorAction SilentlyContinue |
@@ -402,10 +481,6 @@ jobs:
             }
           }
           Write-Host "summary files found: $($summaryCsv.Count)"
-          if ((Test-Path "$env:REPORT_BASE.htm") -or ($summaryCsv.Count -gt 0)) { break }
-          Write-Host '----- no result yet, retrying after a short pause -----'
-          Start-Sleep -Seconds 15
-          }
 
           if ((-not (Test-Path "$env:REPORT_BASE.htm")) -and ($summaryCsv.Count -eq 0)) {
             Write-Host '----- terminal log tail -----'
@@ -468,6 +543,22 @@ jobs:
             python tools/analyze_backtest.py --iteration "${{ inputs.tag || github.run_number }}" --out artifacts/metrics.json
           } else {
             Write-Warning 'No artifacts directory to analyse.'
+          }
+
+      - name: Package tick dump
+        if: always()
+        shell: pwsh
+        run: |
+          $common = Join-Path $env:APPDATA 'MetaQuotes\Terminal\Common\Files'
+          $src = Join-Path $common 'XTRD_TICKS.csv'
+          if (Test-Path $src) {
+            $out = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
+            New-Item -ItemType Directory -Force -Path $out | Out-Null
+            $dst = Join-Path $out 'XTRD_TICKS.zip'
+            Compress-Archive -Path $src -DestinationPath $dst -Force
+            Write-Host "tick dump packaged: $((Get-Item $dst).Length) bytes"
+          } else {
+            Write-Host "no tick dump at $src"
           }
 
       - name: Upload backtest artifacts

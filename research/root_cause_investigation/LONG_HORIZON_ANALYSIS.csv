@@ -1,0 +1,5 @@
+horizon,n,mean_gross_pts,mean_net_pts,mfe_mean,mae_mean,pctpos,verdict
+5m,32142,0.09,-25.93,208.63,-259.59,45.8,Negative evidence
+10m,32139,-2.0,-28.02,308.51,-359.78,46.7,Negative evidence
+15m,32136,-0.0,-26.02,384.33,-436.28,47.5,Negative evidence
+30m,32126,-1.08,-27.1,557.07,-610.13,48.2,Negative evidence

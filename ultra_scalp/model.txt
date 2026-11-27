@@ -1,0 +1,29 @@
+train (343377, 31) win 34.9% | test (159994, 31) win 34.7%
+breakeven mid-based = 33.3% | needed with 26 spread at T80/S40 = 45.2%
+
+=== logit === AUC on OOS = 0.5162
+   prob 0.191-0.350: n= 79996 actual WR= 33.7%
+   prob 0.350-0.363: n= 31999 actual WR= 35.4%
+   prob 0.363-0.371: n= 15999 actual WR= 35.1%
+   prob 0.371-0.382: n= 15999 actual WR= 35.8%
+   prob 0.382-0.392: n=  8000 actual WR= 35.8%
+   prob 0.392-0.402: n=  4800 actual WR= 37.2%
+   prob 0.402-0.409: n=  1600 actual WR= 36.1%
+   prob 0.409-0.501: n=  1600 actual WR= 38.6%
+   top 2%: n=  3200 WR= 37.4% E_mid= +4.9 E_with_spread=-21.1
+   top 5%: n=  8000 WR= 37.2% E_mid= +4.7 E_with_spread=-21.3
+   top 10%: n= 16000 WR= 36.5% E_mid= +3.8 E_with_spread=-22.2
+
+=== gbm === AUC on OOS = 0.5203
+   prob 0.148-0.353: n= 79996 actual WR= 33.4%
+   prob 0.353-0.364: n= 31999 actual WR= 35.2%
+   prob 0.364-0.371: n= 15999 actual WR= 36.2%
+   prob 0.371-0.383: n= 15999 actual WR= 36.2%
+   prob 0.383-0.394: n=  8000 actual WR= 37.2%
+   prob 0.394-0.407: n=  4800 actual WR= 37.2%
+   prob 0.407-0.418: n=  1600 actual WR= 35.8%
+   prob 0.418-0.513: n=  1600 actual WR= 38.6%
+   top 2%: n=  3200 WR= 37.2% E_mid= +4.6 E_with_spread=-21.4
+   top 5%: n=  8000 WR= 37.2% E_mid= +4.6 E_with_spread=-21.4
+   top 10%: n= 16000 WR= 37.2% E_mid= +4.6 E_with_spread=-21.4
+

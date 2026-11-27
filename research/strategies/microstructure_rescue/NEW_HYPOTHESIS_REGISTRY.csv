@@ -1,0 +1,6 @@
+id,hypothesis,test,result
+H1,longer horizon accumulates drift,NET 30-300s,see HOLDING_HORIZON_RESULTS
+H2,delayed entry improves price,immediate vs +1s/+5s,see ENTRY_TIMING_RESULTS
+H3,skewed T/S captures fat tails,first-passage T2_S1/T3_S1/T3_S2,see EXIT_OPTIMIZATION
+H4,regime makes imbalance economical,vol x rate interaction,see REGIME_DISCOVERY
+H5,cost/latency tolerance,cost stress,see COST_AND_LATENCY_RESULTS

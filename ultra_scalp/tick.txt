@@ -1,0 +1,24 @@
+ticks 10,755,156 | median inter-tick gap 0.07s
+
+=== autocorrelation at TICK level (lag in ticks) ===
+  lag   1 ticks: corr=+0.2039
+  lag   2 ticks: corr=+0.0767
+  lag   3 ticks: corr=+0.0426
+  lag   5 ticks: corr=+0.0178
+  lag  10 ticks: corr=-0.0111
+  lag  20 ticks: corr=-0.0003
+  lag  50 ticks: corr=-0.0002
+  lag 100 ticks: corr=+0.0000
+
+=== runs: after k consecutive same-direction ticks, next move ===
+   3 up-ticks: n=1,023,761  next20ticks= +1.68 pts  net=-24.32
+   3 dn-ticks: n=1,021,292  next20ticks=-154.00 pts  net=-180.00
+   5 up-ticks: n=295,913  next20ticks= +2.01 pts  net=-23.99
+   5 dn-ticks: n=290,975  next20ticks=-154.00 pts  net=-180.00
+   8 up-ticks: n= 51,203  next20ticks= +2.31 pts  net=-23.69
+   8 dn-ticks: n= 48,969  next20ticks=-154.00 pts  net=-180.00
+  12 up-ticks: n=  5,523  next20ticks= +2.49 pts  net=-23.51
+  12 dn-ticks: n=  5,037  next20ticks=-154.00 pts  net=-180.00
+
+=== conditional on tick speed (ticks per second) ===
+  ticks/sec: p10=2 p50=7 p90=11 max=61

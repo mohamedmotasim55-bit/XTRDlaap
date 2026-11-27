@@ -1,0 +1,25 @@
+feature,horizon,seg,n,p_up,base,lift,mean_net_buy,mean_net_sell,verdict
+imb250ms,1s,discovery,8304,0.3791,0.4382,-0.0591,-28.14,-23.87,sell candidate
+imb250ms,1s,validation,2983,0.3802,0.4459,-0.0657,-28.79,-23.25,sell candidate
+imb250ms,1s,oos,2300,0.3661,0.4638,-0.0977,-29.46,-22.54,sell candidate
+imb100ms,1s,discovery,12713,0.4934,0.4382,+0.0552,-24.07,-27.95,no edge
+imb100ms,1s,validation,4813,0.5032,0.4459,+0.0574,-24.02,-28.04,no edge
+imb100ms,1s,oos,4153,0.5389,0.4638,+0.0751,-23.40,-28.66,no edge
+imb500ms,1s,discovery,6883,0.4967,0.4382,+0.0585,-23.75,-28.28,no edge
+imb500ms,1s,validation,2598,0.3799,0.4459,-0.0659,-29.03,-23.02,sell candidate
+imb500ms,1s,oos,1995,0.3694,0.4638,-0.0944,-29.81,-22.19,sell candidate
+tickdir_up,1s,discovery,7057,0.3677,0.4382,-0.0705,-27.24,-24.76,sell candidate
+tickdir_up,1s,validation,2270,0.3749,0.4459,-0.0710,-27.83,-24.18,sell candidate
+tickdir_up,1s,oos,1948,0.5508,0.4638,+0.0870,-23.11,-29.00,buy candidate
+mom1s,1s,discovery,6863,0.4947,0.4382,+0.0565,-24.63,-27.41,no edge
+mom1s,1s,validation,2892,0.4990,0.4459,+0.0531,-24.81,-27.31,no edge
+mom1s,1s,oos,1749,0.5277,0.4638,+0.0639,-23.74,-28.29,no edge
+accel,1s,discovery,6951,0.4909,0.4382,+0.0527,-24.62,-27.43,no edge
+accel,1s,validation,2946,0.4949,0.4459,+0.0491,-25.09,-27.02,no edge
+accel,1s,oos,1993,0.4145,0.4638,-0.0493,-27.17,-24.83,sell candidate
+tick_rate,1s,discovery,7145,0.3812,0.4382,-0.0569,-26.18,-25.85,sell candidate
+tick_rate,1s,validation,2021,0.3998,0.4459,-0.0461,-26.12,-26.00,sell candidate
+tick_rate,1s,oos,1056,0.4233,0.4638,-0.0405,-25.88,-26.33,sell candidate
+vol1s,1s,discovery,7054,0.3801,0.4382,-0.0581,-26.07,-25.95,sell candidate
+vol1s,1s,validation,2078,0.3956,0.4459,-0.0503,-26.33,-25.78,sell candidate
+vol1s,1s,oos,1164,0.4107,0.4638,-0.0531,-26.82,-25.36,sell candidate
