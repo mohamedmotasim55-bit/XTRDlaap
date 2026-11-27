@@ -25,6 +25,7 @@ from typing import List, Optional
 import pandas as pd
 
 import indicators
+import dynamic_target_engine
 
 import config
 import regime_detector
@@ -43,6 +44,14 @@ class Signal:
     reason: str = ""
     entry_type: str = "MARKET"    # "MARKET" | "LIMIT"
     limit_price: float = 0.0
+    tp_points: float = 0.0
+    sl_points: float = 0.0
+    be_trigger: float = 0.0
+    be_lock: float = 0.0
+    trail_start: float = 0.0
+    max_hold_minutes: int = 0
+    tier: str = ""
+    score: float = 0.0
 
     def __bool__(self) -> bool:
         return self.signal in ("BUY", "SELL")
@@ -80,12 +89,26 @@ def _clamp_sl_tp(direction, entry, atr, atr_points):
 
 
 def _build(direction, strategy, entry, atr, atr_points, sl_mult, tp_mult, confidence,
-           entry_type="MARKET", limit_price=0.0):
-    sl, tp = _clamp_sl_tp(direction, entry, atr, atr_points)
-    return dict(direction=direction, strategy=strategy, entry=round(entry, 5),
-                sl=round(sl, 5), tp=round(tp, 5), atr_points=round(atr_points, 1),
-                confidence=round(confidence, 3), entry_type=entry_type,
-                limit_price=round(limit_price, 5))
+           entry_type="MARKET", limit_price=0.0, targets=None):
+    out = dict(direction=direction, strategy=strategy, entry=round(entry, 5),
+               atr_points=round(atr_points, 1), confidence=round(confidence, 3),
+               entry_type=entry_type, limit_price=round(limit_price, 5))
+    if targets:
+        point = (atr / atr_points) if atr_points else 0.01
+        sl_pts, tp_pts = targets["sl_points"], targets["tp_points"]
+        if direction == "BUY":
+            sl, tp = entry - sl_pts * point, entry + tp_pts * point
+        else:
+            sl, tp = entry + sl_pts * point, entry - tp_pts * point
+        out.update(sl_points=sl_pts, tp_points=tp_pts,
+                   be_trigger=targets["be_trigger"], be_lock=targets["be_lock"],
+                   trail_start=targets["trail_start"],
+                   max_hold_minutes=targets["max_hold_minutes"],
+                   tier=targets["tier"], score=targets["score"])
+    else:
+        sl, tp = _clamp_sl_tp(direction, entry, atr, atr_points)
+    out.update(sl=round(sl, 5), tp=round(tp, 5))
+    return out
 
 
 def _limit_entry(direction, close, high, low, atr, atr_points):
@@ -322,6 +345,14 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
         reason=f"{winner['strategy']} ({len(agree)} agree)",
         entry_type=winner.get("entry_type", "MARKET"),
         limit_price=winner.get("limit_price", 0.0),
+        tp_points=winner.get("tp_points", 0.0),
+        sl_points=winner.get("sl_points", 0.0),
+        be_trigger=winner.get("be_trigger", 0.0),
+        be_lock=winner.get("be_lock", 0.0),
+        trail_start=winner.get("trail_start", 0.0),
+        max_hold_minutes=winner.get("max_hold_minutes", 0),
+        tier=winner.get("tier", ""),
+        score=winner.get("score", 0.0),
     )
 
 
@@ -376,6 +407,19 @@ def _institutional_models(cands, enabled, df, df_m5, df_m15, close, open_, high,
             hour = None
     hf = (hour + minute / 60.0) if hour is not None else None
 
+    m1_up = (lambda a, b: a is not None and b is not None and a > b)(
+        val(df, "ema_9"), val(df, "ema_21"))
+    atr_avg20 = 0.0
+    if df is not None and "atr_points" in df.columns and len(df):
+        atr_avg20 = float(df["atr_points"].tail(20).mean())
+    atr_ratio = (atr_points / atr_avg20) if atr_avg20 > 0 else 0.0
+    vol_ratio = (vol / vol_ma) if vol_ma else 0.0
+    scalp_ok = atr_points >= config.SCALP_MIN_ATR_POINTS
+
+    def targets_for(direction):
+        return dynamic_target_engine.build(direction, adx, m5_adx_v, atr_ratio,
+                                           vol_ratio, m1_up, m5_up, m15_up)
+
     m15_up = m15_ema21 is not None and m15_ema50 is not None and m15_ema21 > m15_ema50
     m15_dn = m15_ema21 is not None and m15_ema50 is not None and m15_ema21 < m15_ema50
     m5_up = m5_close is not None and m5_ema21 is not None and m5_close > m5_ema21
@@ -388,52 +432,57 @@ def _institutional_models(cands, enabled, df, df_m5, df_m15, close, open_, high,
         return _limit_entry(direction, close, high, low, atr, atr_points)
 
     # 1. M1_M5_MomentumLimit
-    if ("M1_M5_MomentumLimit" in models and m5_adx_v is not None and m5_adx_v > 22
+    if ("M1_M5_MomentumLimit" in models and scalp_ok
+            and m5_adx_v is not None and m5_adx_v > 22
             and body > 1.2 * atr and vol_13):
         if m15_up and m5_up and close > open_:
             cands.append(_build("BUY", "M1_M5_MomentumLimit", close, atr, atr_points,
                                 config.SL_ATR_MULT, config.TP_ATR_MULT, 0.72,
-                                "LIMIT", limit_price("BUY")))
+                                "LIMIT", limit_price("BUY"), targets_for("BUY")))
         if m15_dn and m5_dn and close < open_:
             cands.append(_build("SELL", "M1_M5_MomentumLimit", close, atr, atr_points,
                                 config.SL_ATR_MULT, config.TP_ATR_MULT, 0.72,
-                                "LIMIT", limit_price("SELL")))
+                                "LIMIT", limit_price("SELL"), targets_for("SELL")))
 
     # 2. SessionOpenExpansion
-    if ("SessionOpenExpansion" in models and hf is not None
-            and (8.0 <= hf < 10.5 or 13.5 <= hf < 16.5) and candle_range > 1.5 * atr):
+    if ("SessionOpenExpansion" in models and scalp_ok and hf is not None
+            and (8.0 <= hf < 11.0 or 13.5 <= hf < 17.0) and candle_range > 1.5 * atr):
         if m5_up and close > open_ and (m15_up or m15_ema21 is None):
             cands.append(_build("BUY", "SessionOpenExpansion", close, atr, atr_points,
                                 config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70,
-                                "LIMIT", limit_price("BUY")))
+                                "LIMIT", limit_price("BUY"), targets_for("BUY")))
         if m5_dn and close < open_ and (m15_dn or m15_ema21 is None):
             cands.append(_build("SELL", "SessionOpenExpansion", close, atr, atr_points,
                                 config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70,
-                                "LIMIT", limit_price("SELL")))
+                                "LIMIT", limit_price("SELL"), targets_for("SELL")))
 
     # 3. M15_LiquiditySweep_M1Trigger
-    if ("M15_LiquiditySweep_M1Trigger" in models and candle_range > 0):
+    if "M15_LiquiditySweep_M1Trigger" in models and scalp_ok and candle_range > 0:
         lower_wick = min(open_, close) - low
         upper_wick = high - max(open_, close)
         if (m15_sw_lo is not None and low < m15_sw_lo and close > m15_sw_lo
                 and lower_wick >= 0.45 * candle_range and vol_12):
             cands.append(_build("BUY", "M15_LiquiditySweep_M1Trigger", close, atr,
-                                atr_points, config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70))
+                                atr_points, config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70,
+                                targets=targets_for("BUY")))
         if (m15_sw_hi is not None and high > m15_sw_hi and close < m15_sw_hi
                 and upper_wick >= 0.45 * candle_range and vol_12):
             cands.append(_build("SELL", "M15_LiquiditySweep_M1Trigger", close, atr,
-                                atr_points, config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70))
+                                atr_points, config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70,
+                                targets=targets_for("SELL")))
 
     # 4. M5_OrderBlock_Retest
-    if "M5_OrderBlock_Retest" in models:
+    if "M5_OrderBlock_Retest" in models and scalp_ok:
         bull_zone = last_zone(df_m5, "m5_ob_bull")
         bear_zone = last_zone(df_m5, "m5_ob_bear")
         if bull_zone and low <= bull_zone[0] and close > bull_zone[0] and close > open_:
             cands.append(_build("BUY", "M5_OrderBlock_Retest", close, atr, atr_points,
-                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68))
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68,
+                                targets=targets_for("BUY")))
         if bear_zone and high >= bear_zone[1] and close < bear_zone[1] and close < open_:
             cands.append(_build("SELL", "M5_OrderBlock_Retest", close, atr, atr_points,
-                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68))
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68,
+                                targets=targets_for("SELL")))
 
     # 5. VWAP_SessionMagnet
     if ("VWAP_SessionMagnet" in models and m15_adx is not None and m15_adx < 22
@@ -446,16 +495,17 @@ def _institutional_models(cands, enabled, df, df_m5, df_m15, close, open_, high,
                                 config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.67))
 
     # 6. TickVelocitySurge
-    if ("TickVelocitySurge" in models and vol_20 and candle_range > 0
-            and m5_slope is not None and m5_slope > 0):
+    if ("TickVelocitySurge" in models and scalp_ok
+            and vol is not None and vol_ma is not None and vol > 1.8 * vol_ma
+            and candle_range > 0 and m5_slope is not None and m5_slope > 0):
         if close >= low + 0.8 * candle_range and m5_up:
             cands.append(_build("BUY", "TickVelocitySurge", close, atr, atr_points,
                                 config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68,
-                                "LIMIT", limit_price("BUY")))
+                                "LIMIT", limit_price("BUY"), targets_for("BUY")))
         if close <= low + 0.2 * candle_range and m5_dn:
             cands.append(_build("SELL", "TickVelocitySurge", close, atr, atr_points,
                                 config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68,
-                                "LIMIT", limit_price("SELL")))
+                                "LIMIT", limit_price("SELL"), targets_for("SELL")))
 
     # 7. FVG_InstitutionalFill
     if "FVG_InstitutionalFill" in models:

@@ -3,8 +3,8 @@ alpha_lab.py
 ============
 60-day alpha discovery lab.
 
-Month 1 (days 1-30) is the discovery window: every model is run standalone and
-ranked.  Only models passing PF >= 1.15 and MaxDD <= 40% survive.  The
+Month 1 (days 1-30) is the discovery window: every pure-scalping model is run
+standalone and ranked.  Only models passing PF >= 1.15 and MaxDD <= 40% survive.  The
 survivors are then combined into one portfolio and run blind on Month 2.
 """
 from __future__ import annotations
@@ -67,11 +67,11 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
     print(f"Month 1: {m1a['time'].iloc[0]} -> {m1a['time'].iloc[-1]} ({len(m1a)} bars)")
     print(f"Month 2: {m1b['time'].iloc[0]} -> {m1b['time'].iloc[-1]} ({len(m1b)} bars)")
 
-    print("\n########## 8-MODEL TOURNAMENT ##########")
+    print("\n########## 5-MODEL SCALPING TOURNAMENT ##########")
     print(f" {'Model':<28}{'M1 T':>5}{'WR':>6}{'PF':>6}{'Net$':>8}{'DD%':>6}"
           f" |{'M2 T':>5}{'WR':>6}{'PF':>6}{'Net$':>8}{'DD%':>6}")
     m1_results, m2_results = {}, {}
-    for model in config.NEW_MODELS:
+    for model in config.SCALP_MODELS:
         r1 = _run(m1a, m5a, (model,), f"{model}_m1")
         r2 = _run(m1b, m5b, (model,), f"{model}_m2")
         m1_results[model], m2_results[model] = r1, r2
@@ -79,6 +79,17 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
               f"{_pf(r1):>6}{r1['net_profit']:>8.2f}{r1['max_drawdown_pct']:>6.0f}"
               f" |{r2['total_trades']:>5}{r2['win_rate']:>5.0f}%"
               f"{_pf(r2):>6}{r2['net_profit']:>8.2f}{r2['max_drawdown_pct']:>6.0f}")
+
+    print("\n########## DYNAMIC TARGET TIER BREAKDOWN ##########")
+    for label, results in (("Month 1", m1_results), ("Month 2", m2_results)):
+        agg = _agg_tiers(results)
+        print(f" {label}:")
+        for tier in ("T1", "T2", "T3", "NA"):
+            d = agg.get(tier)
+            if not d or not d["trades"]:
+                continue
+            wr = 100 * d["wins"] / d["trades"]
+            print(f"   {tier:<4}{d['trades']:>6} trades  WR {wr:>5.1f}%  Net ${d['net']:>8.2f}")
 
     selected = select_models(m1_results)
     print(f"\nSelected from Month 1 (PF>={MIN_PF}, DD<={MAX_DD_PCT:.0f}%): "
@@ -95,6 +106,17 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
         print(" No model survived Month 1 — no portfolio traded on Month 2.")
 
     return dict(m1=m1_results, m2=m2_results, selected=selected, portfolio=portfolio, cut=cut)
+
+
+def _agg_tiers(results):
+    agg = {}
+    for r in results.values():
+        for tier, d in (r.get("tiers") or {}).items():
+            a = agg.setdefault(tier, {"trades": 0, "wins": 0, "net": 0.0})
+            a["trades"] += d["trades"]
+            a["wins"] += d["wins"]
+            a["net"] += d["net"]
+    return agg
 
 
 def _pf(r):

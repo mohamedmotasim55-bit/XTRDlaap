@@ -104,7 +104,13 @@ NEW_MODELS = (
     "FVG_InstitutionalFill", "LondonFixReversal",
 )
 ALL_STRATEGIES = LEGACY_STRATEGIES + NEW_MODELS
-ENABLED_STRATEGIES = NEW_MODELS
+SCALP_MODELS = (
+    "M1_M5_MomentumLimit", "TickVelocitySurge", "M15_LiquiditySweep_M1Trigger",
+    "M5_OrderBlock_Retest", "SessionOpenExpansion",
+)
+ENABLED_STRATEGIES = SCALP_MODELS
+SCALP_MIN_ATR_POINTS: float = 95.0
+MAX_SCALP_HOLD_MINUTES: int = 35
 
 # Indicator periods
 EMA_FAST: int = 9

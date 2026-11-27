@@ -144,10 +144,17 @@ class BacktestRunner:
                                tp=round(p["tp"], 3), close_price=round(price, 3),
                                profit_usd=round(pnl, 2), profit_points=round(net, 1),
                                confidence=p.get("conf", 0.0), close_reason=reason))
+            tier = p.get("tier") or "NA"
+            tt = audit.setdefault("tiers", {}).setdefault(
+                tier, {"trades": 0, "wins": 0, "net": 0.0})
+            tt["trades"] += 1
+            tt["net"] += pnl
+            if pnl > 0:
+                tt["wins"] += 1
             brain.record_trade(p["strategy"], pnl, now=cur_time)
             consec_losses = consec_losses + 1 if pnl < 0 else 0
 
-        def open_position(i, direction, entry, sl, tp, strategy, conf):
+        def open_position(i, direction, entry, sl, tp, strategy, conf, ts, meta=None):
             nonlocal ticket, last_entry_i, trades_today
             n_open = len(positions)
             can = n_open == 0
@@ -172,9 +179,12 @@ class BacktestRunner:
             if (equity - margin_needed) < config.MIN_FREE_MARGIN_USD:
                 audit["margin"] += 1
                 return False
-            positions.append(dict(ticket=ticket, dir=direction, entry=entry,
-                                  sl=sl, tp=tp, lots=lot,
-                                  strategy=strategy, conf=conf))
+            pos = dict(ticket=ticket, dir=direction, entry=entry,
+                       sl=sl, tp=tp, lots=lot, strategy=strategy, conf=conf,
+                       open_time=ts)
+            if meta:
+                pos.update(meta)
+            positions.append(pos)
             ticket += 1
             last_entry_i = i
             trades_today += 1
@@ -197,28 +207,34 @@ class BacktestRunner:
                     if row["high"] >= p["tp"]:
                         close_pos(p, p["tp"], "TP"); positions.remove(p); continue
                     prof = (row["close"] - p["entry"]) / self.point
-                    if prof >= config.BREAKEVEN_TRIGGER_POINTS and p["sl"] < p["entry"]:
-                        p["sl"] = p["entry"] + config.BREAKEVEN_LOCK_POINTS * self.point
-                    if prof >= config.TRAILING_START_POINTS:
+                    if prof >= p.get("be_trigger", config.BREAKEVEN_TRIGGER_POINTS) \
+                            and p["sl"] < p["entry"]:
+                        p["sl"] = p["entry"] + p.get("be_lock", config.BREAKEVEN_LOCK_POINTS) * self.point
+                    if prof >= p.get("trail_start", config.TRAILING_START_POINTS):
                         atr = float(row.get("atr_14", 0.0) or 0.0)
                         if atr > 0:
                             cand = row["close"] - config.TRAILING_ATR_MULT * atr
                             if cand > p["sl"]:
                                 p["sl"] = cand
+                    if self._scalp_expired(p, ts):
+                        close_pos(p, row["close"], "TIME"); positions.remove(p); continue
                 else:
                     if row["high"] >= p["sl"]:
                         close_pos(p, p["sl"], "SL"); positions.remove(p); continue
                     if row["low"] <= p["tp"]:
                         close_pos(p, p["tp"], "TP"); positions.remove(p); continue
                     prof = (p["entry"] - row["close"]) / self.point
-                    if prof >= config.BREAKEVEN_TRIGGER_POINTS and (p["sl"] == 0 or p["sl"] > p["entry"]):
-                        p["sl"] = p["entry"] - config.BREAKEVEN_LOCK_POINTS * self.point
-                    if prof >= config.TRAILING_START_POINTS:
+                    if prof >= p.get("be_trigger", config.BREAKEVEN_TRIGGER_POINTS) \
+                            and (p["sl"] == 0 or p["sl"] > p["entry"]):
+                        p["sl"] = p["entry"] - p.get("be_lock", config.BREAKEVEN_LOCK_POINTS) * self.point
+                    if prof >= p.get("trail_start", config.TRAILING_START_POINTS):
                         atr = float(row.get("atr_14", 0.0) or 0.0)
                         if atr > 0:
                             cand = row["close"] + config.TRAILING_ATR_MULT * atr
                             if cand < p["sl"]:
                                 p["sl"] = cand
+                    if self._scalp_expired(p, ts):
+                        close_pos(p, row["close"], "TIME"); positions.remove(p); continue
 
             floating = 0.0
             for p in positions:
@@ -264,7 +280,8 @@ class BacktestRunner:
                         delta = pending["limit"] - pending["sig"].entry
                         if open_position(i, pending["dir"], pending["limit"],
                                          pending["sl"] + delta, pending["tp"] + delta,
-                                         pending["strategy"], pending["conf"]):
+                                         pending["strategy"], pending["conf"], ts,
+                                         pending.get("meta")):
                             audit["limit_filled"] += 1
                         pending = None
                     elif i - pending["placed_i"] >= pending["ttl"]:
@@ -300,12 +317,12 @@ class BacktestRunner:
             if sig.entry_type == "LIMIT" and sig.limit_price > 0 and pending is None:
                 pending = dict(sig=sig, dir=sig.signal, limit=sig.limit_price,
                                sl=sig.sl, tp=sig.tp, strategy=sig.strategy,
-                               conf=conf, placed_i=i, ttl=1)
+                               conf=conf, placed_i=i, ttl=1, meta=self._meta(sig))
                 audit["limit_placed"] += 1
                 continue
 
             open_position(i, sig.signal, row["close"], sig.sl, sig.tp,
-                          sig.strategy, conf)
+                          sig.strategy, conf, ts, self._meta(sig))
 
         if positions:
             last = m1.iloc[-1]
@@ -313,6 +330,24 @@ class BacktestRunner:
                 close_pos(p, last["close"], "EOD"); positions.remove(p)
 
         return self._report(trades, balance, max_dd, audit)
+
+    @staticmethod
+    def _meta(sig):
+        return dict(tier=sig.tier or "NA", score=sig.score,
+                    be_trigger=sig.be_trigger or config.BREAKEVEN_TRIGGER_POINTS,
+                    be_lock=sig.be_lock or config.BREAKEVEN_LOCK_POINTS,
+                    trail_start=sig.trail_start or config.TRAILING_START_POINTS,
+                    max_hold_minutes=sig.max_hold_minutes or 0)
+
+    @staticmethod
+    def _scalp_expired(pos, ts):
+        hold = pos.get("max_hold_minutes") or 0
+        if not hold:
+            return False
+        try:
+            return (ts - pos["open_time"]).total_seconds() / 60.0 >= hold
+        except (KeyError, TypeError):
+            return False
 
     def _report(self, trades, final_balance, max_dd, audit=None):
         n = len(trades)
@@ -332,7 +367,8 @@ class BacktestRunner:
                    net_profit=round(final_balance - self.initial_balance, 2),
                    max_drawdown_usd=round(max_dd, 2),
                    max_drawdown_pct=(100 * max_dd / self.initial_balance if self.initial_balance else 0.0),
-                   by_strategy=by, signal_audit=audit or {})
+                   by_strategy=by, signal_audit=audit or {},
+                   tiers=(audit or {}).get("tiers", {}))
         self._save(trades)
         if self.verbose:
             self._print(res)
@@ -344,7 +380,8 @@ class BacktestRunner:
             if parent:
                 os.makedirs(parent, exist_ok=True)
             cols = ["ticket", "strategy", "direction", "entry_price", "sl", "tp",
-                    "close_price", "profit_usd", "profit_points", "confidence", "close_reason"]
+                    "close_price", "profit_usd", "profit_points", "confidence",
+                    "close_reason", "tier"]
             with open(self.journal_path, "w", newline="", encoding="utf-8") as fh:
                 w = csv.writer(fh); w.writerow(cols)
                 for t in trades:
@@ -373,6 +410,12 @@ class BacktestRunner:
         for name, d in r["by_strategy"].items():
             wr = (100 * d["wins"] / d["n"]) if d["n"] else 0.0
             print(f" {name:<22}{d['n']:>7}{wr:>8.1f}{d['net']:>10.2f}")
+        tiers = r.get("tiers") or {}
+        if tiers:
+            print(f" {'Tier':<22}{'Trades':>7}{'Win%':>8}{'Net$':>10}")
+            for name, d in tiers.items():
+                wr = (100 * d["wins"] / d["trades"]) if d["trades"] else 0.0
+                print(f" {name:<22}{d['trades']:>7}{wr:>8.1f}{d['net']:>10.2f}")
         print("=" * 64)
 
 

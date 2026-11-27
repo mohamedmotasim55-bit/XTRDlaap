@@ -91,22 +91,25 @@ class TestResample(unittest.TestCase):
 class TestEightModels(unittest.TestCase):
     def test_model_1_momentum_limit(self):
         d = m1_df(open=2000, high=2001.2, low=1999.8, close=2001,
-                  tick_volume=300, vol_ma_10=100, atr_14=0.5, atr_points=50)
+                  tick_volume=300, vol_ma_10=100, atr_14=0.5, atr_points=100)
         s = sig_for("M1_M5_MomentumLimit", d, m5_df(close=2001), m15_df())
         self.assertEqual(s.strategy, "M1_M5_MomentumLimit")
         self.assertEqual(s.entry_type, "LIMIT")
         self.assertLess(s.limit_price, s.entry)
+        self.assertIn(s.tier, ("T1", "T2", "T3"))
+        self.assertEqual(s.max_hold_minutes, 35)
+        self.assertGreaterEqual(s.tp_points, 85.0)
 
     def test_model_2_session_open(self):
         d = m1_df(open=2000, high=2001.3, low=2000, close=2001,
-                  atr_14=0.5, atr_points=50, tick_volume=200)
+                  atr_14=0.5, atr_points=100, tick_volume=200)
         s = sig_for("SessionOpenExpansion", d, m5_df(close=2001), m15_df())
         self.assertEqual(s.strategy, "SessionOpenExpansion")
         self.assertEqual(s.entry_type, "LIMIT")
 
     def test_model_3_m15_sweep(self):
         d = m1_df(open=1996, high=1998.5, low=1990, close=1998,
-                  tick_volume=300, vol_ma_10=100, atr_14=0.5, atr_points=50)
+                  tick_volume=300, vol_ma_10=100, atr_14=0.5, atr_points=100)
         s = sig_for("M15_LiquiditySweep_M1Trigger", d, m5_df(),
                     m15_df(swing_low_12=1995.0))
         self.assertEqual(s.strategy, "M15_LiquiditySweep_M1Trigger")
@@ -114,7 +117,7 @@ class TestEightModels(unittest.TestCase):
         self.assertEqual(s.entry_type, "MARKET")
 
     def test_model_4_order_block(self):
-        d = m1_df(open=1996, high=2001, low=1998, close=2000, atr_14=0.5, atr_points=50)
+        d = m1_df(open=1996, high=2001, low=1998, close=2000, atr_14=0.5, atr_points=100)
         s = sig_for("M5_OrderBlock_Retest", d, m5_df(m5_ob_bull=1, high=1999, low=1995),
                     m15_df())
         self.assertEqual(s.strategy, "M5_OrderBlock_Retest")
@@ -130,7 +133,7 @@ class TestEightModels(unittest.TestCase):
 
     def test_model_6_tick_velocity(self):
         d = m1_df(open=2000, high=2001.2, low=2000, close=2001,
-                  tick_volume=300, vol_ma_10=100, atr_14=0.5, atr_points=50)
+                  tick_volume=300, vol_ma_10=100, atr_14=0.5, atr_points=100)
         s = sig_for("TickVelocitySurge", d, m5_df(close=2001), m15_df())
         self.assertEqual(s.strategy, "TickVelocitySurge")
         self.assertEqual(s.entry_type, "LIMIT")
