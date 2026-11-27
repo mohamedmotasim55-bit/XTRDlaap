@@ -71,6 +71,7 @@ class BacktestRunner:
         last_entry_i = -10 ** 9
         consec_losses = 0
         pause_until_i = -1
+        cur_time = None  # simulated clock so brain mutes expire in bar-time
 
         def close_pos(p, price, reason):
             nonlocal balance, consec_losses
@@ -83,12 +84,13 @@ class BacktestRunner:
                                tp=round(p["tp"], 3), close_price=round(price, 3),
                                profit_usd=round(pnl, 2), profit_points=round(net, 1),
                                confidence=p.get("conf", 0.0), close_reason=reason))
-            brain.record_trade(p["strategy"], pnl)
+            brain.record_trade(p["strategy"], pnl, now=cur_time)
             consec_losses = consec_losses + 1 if pnl < 0 else 0
 
         for i in range(self.warmup, n):
             row = m1.iloc[i]
             ts = row["time"]
+            cur_time = ts
             d = ts.date() if hasattr(ts, "date") else None
             if d != day:
                 day, day_start_equity, ratchet_peak, ratchet_locked = d, balance, 0.0, False
@@ -165,7 +167,7 @@ class BacktestRunner:
                 continue
             audit["raw"] += 1
 
-            allowed, conf, _ = brain.evaluate(sig, regime)
+            allowed, conf, _ = brain.evaluate(sig, regime, now=ts)
             if not allowed:
                 audit["conf"] += 1
                 continue
