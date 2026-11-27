@@ -74,6 +74,21 @@ class SafetyGuard:
                 now = datetime.now()
 
         t: dtime = now.time()
+        weekday = now.weekday()  # Mon=0 .. Sun=6
+
+        # Weekend: no trading at all.
+        if weekday >= 5:
+            return config.SESSION_MODE_WEEKEND_SLEEP
+
+        # Friday: stop new entries at 19:30, force-close from 20:15.
+        if weekday == 4:
+            stop_t = dtime(config.FRIDAY_STOP_HOUR, config.FRIDAY_STOP_MINUTE)
+            close_t = dtime(config.FRIDAY_FORCE_CLOSE_HOUR, config.FRIDAY_FORCE_CLOSE_MINUTE)
+            if t >= close_t:
+                return config.SESSION_MODE_WEEKEND_CLOSE
+            if t >= stop_t:
+                return config.SESSION_MODE_STOP
+
         if self._in_window(t, config.ASIAN_RANGE_START, config.ASIAN_RANGE_END):
             return config.SESSION_MODE_ASIAN
         if self._in_window(t, config.MOMENTUM_START, config.MOMENTUM_END):

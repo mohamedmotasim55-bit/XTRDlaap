@@ -65,6 +65,29 @@ def _atr(df: pd.DataFrame, period: int) -> pd.Series:
     return tr.ewm(alpha=1.0 / period, adjust=False, min_periods=period).mean()
 
 
+def _adx(df: pd.DataFrame, period: int) -> pd.Series:
+    """Wilder's Average Directional Index."""
+    high, low, close = df["high"], df["low"], df["close"]
+    up = high.diff()
+    down = -low.diff()
+    plus_dm = pd.Series(
+        np.where((up > down) & (up > 0), up, 0.0), index=df.index
+    )
+    minus_dm = pd.Series(
+        np.where((down > up) & (down > 0), down, 0.0), index=df.index
+    )
+    prev_close = close.shift(1)
+    tr = pd.concat(
+        [(high - low).abs(), (high - prev_close).abs(), (low - prev_close).abs()],
+        axis=1,
+    ).max(axis=1)
+    atr = tr.ewm(alpha=1.0 / period, adjust=False, min_periods=period).mean()
+    plus_di = 100.0 * plus_dm.ewm(alpha=1.0 / period, adjust=False, min_periods=period).mean() / atr
+    minus_di = 100.0 * minus_dm.ewm(alpha=1.0 / period, adjust=False, min_periods=period).mean() / atr
+    dx = 100.0 * (plus_di - minus_di).abs() / (plus_di + minus_di).replace(0.0, np.nan)
+    return dx.ewm(alpha=1.0 / period, adjust=False, min_periods=period).mean()
+
+
 def add_indicators(df: pd.DataFrame, point: float = 0.01) -> pd.DataFrame:
     """Return a copy of ``df`` with all indicator columns appended.
 
@@ -113,5 +136,31 @@ def add_indicators(df: pd.DataFrame, point: float = 0.01) -> pd.DataFrame:
     # Swing levels of the previous SWING_LOOKBACK closed candles (exclude current)
     out["swing_high_15"] = out["high"].rolling(config.SWING_LOOKBACK).max().shift(1)
     out["swing_low_15"] = out["low"].rolling(config.SWING_LOOKBACK).min().shift(1)
+
+    # Ultra-fast scalping ribbon
+    out["ema_5"] = _ema(close, 5)
+    out["ema_13"] = _ema(close, 13)
+
+    # Fast Scalping MACD (5, 13, 4)
+    macd_line = out["ema_5"] - out["ema_13"]
+    macd_signal = macd_line.ewm(span=4, adjust=False).mean()
+    out["macd_line"] = macd_line
+    out["macd_signal"] = macd_signal
+    out["macd_hist"] = macd_line - macd_signal
+
+    # Fast Stochastic (5, 3, 3)
+    low5 = out["low"].rolling(5).min()
+    high5 = out["high"].rolling(5).max()
+    raw_k = 100.0 * (close - low5) / (high5 - low5).replace(0.0, np.nan)
+    stoch_k = raw_k.rolling(3).mean()
+    out["stoch_k"] = stoch_k
+    out["stoch_d"] = stoch_k.rolling(3).mean()
+
+    # ADX(14) — trend strength
+    out["adx_14"] = _adx(out, 14)
+
+    # Fair Value Gap (3-candle imbalance) on M1 candles
+    out["fvg_bull"] = (out["low"] > out["high"].shift(2)).astype(int)
+    out["fvg_bear"] = (out["high"] < out["low"].shift(2)).astype(int)
 
     return out

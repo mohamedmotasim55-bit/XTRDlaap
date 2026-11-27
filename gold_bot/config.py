@@ -120,6 +120,22 @@ CONSECUTIVE_LOSS_TRIGGER: int = 3
 ANALYTICS_PRINT_INTERVAL_SEC: int = 900  # 15 minutes
 
 # ---------------------------------------------------------------------------
+# Friday / weekend shield
+# ---------------------------------------------------------------------------
+FRIDAY_STOP_HOUR: int = 19
+FRIDAY_STOP_MINUTE: int = 30
+FRIDAY_FORCE_CLOSE_HOUR: int = 20
+FRIDAY_FORCE_CLOSE_MINUTE: int = 15
+SESSION_MODE_WEEKEND_CLOSE: str = "WEEKEND_CLOSE"
+SESSION_MODE_WEEKEND_SLEEP: str = "WEEKEND_SLEEP"
+
+# ---------------------------------------------------------------------------
+# Regime thresholds
+# ---------------------------------------------------------------------------
+ADX_TREND_THRESHOLD: float = 25.0
+ATR_SPIKE_FACTOR: float = 1.4
+
+# ---------------------------------------------------------------------------
 # Loop / logging
 # ---------------------------------------------------------------------------
 LOOP_INTERVAL_SEC: float = 1.0

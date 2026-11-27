@@ -76,9 +76,27 @@ def _register_new_position(manager, analytics, sig, mode, spread_pts, atr):
         log.error("Failed to register new position: %s", exc)
 
 
+def _try_reconnect(connector, attempts: int = 3) -> bool:
+    """Self-healing watchdog: shut down and re-initialise MT5 with backoff."""
+    for i in range(attempts):
+        try:
+            connector.shutdown()
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            connector.initialize()
+            log.warning("MT5 reconnected (attempt %d/%d).", i + 1, attempts)
+            return True
+        except MT5ConnectionError as exc:
+            log.error("Reconnect attempt %d/%d failed: %s", i + 1, attempts, exc)
+            _time.sleep(min(30, 5 * (i + 1)))
+    log.error("MT5 reconnect failed after %d attempts; will retry next loop.", attempts)
+    return False
+
+
 def run() -> int:
     _configure_logging()
-    log.info("Starting XAUUSD Gold Bot — Step 4 (news + M5 + analytics)")
+    log.info("Starting XAUUSD Gold Bot — Step 5 (7-strategy matrix + regime + weekend)")
 
     connector = MT5Connector()
     try:
@@ -113,6 +131,13 @@ def run() -> int:
                 acc = connector.account_info()
                 srv_time = connector.server_time().strftime("%Y-%m-%d %H:%M:%S")
 
+                # --- Friday / weekend shield ---
+                if mode == config.SESSION_MODE_WEEKEND_SLEEP:
+                    log.info("Weekend sleep — market closed, no trading.")
+                elif mode == config.SESSION_MODE_WEEKEND_CLOSE:
+                    closed = manager.close_all_positions("Weekend Close")
+                    log.warning("Friday weekend close: closed %d position(s).", closed)
+
                 # --- news shield ---
                 now_utc = datetime.now(timezone.utc)
                 if config.ENABLE_NEWS_FILTER:
@@ -125,7 +150,10 @@ def run() -> int:
                         if closed:
                             log.warning("Closed %d position(s) before news.", closed)
 
-                tradeable = (mode != config.SESSION_MODE_STOP and spread_ok and dd_ok)
+                tradeable = (
+                    mode in (config.SESSION_MODE_ASIAN, config.SESSION_MODE_MOMENTUM)
+                    and spread_ok and dd_ok
+                )
                 if tradeable:
                     point = connector.symbol_info().get("point", 0.01)
                     df = indicators.add_indicators(
@@ -136,6 +164,7 @@ def run() -> int:
                 log.error("Data refresh failed: %s", exc)
                 acc, spread, spread_ok, dd_ok = None, None, False, False
                 mode, srv_time, news_ok = "UNKNOWN", None, False
+                _try_reconnect(connector)
 
             log.info("%s", _format_status(mode, spread, spread_ok, dd_ok, news_ok, acc, srv_time))
 
@@ -148,7 +177,7 @@ def run() -> int:
 
             # 2) Consider a new entry.
             if df is not None and spread_ok and dd_ok and news_ok \
-                    and mode != config.SESSION_MODE_STOP:
+                    and mode in (config.SESSION_MODE_ASIAN, config.SESSION_MODE_MOMENTUM):
                 try:
                     if analytics.in_loss_cooldown():
                         log.debug("Entry blocked: consecutive-loss cooldown.")
