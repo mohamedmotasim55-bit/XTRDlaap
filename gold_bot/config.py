@@ -48,8 +48,8 @@ MAGIC_NUMBER: int = 202699
 LOT_SIZE: float = 0.01               # fixed lot for the $10 micro-account
 MAX_SPREAD_POINTS: float = 38.0      # JustMarkets base ~26 pts; 38 tolerates normal vol
 MAX_OPEN_TRADES: int = 1             # strict single-position cap to protect $10
-DAILY_LOSS_LIMIT_USD: float = 2.50   # equity guard; 3-loss pause handles micro-DD
-MAX_TRADES_PER_DAY: int = 14         # keep quality high, volume 50-80/week
+DAILY_LOSS_LIMIT_USD: float = 1.85   # equity guard; 3-loss pause handles micro-DD
+MAX_TRADES_PER_DAY: int = 12         # keep quality high, volume 50-80/week
 RISK_PER_TRADE_PCT: float = 1.0      # kept for reference / future dynamic sizing
 MAX_DAILY_DRAWDOWN_PCT: float = 4.0  # legacy % cap (superseded by DAILY_LOSS_LIMIT_USD)
 
@@ -78,13 +78,13 @@ SESSION_MODE_STOP: str = "STOP"
 # ---------------------------------------------------------------------------
 ATR_PERIOD: int = 14
 MIN_ATR_POINTS: float = 35.0     # skip dead market (spread cannot be covered)
-SL_ATR_MULT: float = 0.60        # momentum-mode stop distance (x ATR)
+SL_ATR_MULT: float = 0.52        # momentum-mode stop distance (x ATR)
 TP_ATR_MULT: float = 2.00        # momentum-mode target distance (x ATR)
 COOLDOWN_SECONDS: int = 20       # wait after a close before a new entry
 
 # Hard SL/TP calibration (points) sized for $3770 gold on a $10 account.
-MIN_SL_POINTS: float = 50.0
-MAX_SL_POINTS: float = 75.0      # max risk $0.75 per 0.01 lot
+MIN_SL_POINTS: float = 45.0
+MAX_SL_POINTS: float = 62.0      # max risk $0.62 per 0.01 lot
 MIN_TP_POINTS: float = 130.0
 MAX_TP_POINTS: float = 210.0
 SPREAD_SL_RATIO: float = 0.45    # block if spread > 45% of the SL distance
@@ -111,7 +111,7 @@ VOL_MA_PERIOD: int = 10
 SWING_LOOKBACK: int = 15
 
 # Range-mode (Asian) tighter targets
-RANGE_SL_ATR_MULT: float = 0.60
+RANGE_SL_ATR_MULT: float = 0.52
 RANGE_TP_ATR_MULT: float = 2.00
 
 # ---------------------------------------------------------------------------
@@ -134,8 +134,8 @@ ENABLE_NEWS_FILTER: bool = True     # block entries around High-Impact USD news
 NEWS_PAUSE_BEFORE_MIN: int = 15     # stop entering this many minutes BEFORE a release
 NEWS_PAUSE_AFTER_MIN: int = 15      # resume this many minutes AFTER a release
 NEWS_FORCE_CLOSE_MIN: int = 5       # close open positions if a release is this close
-CONSECUTIVE_LOSS_COOLDOWN_MIN: int = 30  # pause after 3 consecutive losses
-CONSECUTIVE_LOSS_TRIGGER: int = 3
+CONSECUTIVE_LOSS_COOLDOWN_MIN: int = 30  # pause after 2 consecutive losses
+CONSECUTIVE_LOSS_TRIGGER: int = 2
 ANALYTICS_PRINT_INTERVAL_SEC: int = 900  # 15 minutes
 
 # ---------------------------------------------------------------------------
@@ -163,8 +163,8 @@ MIN_CONFIDENCE_TO_TRADE: float = 0.55
 REGIME_BOOST: float = 0.15
 CONF_MULT_FLOOR: float = 0.90      # never decay a valid signal below 90%
 MUTE_MIN_TRADES: int = 6           # need 6 completed trades before muting
-CONSECUTIVE_LOSS_TRIGGER: int = 3
-CONSECUTIVE_LOSS_PAUSE_MIN: int = 45
+CONSECUTIVE_LOSS_TRIGGER: int = 2
+CONSECUTIVE_LOSS_PAUSE_MIN: int = 30
 
 # ---------------------------------------------------------------------------
 # Zero-risk pyramiding

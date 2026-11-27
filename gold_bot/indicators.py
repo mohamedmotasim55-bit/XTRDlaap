@@ -181,7 +181,7 @@ def add_indicators(df: pd.DataFrame, point: float = 0.01) -> pd.DataFrame:
     cum_v = vol.groupby(day_key).cumsum().replace(0.0, np.nan)
     out["vwap"] = cum_pv / cum_v
     out["vwap_sd"] = (typical - out["vwap"]).rolling(20).std()
-    out["vwap_upper"] = out["vwap"] + 1.6 * out["vwap_sd"]
-    out["vwap_lower"] = out["vwap"] - 1.6 * out["vwap_sd"]
+    out["vwap_upper"] = out["vwap"] + 1.35 * out["vwap_sd"]
+    out["vwap_lower"] = out["vwap"] - 1.35 * out["vwap_sd"]
 
     return out

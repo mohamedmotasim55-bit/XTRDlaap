@@ -119,6 +119,7 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
     ema5 = _last(df, "ema_5"); ema13 = _last(df, "ema_13")
     ema9 = _last(df, "ema_9"); ema21 = _last(df, "ema_21"); ema50 = _last(df, "ema_50")
     rsi = _last(df, "rsi_7")
+    adx = _last(df, "adx_14")
     bb_up = _last(df, "bb_upper"); bb_lo = _last(df, "bb_lower")
     vol = _last(df, "tick_volume"); vol_ma = _last(df, "vol_ma_10")
     sw_hi = _last(df, "swing_high_15"); sw_lo = _last(df, "swing_low_15")
@@ -151,7 +152,10 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
     if df_m5 is not None and len(df_m5) >= config.EMA_SLOW:
         try:
             mc = float(df_m5["close"].iloc[-1])
-            me = float(df_m5["close"].ewm(span=config.EMA_SLOW, adjust=False).mean().iloc[-1])
+            if "m5_ema_50" in df_m5.columns:
+                me = float(df_m5["m5_ema_50"].iloc[-1])
+            else:
+                me = float(df_m5["close"].ewm(span=config.EMA_SLOW, adjust=False).mean().iloc[-1])
             m5_ok_buy = mc > me
             m5_ok_sell = mc < me
         except (KeyError, IndexError, TypeError, ValueError):
@@ -160,8 +164,13 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
     if df_m5 is not None and len(df_m5) >= 30:
         try:
             m5_close = float(df_m5["close"].iloc[-1])
-            m5_ema21 = float(df_m5["close"].ewm(span=21, adjust=False).mean().iloc[-1])
-            if {"high", "low", "close"}.issubset(df_m5.columns):
+            if "m5_ema_21" in df_m5.columns:
+                m5_ema21 = float(df_m5["m5_ema_21"].iloc[-1])
+            else:
+                m5_ema21 = float(df_m5["close"].ewm(span=21, adjust=False).mean().iloc[-1])
+            if "m5_adx_14" in df_m5.columns:
+                m5_adx = float(df_m5["m5_adx_14"].iloc[-1])
+            elif {"high", "low", "close"}.issubset(df_m5.columns):
                 m5_adx = float(indicators._adx(df_m5, 14).iloc[-1])
         except (KeyError, IndexError, TypeError, ValueError):
             m5_close = m5_ema21 = m5_adx = None
@@ -187,20 +196,28 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
         vol_ok_strict = (vol is not None and vol_ma is not None
                          and vol > 1.1 * vol_ma)
         if (sw_lo is not None and low < sw_lo and close > sw_lo
-                and lower_wick >= 0.48 * candle_range and rsi < 34 and vol_ok_strict):
+                and lower_wick >= 0.48 * candle_range and rsi < 34
+                and vol_ok_strict and shield_buy):
             cands.append(_build("BUY", "LiquiditySweep", close, atr, atr_points,
                                 config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70))
         if (sw_hi is not None and high > sw_hi and close < sw_hi
-                and upper_wick >= 0.48 * candle_range and rsi > 66 and vol_ok_strict):
+                and upper_wick >= 0.48 * candle_range and rsi > 66
+                and vol_ok_strict and shield_sell):
             cands.append(_build("SELL", "LiquiditySweep", close, atr, atr_points,
                                 config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70))
 
-    # ---- 3. BollingerBounce (with M5 falling-knife shield) ---------------
-    if "BollingerBounce" in enabled:
-        if low <= bb_lo and rsi < 30 and close > open_ and shield_buy:
+    # ---- 3. BollingerBounce (flat-range sniper, M5+M1 ADX gated) --------
+    if "BollingerBounce" in enabled and candle_range > 0:
+        lower_wick_ratio = (min(open_, close) - low) / candle_range
+        upper_wick_ratio = (high - max(open_, close)) / candle_range
+        flat_range = (m5_adx is not None and m5_adx < 20
+                      and adx is not None and adx < 22)
+        if (flat_range and low <= bb_lo and rsi < 24 and close > open_
+                and lower_wick_ratio >= 0.42 and volume_ok and shield_buy):
             cands.append(_build("BUY", "BollingerBounce", close, atr, atr_points,
                                 config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.66))
-        if high >= bb_up and rsi > 70 and close < open_ and shield_sell:
+        if (flat_range and high >= bb_up and rsi > 76 and close < open_
+                and upper_wick_ratio >= 0.42 and volume_ok and shield_sell):
             cands.append(_build("SELL", "BollingerBounce", close, atr, atr_points,
                                 config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.66))
 
@@ -248,11 +265,11 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
     if "RSISnapback" in enabled:
         c2 = _last(df, "close", -3)
         two_candle_move = abs(close - c2) if c2 is not None else 0.0
-        if two_candle_move > 1.15 * atr:
-            if rsi < 26 and close > open_ and shield_buy:
+        if two_candle_move > 1.05 * atr:
+            if rsi < 27 and close > open_ and shield_buy:
                 cands.append(_build("BUY", "RSISnapback", close, atr, atr_points,
                                     config.SL_ATR_MULT, config.TP_ATR_MULT, 0.65))
-            if rsi > 74 and close < open_ and shield_sell:
+            if rsi > 73 and close < open_ and shield_sell:
                 cands.append(_build("SELL", "RSISnapback", close, atr, atr_points,
                                     config.SL_ATR_MULT, config.TP_ATR_MULT, 0.65))
 
@@ -262,10 +279,10 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
         vw_up = _last(df, "vwap_upper")
         vw_lo = _last(df, "vwap_lower")
         if None not in (vwap, vw_up, vw_lo):
-            if low <= vw_lo and rsi < 35 and close > open_ and close > vw_lo and shield_buy:
+            if low <= vw_lo and rsi < 38 and close > open_ and close > vw_lo and shield_buy:
                 cands.append(_build("BUY", "VWAPReversion", close, atr, atr_points,
                                     config.SL_ATR_MULT, config.TP_ATR_MULT, 0.67))
-            if high >= vw_up and rsi > 65 and close < open_ and close < vw_up and shield_sell:
+            if high >= vw_up and rsi > 62 and close < open_ and close < vw_up and shield_sell:
                 cands.append(_build("SELL", "VWAPReversion", close, atr, atr_points,
                                     config.SL_ATR_MULT, config.TP_ATR_MULT, 0.67))
 

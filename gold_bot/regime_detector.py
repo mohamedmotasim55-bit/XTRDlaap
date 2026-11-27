@@ -76,7 +76,10 @@ class RegimeDetector:
         if df_m5 is not None and len(df_m5) >= config.EMA_SLOW:
             try:
                 mc = float(df_m5["close"].iloc[-1])
-                me = float(df_m5["close"].ewm(span=config.EMA_SLOW, adjust=False).mean().iloc[-1])
+                if "m5_ema_50" in df_m5.columns:
+                    me = float(df_m5["m5_ema_50"].iloc[-1])
+                else:
+                    me = float(df_m5["close"].ewm(span=config.EMA_SLOW, adjust=False).mean().iloc[-1])
                 m5_up = mc > me
             except (KeyError, IndexError, TypeError, ValueError):
                 m5_up = True

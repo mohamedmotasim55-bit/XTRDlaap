@@ -50,6 +50,10 @@ class BacktestRunner:
         self._sizer = DynamicLotSizer(mt5_module=None)
         self.m1 = indicators.add_indicators(m1_df.copy().reset_index(drop=True), point=point)
         self.m5 = m5_df.reset_index(drop=True) if m5_df is not None else None
+        if self.m5 is not None and {"high", "low", "close"}.issubset(self.m5.columns):
+            self.m5["m5_ema_21"] = self.m5["close"].ewm(span=21, adjust=False).mean()
+            self.m5["m5_ema_50"] = self.m5["close"].ewm(span=config.EMA_SLOW, adjust=False).mean()
+            self.m5["m5_adx_14"] = indicators._adx(self.m5, 14)
 
     def _m5_slice(self, i):
         if self.m5 is None:

@@ -16,6 +16,12 @@ def force(df, pos, **kw):
     for k,v in kw.items(): d.loc[idx,k]=v
     return d
 
+def m5_flat():
+    d=pd.DataFrame([dict(open=2000.0,high=2000.2,low=1999.8,close=2000.0,tick_volume=100)
+                    for _ in range(60)])
+    d["m5_adx_14"]=10.0; d["m5_ema_21"]=2000.0; d["m5_ema_50"]=2000.0
+    return d
+
 def m5(trend):
     rows=[]
     for i in range(60):
@@ -45,14 +51,14 @@ class TestSevenStrategies(unittest.TestCase):
         d=force(base_df(),-1, **q(open=1996,high=1998.5,low=1990,close=1998,tick_volume=400,
             ema_9=1999,ema_21=2000,ema_50=2005,bb_upper=2010,bb_lower=1985,
             rsi_7=30,vol_ma_10=300,swing_high_15=2005,swing_low_15=1995))
-        s=strategy_engine.generate_signal(d, config.SESSION_MODE_MOMENTUM, m5(-1))
+        s=strategy_engine.generate_signal(d, config.SESSION_MODE_MOMENTUM, m5_flat())
         self.assertEqual(s.strategy,"LiquiditySweep")
 
     def test_bollinger_bounce(self):
         d=force(base_df(),-1, **q(open=1990,high=1992.5,low=1988,close=1992,tick_volume=200,
             ema_9=1995,ema_21=1998,ema_50=2000,bb_upper=2000,bb_lower=1989.5,
-            rsi_7=20,vol_ma_10=200,swing_high_15=2005,swing_low_15=1985))
-        s=strategy_engine.generate_signal(d, config.SESSION_MODE_ASIAN)
+            rsi_7=20,vol_ma_10=100,swing_high_15=2005,swing_low_15=1985))
+        s=strategy_engine.generate_signal(d, config.SESSION_MODE_ASIAN, m5_flat())
         self.assertEqual(s.strategy,"BollingerBounce")
 
     def test_rsi_snapback(self):
