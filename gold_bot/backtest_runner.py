@@ -168,12 +168,13 @@ class BacktestRunner:
             net = raw - self.spread_points
             pnl = net * p["lots"]
             balance += pnl
+            tier = p.get("tier") or "NA"
             trades.append(dict(ticket=p["ticket"], strategy=p["strategy"], direction=p["dir"],
                                entry_price=round(p["entry"], 3), sl=round(p["sl"], 3),
                                tp=round(p["tp"], 3), close_price=round(price, 3),
                                profit_usd=round(pnl, 2), profit_points=round(net, 1),
-                               confidence=p.get("conf", 0.0), close_reason=reason))
-            tier = p.get("tier") or "NA"
+                               confidence=p.get("conf", 0.0), close_reason=reason,
+                               tier=tier))
             tt = audit.setdefault("tiers", {}).setdefault(
                 tier, {"trades": 0, "wins": 0, "net": 0.0})
             tt["trades"] += 1
