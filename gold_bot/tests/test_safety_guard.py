@@ -26,5 +26,11 @@ class TestSpreadGuard(unittest.TestCase):
     def test_spread_ok_without_sl(self):
         self.assertTrue(SafetyGuard(FakeConn(26.0)).check_spread())
 
+    def test_atr_gate_blocks_dead_market(self):
+        self.assertFalse(SafetyGuard(FakeConn(26.0)).check_spread(atr_points=50.0))
+
+    def test_atr_gate_allows_volatile_market(self):
+        self.assertTrue(SafetyGuard(FakeConn(26.0)).check_spread(atr_points=120.0))
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -166,4 +166,22 @@ def add_indicators(df: pd.DataFrame, point: float = 0.01) -> pd.DataFrame:
     out["fvg_bull"] = (out["low"] > out["high"].shift(2)).astype(int)
     out["fvg_bear"] = (out["high"] < out["low"].shift(2)).astype(int)
 
+    # Intraday VWAP (resets at 00:00 server time) + 20-bar 1.6-sigma bands
+    typical = (out["high"] + out["low"] + out["close"]) / 3.0
+    vol = (out["tick_volume"] if "tick_volume" in out.columns
+           else pd.Series(1.0, index=out.index))
+    if "time" in out.columns:
+        try:
+            day_key = pd.to_datetime(out["time"]).dt.date
+        except (TypeError, ValueError):
+            day_key = pd.Series(0, index=out.index)
+    else:
+        day_key = pd.Series(0, index=out.index)
+    cum_pv = (typical * vol).groupby(day_key).cumsum()
+    cum_v = vol.groupby(day_key).cumsum().replace(0.0, np.nan)
+    out["vwap"] = cum_pv / cum_v
+    out["vwap_sd"] = (typical - out["vwap"]).rolling(20).std()
+    out["vwap_upper"] = out["vwap"] + 1.6 * out["vwap_sd"]
+    out["vwap_lower"] = out["vwap"] - 1.6 * out["vwap_sd"]
+
     return out

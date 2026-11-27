@@ -67,7 +67,8 @@ class BacktestRunner:
         day_start_equity, ratchet_peak, ratchet_locked = balance, 0.0, False
         ticket = 1
         audit = dict(raw=0, conf=0, spread=0, cooldown=0, margin=0,
-                     daily_dd=0, pause=0, opened=0)
+                     daily_dd=0, pause=0, daycap=0, opened=0)
+        trades_today = 0
         last_entry_i = -10 ** 9
         consec_losses = 0
         pause_until_i = -1
@@ -94,6 +95,7 @@ class BacktestRunner:
             d = ts.date() if hasattr(ts, "date") else None
             if d != day:
                 day, day_start_equity, ratchet_peak, ratchet_locked = d, balance, 0.0, False
+                trades_today = 0
 
             for p in list(positions):
                 if p["dir"] == "BUY":
@@ -174,8 +176,13 @@ class BacktestRunner:
 
             sl_points = abs(row["close"] - sig.sl) / self.point
             if (self.spread_points > config.MAX_SPREAD_POINTS
-                    or self.spread_points > config.SPREAD_SL_RATIO * sl_points):
+                    or self.spread_points > config.SPREAD_SL_RATIO * sl_points
+                    or sig.atr_points < config.ATR_SPREAD_MULT * self.spread_points):
                 audit["spread"] += 1
+                continue
+
+            if trades_today >= config.MAX_TRADES_PER_DAY:
+                audit["daycap"] += 1
                 continue
 
             n_open = len(positions)
@@ -210,6 +217,7 @@ class BacktestRunner:
                                   strategy=sig.strategy, conf=conf))
             ticket += 1
             last_entry_i = i
+            trades_today += 1
             audit["opened"] += 1
 
         if positions:
@@ -269,7 +277,8 @@ class BacktestRunner:
         print(f" Signals: raw={a.get('raw',0)} conf_rej={a.get('conf',0)} "
               f"spread_rej={a.get('spread',0)} cool_rej={a.get('cooldown',0)} "
               f"margin_rej={a.get('margin',0)} dailyDD_rej={a.get('daily_dd',0)} "
-              f"pause_rej={a.get('pause',0)} opened={a.get('opened',0)}")
+              f"pause_rej={a.get('pause',0)} daycap_rej={a.get('daycap',0)} "
+              f"opened={a.get('opened',0)}")
         print("-" * 64)
         print(f" {'Strategy':<22}{'Trades':>7}{'Win%':>8}{'Net$':>10}")
         for name, d in r["by_strategy"].items():

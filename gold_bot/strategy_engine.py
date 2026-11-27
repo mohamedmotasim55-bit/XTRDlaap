@@ -24,6 +24,8 @@ from typing import List, Optional
 
 import pandas as pd
 
+import indicators
+
 import config
 import regime_detector
 
@@ -154,6 +156,19 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
             m5_ok_sell = mc < me
         except (KeyError, IndexError, TypeError, ValueError):
             pass
+    m5_close = m5_ema21 = m5_adx = None
+    if df_m5 is not None and len(df_m5) >= 30:
+        try:
+            m5_close = float(df_m5["close"].iloc[-1])
+            m5_ema21 = float(df_m5["close"].ewm(span=21, adjust=False).mean().iloc[-1])
+            if {"high", "low", "close"}.issubset(df_m5.columns):
+                m5_adx = float(indicators._adx(df_m5, 14).iloc[-1])
+        except (KeyError, IndexError, TypeError, ValueError):
+            m5_close = m5_ema21 = m5_adx = None
+    shield_buy = not (m5_adx is not None and m5_close is not None
+                      and m5_ema21 is not None and m5_adx > 30 and m5_close < m5_ema21)
+    shield_sell = not (m5_adx is not None and m5_close is not None
+                       and m5_ema21 is not None and m5_adx > 30 and m5_close > m5_ema21)
     bull_break = (close > bb_up) or (body > 1.2 * atr and close > open_)
     bear_break = (close < bb_lo) or (body > 1.2 * atr and close < open_)
     if ("MomentumBreakout" in enabled and close > ema50 and ema9 > ema21
@@ -165,29 +180,29 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
         cands.append(_build("SELL", "MomentumBreakout", close, atr, atr_points,
                             config.SL_ATR_MULT, config.TP_ATR_MULT, 0.72))
 
-    # ---- 2. LiquiditySweep (24/5 micro-swing sweeps) ---------------------
+    # ---- 2. LiquiditySweep (15-bar institutional sweep) ------------------
     if "LiquiditySweep" in enabled and candle_range > 0:
         lower_wick = min(open_, close) - low
         upper_wick = high - max(open_, close)
-        broke_lo = ((sw_lo is not None and low < sw_lo)
-                    or (sw_lo8 is not None and low < sw_lo8))
-        broke_hi = ((sw_hi is not None and high > sw_hi)
-                    or (sw_hi8 is not None and high > sw_hi8))
-        if broke_lo and lower_wick >= 0.38 * candle_range and rsi < 40:
+        vol_ok_strict = (vol is not None and vol_ma is not None
+                         and vol > 1.1 * vol_ma)
+        if (sw_lo is not None and low < sw_lo and close > sw_lo
+                and lower_wick >= 0.48 * candle_range and rsi < 34 and vol_ok_strict):
             cands.append(_build("BUY", "LiquiditySweep", close, atr, atr_points,
-                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68))
-        if broke_hi and upper_wick >= 0.38 * candle_range and rsi > 60:
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70))
+        if (sw_hi is not None and high > sw_hi and close < sw_hi
+                and upper_wick >= 0.48 * candle_range and rsi > 66 and vol_ok_strict):
             cands.append(_build("SELL", "LiquiditySweep", close, atr, atr_points,
-                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68))
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70))
 
-    # ---- 3. BollingerBounce (24/5 mean reversion) -----------------------
+    # ---- 3. BollingerBounce (with M5 falling-knife shield) ---------------
     if "BollingerBounce" in enabled:
-        if low <= bb_lo and rsi < 32 and close > open_:
+        if low <= bb_lo and rsi < 30 and close > open_ and shield_buy:
             cands.append(_build("BUY", "BollingerBounce", close, atr, atr_points,
-                                config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.65))
-        if high >= bb_up and rsi > 68 and close < open_:
+                                config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.66))
+        if high >= bb_up and rsi > 70 and close < open_ and shield_sell:
             cands.append(_build("SELL", "BollingerBounce", close, atr, atr_points,
-                                config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.65))
+                                config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.66))
 
     # ---- 4. EMARibbonPullback (trending regimes only) -------------------
     if "EMARibbonPullback" in enabled and regime.is_trending and ema5 is not None and ema13 is not None:
@@ -229,17 +244,30 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
             cands.append(_build("SELL", "MicroEngulfingReversal", close, atr, atr_points,
                                 1.5, 2.2, 0.70))
 
-    # ---- 8. RSISnapback (high-frequency exhaustion reversal) ------------
+    # ---- 8. RSISnapback (calibrated exhaustion reversal) ----------------
     if "RSISnapback" in enabled:
         c2 = _last(df, "close", -3)
         two_candle_move = abs(close - c2) if c2 is not None else 0.0
-        if two_candle_move > 1.6 * atr:
-            if rsi < 22 and close > open_:
+        if two_candle_move > 1.15 * atr:
+            if rsi < 26 and close > open_ and shield_buy:
                 cands.append(_build("BUY", "RSISnapback", close, atr, atr_points,
-                                    config.SL_ATR_MULT, config.TP_ATR_MULT, 0.64))
-            if rsi > 78 and close < open_:
+                                    config.SL_ATR_MULT, config.TP_ATR_MULT, 0.65))
+            if rsi > 74 and close < open_ and shield_sell:
                 cands.append(_build("SELL", "RSISnapback", close, atr, atr_points,
-                                    config.SL_ATR_MULT, config.TP_ATR_MULT, 0.64))
+                                    config.SL_ATR_MULT, config.TP_ATR_MULT, 0.65))
+
+    # ---- 9. VWAPReversion (intraday magnet, with M5 shield) -------------
+    if "VWAPReversion" in enabled:
+        vwap = _last(df, "vwap")
+        vw_up = _last(df, "vwap_upper")
+        vw_lo = _last(df, "vwap_lower")
+        if None not in (vwap, vw_up, vw_lo):
+            if low <= vw_lo and rsi < 35 and close > open_ and close > vw_lo and shield_buy:
+                cands.append(_build("BUY", "VWAPReversion", close, atr, atr_points,
+                                    config.SL_ATR_MULT, config.TP_ATR_MULT, 0.67))
+            if high >= vw_up and rsi > 65 and close < open_ and close < vw_up and shield_sell:
+                cands.append(_build("SELL", "VWAPReversion", close, atr, atr_points,
+                                    config.SL_ATR_MULT, config.TP_ATR_MULT, 0.67))
 
     if not cands:
         sig.reason = "no strategy matched"

@@ -42,7 +42,7 @@ class TestSevenStrategies(unittest.TestCase):
         self.assertEqual(s.strategy,"MomentumBreakout")
 
     def test_liquidity_sweep(self):
-        d=force(base_df(),-1, **q(open=1996,high=1998.5,low=1990,close=1998,tick_volume=300,
+        d=force(base_df(),-1, **q(open=1996,high=1998.5,low=1990,close=1998,tick_volume=400,
             ema_9=1999,ema_21=2000,ema_50=2005,bb_upper=2010,bb_lower=1985,
             rsi_7=30,vol_ma_10=300,swing_high_15=2005,swing_low_15=1995))
         s=strategy_engine.generate_signal(d, config.SESSION_MODE_MOMENTUM, m5(-1))
@@ -62,6 +62,22 @@ class TestSevenStrategies(unittest.TestCase):
         d=force(d,-3, close=1990.5)
         s=strategy_engine.generate_signal(d, config.SESSION_MODE_ASIAN)
         self.assertEqual(s.strategy,"RSISnapback")
+
+    def test_vwap_reversion(self):
+        d=force(base_df(),-1, **q(open=1992,high=1994,low=1990,close=1993.5,tick_volume=300,
+            rsi_7=30,bb_upper=2020,bb_lower=1980,
+            swing_high_15=2010,swing_low_15=1980,
+            vwap=2000.0,vwap_upper=2010.0,vwap_lower=1990.5))
+        s=strategy_engine.generate_signal(d, config.SESSION_MODE_ASIAN)
+        self.assertEqual(s.strategy,"VWAPReversion")
+
+    def test_bollinger_blocked_by_m5_downtrend(self):
+        d=force(base_df(),-1, **q(open=1990,high=1992.5,low=1988,close=1992,tick_volume=200,
+            bb_upper=2000,bb_lower=1989.5,rsi_7=20,
+            swing_high_15=2005,swing_low_15=1985,
+            vwap=2000.0,vwap_upper=2010.0,vwap_lower=1980.0))
+        s=strategy_engine.generate_signal(d, config.SESSION_MODE_ASIAN, m5(-1))
+        self.assertEqual(s.signal,"NONE")
 
     def test_disabled_strategies_gated(self):
         d=force(base_df(),-1, **q(open=2005,high=2010.5,low=2004.5,close=2010,tick_volume=500,

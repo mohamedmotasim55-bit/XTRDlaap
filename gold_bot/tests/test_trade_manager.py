@@ -107,12 +107,12 @@ class TestTradeManager(unittest.TestCase):
 
     def test_breakeven(self):
         m,f=make_tm()
-        f._bid=2000.60; f._ask=2000.86   # +60 pts profit on BUY @2000 (> 48 trigger)
+        f._bid=2000.70; f._ask=2000.96   # +70 pts profit on BUY @2000 (> 60 trigger)
         f._positions=[pos(10, FakeMT5.POSITION_TYPE_BUY, 2000.0, sl=0.0, tp=2002.0)]
         m.manage_open_positions(current_atr=None)
         req=f.sent_requests[-1]
         self.assertEqual(req["action"], FakeMT5.TRADE_ACTION_SLTP)
-        self.assertAlmostEqual(req["sl"], 2000.08, places=2)   # open + 8 pts
+        self.assertAlmostEqual(req["sl"], 2000.10, places=2)   # open + 10 pts
 
     def test_trailing(self):
         m,f=make_tm()
