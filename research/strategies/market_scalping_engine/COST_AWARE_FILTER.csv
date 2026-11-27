@@ -1,0 +1,7 @@
+target_x_spread,target_pts,cost_pts,breakeven_win_pct,note
+1,26,26,50.0,need win>50% for EV>0
+1.5,39,26,40.0,need win>40% for EV>0
+2,52,26,33.3,need win>33% for EV>0
+2.5,65,26,28.6,need win>29% for EV>0
+3,78,26,25.0,need win>25% for EV>0
+4,104,26,20.0,need win>20% for EV>0

@@ -1,0 +1,17 @@
+family,side,n_per_day,mean_net_1s,verdict
+IMB_Q50,BUY,159.5,-23.77,negative
+IMB_Q50,SELL,157.3,-23.84,negative
+IMB_Q70,BUY,143.3,-23.77,negative
+IMB_Q70,SELL,140.7,-23.87,negative
+IMB_Q85,BUY,143.3,-23.77,negative
+IMB_Q85,SELL,140.7,-23.87,negative
+IMB_Q95,BUY,143.3,-23.77,negative
+IMB_Q95,SELL,140.7,-23.87,negative
+TICKRATE_HI,BUY,185.8,-26.25,negative
+TICKRATE_HI,SELL,185.8,-25.76,negative
+VOL_HI,BUY,200.3,-26.07,negative
+VOL_HI,SELL,200.3,-25.95,negative
+CONFLUENCE,BUY,41.6,-22.1,negative
+CONFLUENCE,SELL,41.6,-22.5,negative
+REVERSAL_HI,BUY,236.6,-26.13,negative
+REVERSAL_HI,SELL,236.6,-25.89,negative
