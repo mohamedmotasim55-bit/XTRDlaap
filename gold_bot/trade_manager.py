@@ -334,6 +334,40 @@ class TradeManager:
 
         self._modify_sltp(pos, new_sl, tp, profit_pts)
 
+    def close_all_positions(self, reason: str = "manual") -> int:
+        """Market-close every bot position (e.g. before a high-impact news release)."""
+        if mt5 is None:
+            return 0
+        tick = self._tick()
+        if tick is None:
+            return 0
+        closed = 0
+        for p in self._positions():
+            if p.magic != config.MAGIC_NUMBER:
+                continue
+            is_buy = p.type == mt5.POSITION_TYPE_BUY
+            price = tick.bid if is_buy else tick.ask
+            request = {
+                "action": mt5.TRADE_ACTION_DEAL,
+                "symbol": self.symbol,
+                "volume": float(p.volume),
+                "type": mt5.ORDER_TYPE_SELL if is_buy else mt5.ORDER_TYPE_BUY,
+                "position": p.ticket,
+                "price": price,
+                "deviation": config.DEVIATION_POINTS,
+                "magic": config.MAGIC_NUMBER,
+                "comment": reason[:31],
+                "type_time": mt5.ORDER_TIME_GTC,
+                "type_filling": self._filling_candidates()[0],
+            }
+            result = mt5.order_send(request)
+            if result is not None and result.retcode in (
+                mt5.TRADE_RETCODE_DONE, mt5.TRADE_RETCODE_PLACED
+            ):
+                closed += 1
+                log.info("CLOSED #%s (%s) before news.", p.ticket, reason)
+        return closed
+
     def _modify_sltp(self, pos, new_sl: float, tp: float, profit_pts: float) -> None:
         request = {
             "action": mt5.TRADE_ACTION_SLTP,

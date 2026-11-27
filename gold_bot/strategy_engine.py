@@ -90,8 +90,13 @@ def _make_signal(
     )
 
 
-def generate_signal(df: pd.DataFrame, mode: str) -> Signal:
-    """Evaluate the appropriate sub-strategies and return a :class:`Signal`."""
+def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] = None) -> Signal:
+    """Evaluate the appropriate sub-strategies and return a :class:`Signal`.
+
+    ``df_m5`` (optional) is used only to align MomentumBreakout with the
+    higher-timeframe trend (M5 close vs M5 EMA50). LiquiditySweep and
+    BollingerBounce remain independent reversal strategies.
+    """
     sig = Signal()
 
     min_rows = max(
@@ -143,6 +148,18 @@ def generate_signal(df: pd.DataFrame, mode: str) -> Signal:
     if mode == config.SESSION_MODE_MOMENTUM:
         volume_ok = vol is not None and vol_ma is not None and vol > vol_ma
 
+        # M5 higher-timeframe trend alignment (only filters MomentumBreakout).
+        m5_ok_buy = True
+        m5_ok_sell = True
+        if df_m5 is not None and len(df_m5) >= config.EMA_SLOW:
+            try:
+                m5_close = float(df_m5["close"].iloc[-1])
+                m5_ema50 = float(df_m5["close"].ewm(span=config.EMA_SLOW, adjust=False).mean().iloc[-1])
+                m5_ok_buy = m5_close > m5_ema50
+                m5_ok_sell = m5_close < m5_ema50
+            except (KeyError, IndexError, TypeError, ValueError):
+                pass
+
         # Sub-strategy 1: Momentum Breakout
         bullish_break = (close > bb_up) or (body > 1.2 * atr and close > open_)
         bearish_break = (close < bb_lo) or (body > 1.2 * atr and close < open_)
@@ -153,6 +170,7 @@ def generate_signal(df: pd.DataFrame, mode: str) -> Signal:
             and bullish_break
             and 60.0 <= rsi <= 82.0
             and volume_ok
+            and m5_ok_buy
         ):
             return _make_signal(
                 "BUY", "MomentumBreakout", close, atr,
@@ -164,6 +182,7 @@ def generate_signal(df: pd.DataFrame, mode: str) -> Signal:
             and bearish_break
             and 18.0 <= rsi <= 40.0
             and volume_ok
+            and m5_ok_sell
         ):
             return _make_signal(
                 "SELL", "MomentumBreakout", close, atr,

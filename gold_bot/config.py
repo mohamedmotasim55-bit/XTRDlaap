@@ -109,6 +109,17 @@ SL_SAFETY_BUFFER_POINTS: float = 5.0    # extra SL distance beyond broker stops_
 TRAIL_MIN_STEP_POINTS: float = 3.0      # ignore SL moves smaller than this (avoid spam)
 
 # ---------------------------------------------------------------------------
+# News filter & resilience
+# ---------------------------------------------------------------------------
+ENABLE_NEWS_FILTER: bool = True     # block entries around High-Impact USD news
+NEWS_PAUSE_BEFORE_MIN: int = 15     # stop entering this many minutes BEFORE a release
+NEWS_PAUSE_AFTER_MIN: int = 15      # resume this many minutes AFTER a release
+NEWS_FORCE_CLOSE_MIN: int = 5       # close open positions if a release is this close
+CONSECUTIVE_LOSS_COOLDOWN_MIN: int = 30  # pause after 3 consecutive losses
+CONSECUTIVE_LOSS_TRIGGER: int = 3
+ANALYTICS_PRINT_INTERVAL_SEC: int = 900  # 15 minutes
+
+# ---------------------------------------------------------------------------
 # Loop / logging
 # ---------------------------------------------------------------------------
 LOOP_INTERVAL_SEC: float = 1.0
