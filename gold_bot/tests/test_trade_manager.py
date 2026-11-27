@@ -85,7 +85,7 @@ class TestTradeManager(unittest.TestCase):
         self.assertTrue(m.can_open_new_trade())
 
     def test_can_open_margin_low(self):
-        m,f=make_tm(); f._positions=[]; f._deals=[]; f._margin_free=4.0; f._margin=1.42
+        m,f=make_tm(); f._positions=[]; f._deals=[]; f._margin_free=0.5; f._margin=1.42
         self.assertFalse(m.can_open_new_trade())
         self.assertIn("margin", m.last_error)
 
@@ -107,12 +107,12 @@ class TestTradeManager(unittest.TestCase):
 
     def test_breakeven(self):
         m,f=make_tm()
-        f._bid=2000.40; f._ask=2000.66   # +40 pts profit on BUY @2000
+        f._bid=2000.60; f._ask=2000.86   # +60 pts profit on BUY @2000 (> 48 trigger)
         f._positions=[pos(10, FakeMT5.POSITION_TYPE_BUY, 2000.0, sl=0.0, tp=2002.0)]
         m.manage_open_positions(current_atr=None)
         req=f.sent_requests[-1]
         self.assertEqual(req["action"], FakeMT5.TRADE_ACTION_SLTP)
-        self.assertAlmostEqual(req["sl"], 2000.05, places=2)   # open + 5 pts
+        self.assertAlmostEqual(req["sl"], 2000.08, places=2)   # open + 8 pts
 
     def test_trailing(self):
         m,f=make_tm()
@@ -121,7 +121,7 @@ class TestTradeManager(unittest.TestCase):
         m.manage_open_positions(current_atr=0.30)
         req=f.sent_requests[-1]
         self.assertEqual(req["action"], FakeMT5.TRADE_ACTION_SLTP)
-        self.assertAlmostEqual(req["sl"], 2000.90, places=2)   # 2001.20 - 0.30
+        self.assertAlmostEqual(req["sl"], 2001.005, places=2)  # 2001.20 - 0.65*0.30
 
     def test_no_backward_trail(self):
         m,f=make_tm()

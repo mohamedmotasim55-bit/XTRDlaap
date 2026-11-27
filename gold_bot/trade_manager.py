@@ -244,6 +244,11 @@ class TradeManager:
         tp_dist = abs(float(signal.tp) - entry)
         sl_dist = max(sl_dist, min_dist)
         tp_dist = max(tp_dist, min_dist)
+        # Hard calibration clamp (points) — protects the $10 account.
+        sl_dist = min(max(sl_dist, config.MIN_SL_POINTS * point),
+                      config.MAX_SL_POINTS * point)
+        tp_dist = min(max(tp_dist, config.MIN_TP_POINTS * point),
+                      config.MAX_TP_POINTS * point)
 
         if is_buy:
             sl = entry - sl_dist

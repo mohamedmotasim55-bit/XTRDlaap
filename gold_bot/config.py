@@ -48,7 +48,7 @@ MAGIC_NUMBER: int = 202699
 LOT_SIZE: float = 0.01               # fixed lot for the $10 micro-account
 MAX_SPREAD_POINTS: float = 38.0      # JustMarkets base ~26 pts; 38 tolerates normal vol
 MAX_OPEN_TRADES: int = 1             # strict single-position cap to protect $10
-DAILY_LOSS_LIMIT_USD: float = 3.00   # stop for the day past this realised+floating loss
+DAILY_LOSS_LIMIT_USD: float = 3.50   # stop for the day past this realised+floating loss
 RISK_PER_TRADE_PCT: float = 1.0      # kept for reference / future dynamic sizing
 MAX_DAILY_DRAWDOWN_PCT: float = 4.0  # legacy % cap (superseded by DAILY_LOSS_LIMIT_USD)
 
@@ -60,12 +60,12 @@ MAX_DAILY_DRAWDOWN_PCT: float = 4.0  # legacy % cap (superseded by DAILY_LOSS_LI
 #   ASIAN   : 01:00 .. 09:29  -> END = 09:30
 #   MOMENTUM: 09:30 .. 21:00  -> END = 21:01
 #   STOP    : 21:01 .. 00:59  (everything else)
-ASIAN_RANGE_START: time = time(1, 0)
-ASIAN_RANGE_END: time = time(9, 30)
+ASIAN_RANGE_START: time = time(23, 0)
+ASIAN_RANGE_END: time = time(8, 0)
 
 # London/NY session -> momentum mode.
-MOMENTUM_START: time = time(9, 30)
-MOMENTUM_END: time = time(21, 1)
+MOMENTUM_START: time = time(8, 0)
+MOMENTUM_END: time = time(22, 0)
 
 # Canonical session-mode strings returned by safety_guard.check_session().
 SESSION_MODE_ASIAN: str = "ASIAN_RANGE"
@@ -77,9 +77,16 @@ SESSION_MODE_STOP: str = "STOP"
 # ---------------------------------------------------------------------------
 ATR_PERIOD: int = 14
 MIN_ATR_POINTS: float = 35.0     # skip dead market (spread cannot be covered)
-SL_ATR_MULT: float = 1.6         # momentum-mode stop distance (x ATR)
-TP_ATR_MULT: float = 2.4         # momentum-mode target distance (x ATR)
-COOLDOWN_SECONDS: int = 45       # wait after a close before a new entry
+SL_ATR_MULT: float = 0.75        # momentum-mode stop distance (x ATR)
+TP_ATR_MULT: float = 1.65        # momentum-mode target distance (x ATR)
+COOLDOWN_SECONDS: int = 20       # wait after a close before a new entry
+
+# Hard SL/TP calibration (points) sized for $3770 gold on a $10 account.
+MIN_SL_POINTS: float = 55.0
+MAX_SL_POINTS: float = 105.0
+MIN_TP_POINTS: float = 100.0
+MAX_TP_POINTS: float = 220.0
+SPREAD_SL_RATIO: float = 0.45    # block if spread > 45% of the SL distance
 
 # Indicator periods
 EMA_FAST: int = 9
@@ -92,19 +99,19 @@ VOL_MA_PERIOD: int = 10
 SWING_LOOKBACK: int = 15
 
 # Range-mode (Asian) tighter targets
-RANGE_SL_ATR_MULT: float = 1.3
-RANGE_TP_ATR_MULT: float = 1.8
+RANGE_SL_ATR_MULT: float = 0.75
+RANGE_TP_ATR_MULT: float = 1.65
 
 # ---------------------------------------------------------------------------
 # Execution & trade management
 # ---------------------------------------------------------------------------
 ENABLE_LIVE_TRADING: bool = True        # master switch: send real/demo orders to MT5
 DEVIATION_POINTS: int = 20              # max allowed slippage (points)
-BREAKEVEN_TRIGGER_POINTS: float = 32.0  # profit needed before SL moves to break-even
-BREAKEVEN_LOCK_POINTS: float = 5.0      # lock this many points beyond entry at BE
-TRAILING_START_POINTS: float = 45.0     # profit needed before trailing begins
-TRAILING_ATR_MULT: float = 1.0          # trailing distance = mult * current ATR
-MIN_FREE_MARGIN_USD: float = 3.50       # keep this free-margin buffer on the $10 account
+BREAKEVEN_TRIGGER_POINTS: float = 48.0  # covers 26-pt spread + 22 pts, then locks
+BREAKEVEN_LOCK_POINTS: float = 8.0      # lock this many points beyond entry at BE
+TRAILING_START_POINTS: float = 70.0     # profit needed before trailing begins
+TRAILING_ATR_MULT: float = 0.65         # trailing distance = mult * current ATR
+MIN_FREE_MARGIN_USD: float = 1.20       # realistic 1:3000 free-margin buffer
 SL_SAFETY_BUFFER_POINTS: float = 5.0    # extra SL distance beyond broker stops_level
 TRAIL_MIN_STEP_POINTS: float = 3.0      # ignore SL moves smaller than this (avoid spam)
 
@@ -140,7 +147,7 @@ ATR_SPIKE_FACTOR: float = 1.4
 # ---------------------------------------------------------------------------
 ROLLING_WINDOW: int = 20
 STRATEGY_MUTE_MINUTES: int = 120
-MIN_CONFIDENCE_TO_TRADE: float = 0.62
+MIN_CONFIDENCE_TO_TRADE: float = 0.50
 REGIME_BOOST: float = 0.15
 
 # ---------------------------------------------------------------------------
@@ -165,6 +172,8 @@ COMPOUND_START_EQUITY_USD: float = 20.0
 DD_THROTTLE_PCT: float = 0.08
 DD_RECOVER_PCT: float = 0.03
 MARGIN_FREE_FRACTION: float = 0.40
+ACCOUNT_LEVERAGE: int = 3000
+CONTRACT_SIZE: float = 100.0
 
 # ---------------------------------------------------------------------------
 # State persistence / log rotation

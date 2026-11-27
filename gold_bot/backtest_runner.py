@@ -66,6 +66,8 @@ class BacktestRunner:
         day = None
         day_start_equity, ratchet_peak, ratchet_locked = balance, 0.0, False
         ticket = 1
+        audit = dict(raw=0, conf=0, spread=0, cooldown=0, margin=0, daily_dd=0, opened=0)
+        last_entry_i = -10 ** 9
 
         def close_pos(p, price, reason):
             nonlocal balance
@@ -139,14 +141,27 @@ class BacktestRunner:
             if mode == config.SESSION_MODE_STOP:
                 continue
 
+            if day_pnl <= -config.DAILY_LOSS_LIMIT_USD:
+                audit["daily_dd"] += 1
+                continue
+
             sub = m1.iloc[: i + 1]
             m5sub = self._m5_slice(i)
             regime = regime_detector.RegimeDetector.classify(sub, m5sub)
             sig = strategy_engine.generate_signal(sub, mode, m5sub, regime=regime)
             if not sig:
                 continue
+            audit["raw"] += 1
+
             allowed, conf, _ = brain.evaluate(sig, regime)
             if not allowed:
+                audit["conf"] += 1
+                continue
+
+            sl_points = abs(row["close"] - sig.sl) / self.point
+            if (self.spread_points > config.MAX_SPREAD_POINTS
+                    or self.spread_points > config.SPREAD_SL_RATIO * sl_points):
+                audit["spread"] += 1
                 continue
 
             n_open = len(positions)
@@ -159,7 +174,10 @@ class BacktestRunner:
                 can = same and risk_free
             if not can:
                 continue
-            if (equity - 1.5) < config.MIN_FREE_MARGIN_USD:
+
+            cooldown_bars = max(1, int(config.COOLDOWN_SECONDS // 60))
+            if i - last_entry_i < cooldown_bars:
+                audit["cooldown"] += 1
                 continue
 
             lot = config.LOT_SIZE
@@ -167,19 +185,27 @@ class BacktestRunner:
                 lot = self._sizer.size(equity, peak_equity, price=row["close"])
                 if n_open >= 1:
                     lot = min(lot, 0.01)
+
+            margin_needed = lot * config.CONTRACT_SIZE * row["close"] / config.ACCOUNT_LEVERAGE
+            if (equity - margin_needed) < config.MIN_FREE_MARGIN_USD:
+                audit["margin"] += 1
+                continue
+
             positions.append(dict(ticket=ticket, dir=sig.signal, entry=row["close"],
                                   sl=sig.sl, tp=sig.tp, lots=lot,
                                   strategy=sig.strategy, conf=conf))
             ticket += 1
+            last_entry_i = i
+            audit["opened"] += 1
 
         if positions:
             last = m1.iloc[-1]
             for p in list(positions):
                 close_pos(p, last["close"], "EOD"); positions.remove(p)
 
-        return self._report(trades, balance, max_dd)
+        return self._report(trades, balance, max_dd, audit)
 
-    def _report(self, trades, final_balance, max_dd):
+    def _report(self, trades, final_balance, max_dd, audit=None):
         n = len(trades)
         wins = sum(1 for t in trades if t["profit_usd"] > 0)
         losses = sum(1 for t in trades if t["profit_usd"] < 0)
@@ -197,7 +223,7 @@ class BacktestRunner:
                    net_profit=round(final_balance - self.initial_balance, 2),
                    max_drawdown_usd=round(max_dd, 2),
                    max_drawdown_pct=(100 * max_dd / self.initial_balance if self.initial_balance else 0.0),
-                   by_strategy=by)
+                   by_strategy=by, signal_audit=audit or {})
         self._save(trades)
         if self.verbose:
             self._print(res)
@@ -225,6 +251,11 @@ class BacktestRunner:
         print(f" Initial: ${r['initial_balance']:.2f}  Final: ${r['final_balance']:.2f}  Net: ${r['net_profit']:.2f}")
         print(f" Trades: {r['total_trades']}  W:{r['wins']}  L:{r['losses']}  WinRate: {r['win_rate']:.1f}%")
         print(f" Profit Factor: {pf}  MaxDD: ${r['max_drawdown_usd']:.2f} ({r['max_drawdown_pct']:.1f}%)")
+        a = r.get("signal_audit") or {}
+        print(f" Signals: raw={a.get('raw',0)} conf_rej={a.get('conf',0)} "
+              f"spread_rej={a.get('spread',0)} cool_rej={a.get('cooldown',0)} "
+              f"margin_rej={a.get('margin',0)} dailyDD_rej={a.get('daily_dd',0)} "
+              f"opened={a.get('opened',0)}")
         print("-" * 64)
         print(f" {'Strategy':<22}{'Trades':>7}{'Win%':>8}{'Net$':>10}")
         for name, d in r["by_strategy"].items():

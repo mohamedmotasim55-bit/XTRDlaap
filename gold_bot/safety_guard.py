@@ -42,8 +42,8 @@ class SafetyGuard:
         self._ratchet_day = None
 
     # ------------------------------------------------------------------ spread
-    def check_spread(self) -> bool:
-        """Return ``True`` if the live spread is within the configured maximum."""
+    def check_spread(self, sl_points: Optional[float] = None) -> bool:
+        """Return ``True`` if spread is within max AND <= 45% of the SL distance."""
         try:
             spread = self.conn.current_spread_points()
         except MT5ConnectionError as exc:
@@ -54,12 +54,14 @@ class SafetyGuard:
             return False
         ok = spread <= config.MAX_SPREAD_POINTS
         if not ok:
-            log.warning(
-                "Spread %.1f pts exceeds max %.1f pts.",
-                spread,
-                config.MAX_SPREAD_POINTS,
-            )
-        return ok
+            log.warning("Spread %.1f pts exceeds max %.1f pts.",
+                        spread, config.MAX_SPREAD_POINTS)
+            return False
+        if sl_points and sl_points > 0 and spread > config.SPREAD_SL_RATIO * sl_points:
+            log.warning("Spread %.1f pts > %.0f%% of SL %.1f pts; skipping.",
+                        spread, config.SPREAD_SL_RATIO * 100, sl_points)
+            return False
+        return True
 
     # ----------------------------------------------------------------- session
     def check_session(self, now: Optional[datetime] = None) -> str:

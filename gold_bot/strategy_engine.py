@@ -58,13 +58,25 @@ def _last(df: pd.DataFrame, col: str, offset: int = -1) -> Optional[float]:
     return _num(df[col].iloc[offset])
 
 
-def _build(direction, strategy, entry, atr, atr_points, sl_mult, tp_mult, confidence):
+def _clamp_sl_tp(direction, entry, atr, atr_points):
+    """Unified SL/TP calculator: ATR-based, hard-clamped in POINTS.
+
+    Guarantees no strategy can ever emit a 5-point (or 290-point) stop.
+    """
+    point = (atr / atr_points) if atr_points and atr_points > 0 else 0.01
+    sl_points = max(config.MIN_SL_POINTS,
+                    min(config.MAX_SL_POINTS, atr_points * config.SL_ATR_MULT))
+    tp_points = max(config.MIN_TP_POINTS,
+                    min(config.MAX_TP_POINTS, atr_points * config.TP_ATR_MULT))
+    sl_dist = sl_points * point
+    tp_dist = tp_points * point
     if direction == "BUY":
-        sl = entry - sl_mult * atr
-        tp = entry + tp_mult * atr
-    else:
-        sl = entry + sl_mult * atr
-        tp = entry - tp_mult * atr
+        return entry - sl_dist, entry + tp_dist
+    return entry + sl_dist, entry - tp_dist
+
+
+def _build(direction, strategy, entry, atr, atr_points, sl_mult, tp_mult, confidence):
+    sl, tp = _clamp_sl_tp(direction, entry, atr, atr_points)
     return dict(direction=direction, strategy=strategy, entry=round(entry, 5),
                 sl=round(sl, 5), tp=round(tp, 5), atr_points=round(atr_points, 1),
                 confidence=round(confidence, 3))

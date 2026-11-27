@@ -5,7 +5,7 @@ Standalone live-data backtest against the connected JustMarkets MT5 terminal.
 Fetches real M1 (10,000) and M5 (2,500) XAUUSD candles + real point/tick_value/
 live spread, runs BacktestRunner at $10 balance, prints the Institutional
 Backtest Report, then a parameter-sensitivity sweep over
-BREAKEVEN_TRIGGER_POINTS [28,32,36] x TP_ATR_MULT [2.0,2.4,2.8].
+BREAKEVEN_TRIGGER_POINTS [40,50,65] x TP_ATR_MULT [1.4,1.7,2.1].
 """
 from __future__ import annotations
 import sys
@@ -50,8 +50,8 @@ def main() -> int:
     orig_be, orig_tp = config.BREAKEVEN_TRIGGER_POINTS, config.TP_ATR_MULT
     rows = []
     try:
-        for be in (28, 32, 36):
-            for tp in (2.0, 2.4, 2.8):
+        for be in (40, 50, 65):
+            for tp in (1.4, 1.7, 2.1):
                 config.BREAKEVEN_TRIGGER_POINTS = be
                 config.TP_ATR_MULT = tp
                 r = BacktestRunner(m1, m5, journal_path=f"logs/bt_be{be}_tp{tp}.csv",
