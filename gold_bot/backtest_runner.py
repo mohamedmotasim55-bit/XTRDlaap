@@ -79,6 +79,8 @@ def _prepare_frames(m1_df, m5_df, point):
             st, st_dir = indicators._supertrend(m5, 10, 2.5)
             m5["supertrend"] = st
             m5["supertrend_dir"] = st_dir
+            indicators.add_zone_levels(m5, ("fvg_bull", "fvg_bear",
+                                            "order_block_bull", "order_block_bear"), 10)
     m15 = BacktestRunner._resample_m15(m1_df)
     if m15 is not None:
         m15 = indicators.add_indicators(m15, point=point)

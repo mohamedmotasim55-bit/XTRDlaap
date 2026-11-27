@@ -199,6 +199,9 @@ def add_indicators(df: pd.DataFrame, point: float = 0.01) -> pd.DataFrame:
     out["order_block_bear"] = ((out["close"] < out["open"])
                                & (body > 1.2 * out["atr_14"])).astype(int)
 
+    add_zone_levels(out, ("fvg_bull", "fvg_bear",
+                          "order_block_bull", "order_block_bear"), 10)
+
     for col, ser in _pivots(out).items():
         out[col] = ser
 
@@ -219,6 +222,22 @@ def add_indicators(df: pd.DataFrame, point: float = 0.01) -> pd.DataFrame:
         out["asian_low"] = np.nan
 
     return out
+
+
+def add_zone_levels(df, flags, n: int = 10):
+    """Vectorised "last active zone" high/low so strategies avoid per-bar scans."""
+    idx = np.arange(len(df))
+    hi = df["high"].to_numpy()
+    lo = df["low"].to_numpy()
+    for flag in flags:
+        if flag not in df.columns:
+            continue
+        pos = np.maximum.accumulate(np.where(df[flag].to_numpy() == 1, idx, -1))
+        valid = (pos >= 0) & ((idx - pos) <= n)
+        safe = np.clip(pos, 0, None)
+        df[flag + "_hi"] = np.where(valid, hi[safe], np.nan)
+        df[flag + "_lo"] = np.where(valid, lo[safe], np.nan)
+    return df
 
 
 def _supertrend(df, period: int = 10, mult: float = 2.5):

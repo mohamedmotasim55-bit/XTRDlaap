@@ -9,7 +9,7 @@ env:
 jobs:
   backtest:
     runs-on: windows-latest
-    timeout-minutes: 120
+    timeout-minutes: 170
     steps:
       - uses: actions/checkout@v4
       - name: Validate required secrets

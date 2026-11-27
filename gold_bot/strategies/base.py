@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from typing import Optional
 
-import config
+import numpy as np
 
 
 def _num(value) -> Optional[float]:
@@ -15,102 +15,130 @@ def _num(value) -> Optional[float]:
         return None
 
 
-def _last(frame, col, off=-1):
-    if frame is None or col not in getattr(frame, "columns", []) or len(frame) < abs(off):
+_ROW_CACHE = {}
+
+
+def _row_dict(frame):
+    if frame is None or not len(frame):
         return None
-    return _num(frame[col].iloc[off])
+    key = (id(frame), len(frame))
+    cached = _ROW_CACHE.get(key)
+    if cached is not None:
+        return cached
+    if len(_ROW_CACHE) > 6:
+        _ROW_CACHE.clear()
+    d = frame.iloc[-1].to_dict()
+    _ROW_CACHE[key] = d
+    return d
 
 
 def _zone(frame, flag, n=10):
     if frame is None or flag not in getattr(frame, "columns", []) or "high" not in frame.columns:
         return None
-    for _, row in frame.tail(n).iloc[::-1].iterrows():
-        try:
-            if int(row[flag]) == 1:
-                return float(row["high"]), float(row["low"])
-        except (TypeError, ValueError):
-            continue
-    return None
+    tail = frame[flag].tail(n).to_numpy()
+    hits = np.nonzero(tail == 1)[0]
+    if not len(hits):
+        return None
+    pos = len(frame) - 1 - (len(tail) - 1 - int(hits[-1]))
+    return float(frame["high"].iloc[pos]), float(frame["low"].iloc[pos])
 
 
 class Ctx:
     def __init__(self, df, m5=None, m15=None):
         self.df, self.m5, self.m15 = df, m5, m15
-        self.close = _last(df, "close")
-        self.open_ = _last(df, "open")
-        self.high = _last(df, "high")
-        self.low = _last(df, "low")
-        self.atr = _last(df, "atr_14")
-        self.atr_points = _last(df, "atr_points")
-        self.atr_ma_20 = _last(df, "atr_ma_20")
-        self.rsi = _last(df, "rsi_7")
-        self.adx = _last(df, "adx_14")
-        self.vol = _last(df, "tick_volume")
-        self.vol_ma = _last(df, "vol_ma_10")
-        self.ema5 = _last(df, "ema_5")
-        self.ema9 = _last(df, "ema_9")
-        self.ema13 = _last(df, "ema_13")
-        self.ema21 = _last(df, "ema_21")
-        self.ema50 = _last(df, "ema_50")
-        self.macd_hist = _last(df, "macd_hist")
-        self.macd_hist_prev = _last(df, "macd_hist", -2)
-        self.stoch_k = _last(df, "stoch_k")
-        self.stoch_d = _last(df, "stoch_d")
-        self.st_dir = _last(df, "supertrend_dir")
-        self.st_dir_prev = _last(df, "supertrend_dir", -2)
-        self.bb_up = _last(df, "bb_upper")
-        self.bb_lo = _last(df, "bb_lower")
-        self.kelt_up = _last(df, "keltner_upper")
-        self.kelt_lo = _last(df, "keltner_lower")
-        self.vwap_up = _last(df, "vwap_upper")
-        self.vwap_lo = _last(df, "vwap_lower")
-        self.pivot_p = _last(df, "pivot_p")
-        self.pivot_r1 = _last(df, "pivot_r1")
-        self.pivot_s1 = _last(df, "pivot_s1")
-        self.obv = _last(df, "obv")
-        self.obv_prev = _last(df, "obv", -2)
-        self.swing_hi = _last(df, "swing_high_15")
-        self.swing_lo = _last(df, "swing_low_15")
-        self.swing_hi20 = _last(df, "swing_high_20")
-        self.swing_lo20 = _last(df, "swing_low_20")
-        self.inside_bar = _last(df, "inside_bar")
-        self.asian_hi = _last(df, "asian_high")
-        self.asian_lo = _last(df, "asian_low")
-        self.prev_high = _last(df, "high", -2)
-        self.prev_low = _last(df, "low", -2)
-        self.prev_close = _last(df, "close", -2)
-        self.fvg_bull = _zone(df, "fvg_bull")
-        self.fvg_bear = _zone(df, "fvg_bear")
-        self.ob_bull = _zone(df, "order_block_bull")
-        self.ob_bear = _zone(df, "order_block_bear")
+        lr = _row_dict(df)
+        pr = df.iloc[-2].to_dict() if df is not None and len(df) > 1 else None
 
-        self.m5_close = _last(m5, "close")
-        self.m5_ema21 = _last(m5, "m5_ema_21")
-        self.m5_ema50 = _last(m5, "m5_ema_50")
-        self.m5_adx = _last(m5, "m5_adx_14")
-        self.m5_slope = _last(m5, "m5_ema21_slope")
-        self.m5_vwap_up = _last(m5, "m5_vwap_upper")
-        self.m5_vwap_lo = _last(m5, "m5_vwap_lower")
-        self.m5_sw_hi = _last(m5, "swing_high_20")
-        self.m5_sw_lo = _last(m5, "swing_low_20")
-        self.m5_st_dir = _last(m5, "supertrend_dir")
-        self.m5_inside = _last(m5, "inside_bar")
-        self.m5_ob_bull = _zone(m5, "order_block_bull") or _zone(m5, "m5_ob_bull")
-        self.m5_ob_bear = _zone(m5, "order_block_bear") or _zone(m5, "m5_ob_bear")
-        self.m5_fvg_bull = _zone(m5, "fvg_bull")
-        self.m5_fvg_bear = _zone(m5, "fvg_bear")
+        def g(col):
+            return _num(lr.get(col)) if lr is not None else None
 
-        self.m15_ema21 = _last(m15, "ema_21")
-        self.m15_ema50 = _last(m15, "ema_50")
-        self.m15_adx = _last(m15, "adx_14")
-        self.m15_rsi = _last(m15, "rsi_7")
-        self.m15_sw_hi = _last(m15, "swing_high_12")
-        self.m15_sw_lo = _last(m15, "swing_low_12")
-        self.m15_st_dir = _last(m15, "supertrend_dir")
-        self.m15_ob_bull = _zone(m15, "order_block_bull", 6)
-        self.m15_ob_bear = _zone(m15, "order_block_bear", 6)
-        self.m15_fvg_bull = _zone(m15, "fvg_bull", 6)
-        self.m15_fvg_bear = _zone(m15, "fvg_bear", 6)
+        def gp(col):
+            return _num(pr.get(col)) if pr is not None else None
+
+        self.close = g("close")
+        self.open_ = g("open")
+        self.high = g("high")
+        self.low = g("low")
+        self.atr = g("atr_14")
+        self.atr_points = g("atr_points")
+        self.atr_ma_20 = g("atr_ma_20")
+        self.rsi = g("rsi_7")
+        self.adx = g("adx_14")
+        self.vol = g("tick_volume")
+        self.vol_ma = g("vol_ma_10")
+        self.ema5 = g("ema_5")
+        self.ema9 = g("ema_9")
+        self.ema13 = g("ema_13")
+        self.ema21 = g("ema_21")
+        self.ema50 = g("ema_50")
+        self.macd_hist = g("macd_hist")
+        self.macd_hist_prev = gp("macd_hist")
+        self.stoch_k = g("stoch_k")
+        self.stoch_d = g("stoch_d")
+        self.st_dir = g("supertrend_dir")
+        self.st_dir_prev = gp("supertrend_dir")
+        self.bb_up = g("bb_upper")
+        self.bb_lo = g("bb_lower")
+        self.kelt_up = g("keltner_upper")
+        self.kelt_lo = g("keltner_lower")
+        self.vwap_up = g("vwap_upper")
+        self.vwap_lo = g("vwap_lower")
+        self.pivot_p = g("pivot_p")
+        self.pivot_r1 = g("pivot_r1")
+        self.pivot_s1 = g("pivot_s1")
+        self.obv = g("obv")
+        self.obv_prev = gp("obv")
+        self.swing_hi = g("swing_high_15")
+        self.swing_lo = g("swing_low_15")
+        self.swing_hi20 = g("swing_high_20")
+        self.swing_lo20 = g("swing_low_20")
+        self.inside_bar = g("inside_bar")
+        self.asian_hi = g("asian_high")
+        self.asian_lo = g("asian_low")
+        self.prev_high = gp("high")
+        self.prev_low = gp("low")
+        self.prev_close = gp("close")
+        self.fvg_bull = self._lvl(g, "fvg_bull") or _zone(df, "fvg_bull")
+        self.fvg_bear = self._lvl(g, "fvg_bear") or _zone(df, "fvg_bear")
+        self.ob_bull = self._lvl(g, "order_block_bull") or _zone(df, "order_block_bull")
+        self.ob_bear = self._lvl(g, "order_block_bear") or _zone(df, "order_block_bear")
+
+        m5r = _row_dict(m5)
+        m15r = _row_dict(m15)
+
+        def g5(col):
+            return _num(m5r.get(col)) if m5r is not None else None
+
+        def g15(col):
+            return _num(m15r.get(col)) if m15r is not None else None
+
+        self.m5_close = g5("close")
+        self.m5_ema21 = g5("m5_ema_21")
+        self.m5_ema50 = g5("m5_ema_50")
+        self.m5_adx = g5("m5_adx_14")
+        self.m5_slope = g5("m5_ema21_slope")
+        self.m5_vwap_up = g5("m5_vwap_upper")
+        self.m5_vwap_lo = g5("m5_vwap_lower")
+        self.m5_sw_hi = g5("swing_high_20")
+        self.m5_sw_lo = g5("swing_low_20")
+        self.m5_st_dir = g5("supertrend_dir")
+        self.m5_inside = g5("inside_bar")
+        self.m5_ob_bull = self._lvl(g5, "order_block_bull") or _zone(m5, "order_block_bull") or _zone(m5, "m5_ob_bull")
+        self.m5_ob_bear = self._lvl(g5, "order_block_bear") or _zone(m5, "order_block_bear") or _zone(m5, "m5_ob_bear")
+        self.m5_fvg_bull = self._lvl(g5, "fvg_bull") or _zone(m5, "fvg_bull")
+        self.m5_fvg_bear = self._lvl(g5, "fvg_bear") or _zone(m5, "fvg_bear")
+
+        self.m15_ema21 = g15("ema_21")
+        self.m15_ema50 = g15("ema_50")
+        self.m15_adx = g15("adx_14")
+        self.m15_rsi = g15("rsi_7")
+        self.m15_sw_hi = g15("swing_high_12")
+        self.m15_sw_lo = g15("swing_low_12")
+        self.m15_st_dir = g15("supertrend_dir")
+        self.m15_ob_bull = self._lvl(g15, "order_block_bull") or _zone(m15, "order_block_bull", 6)
+        self.m15_ob_bear = self._lvl(g15, "order_block_bear") or _zone(m15, "order_block_bear", 6)
+        self.m15_fvg_bull = self._lvl(g15, "fvg_bull") or _zone(m15, "fvg_bull", 6)
+        self.m15_fvg_bear = self._lvl(g15, "fvg_bear") or _zone(m15, "fvg_bear", 6)
 
         self.range = (self.high - self.low) if None not in (self.high, self.low) else 0.0
         self.body = abs(self.close - self.open_) if None not in (self.close, self.open_) else 0.0
@@ -139,6 +167,12 @@ class Ctx:
                           if (self.atr and self.atr_ma_20) else 0.0)
         self.vol_ratio = ((self.vol / self.vol_ma)
                           if (self.vol and self.vol_ma) else 0.0)
+
+    @staticmethod
+    def _lvl(getter, flag):
+        hi = getter(flag + "_hi")
+        lo = getter(flag + "_lo")
+        return (hi, lo) if hi is not None and lo is not None else None
 
     def micro_limit(self, direction):
         if not self.point:

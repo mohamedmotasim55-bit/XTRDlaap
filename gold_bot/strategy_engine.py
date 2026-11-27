@@ -142,6 +142,10 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
         sig.reason = f"mode '{mode}' not tradeable"
         return sig
 
+    if set(config.ENABLED_STRATEGIES) & set(config.STRATEGY_32):
+        return _build_32_signal(df, df_m5, df_m15, regime,
+                                set(config.ENABLED_STRATEGIES), sig)
+
     atr = _last(df, "atr_14")
     atr_points = _last(df, "atr_points")
     if atr is None or atr_points is None or atr <= 0:
@@ -186,8 +190,6 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
     volume_ok = vol is not None and vol_ma is not None and vol > vol_ma
     cands: List[dict] = []
     enabled = set(config.ENABLED_STRATEGIES)
-    if enabled & set(config.STRATEGY_32):
-        return _build_32_signal(df, df_m5, df_m15, regime, enabled, sig)
 
     # ---- 1. MomentumBreakout --------------------------------------------
     m5_ok_buy = m5_ok_sell = True
@@ -536,6 +538,16 @@ def _institutional_models(cands, enabled, df, df_m5, df_m15, close, open_, high,
 
 def _build_32_signal(df, df_m5, df_m15, regime, enabled, base_sig):
     ctx = Ctx(df, df_m5, df_m15)
+    if ctx.atr is None or ctx.atr_points is None or ctx.atr_points <= 0:
+        base_sig.reason = "ATR unavailable"
+        return base_sig
+    if ctx.atr_points < config.MIN_ATR_POINTS:
+        base_sig.reason = (f"ATR {ctx.atr_points:.1f} pts < min "
+                           f"{config.MIN_ATR_POINTS:.0f}")
+        return base_sig
+    base_sig.atr_points = round(ctx.atr_points, 1)
+    if regime is None:
+        regime = regime_detector.RegimeDetector.classify(df, df_m5)
     found = []
     for name, fn in STRATEGIES_32:
         if name not in enabled:
