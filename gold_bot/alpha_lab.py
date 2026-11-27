@@ -67,14 +67,16 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
     print(f"Month 1: {m1a['time'].iloc[0]} -> {m1a['time'].iloc[-1]} ({len(m1a)} bars)")
     print(f"Month 2: {m1b['time'].iloc[0]} -> {m1b['time'].iloc[-1]} ({len(m1b)} bars)")
 
-    print("\n########## 5-MODEL SCALPING TOURNAMENT ##########")
+    print("\n########## 32-STRATEGY SCALPING TOURNAMENT ##########")
     print(f" {'Model':<28}{'M1 T':>5}{'WR':>6}{'PF':>6}{'Net$':>8}{'DD%':>6}"
           f" |{'M2 T':>5}{'WR':>6}{'PF':>6}{'Net$':>8}{'DD%':>6}")
-    m1_results, m2_results = {}, {}
-    for model in config.SCALP_MODELS:
+    m1_results, m2_results, rows = {}, {}, []
+    for model in config.STRATEGY_32:
         r1 = _run(m1a, m5a, (model,), f"{model}_m1")
         r2 = _run(m1b, m5b, (model,), f"{model}_m2")
         m1_results[model], m2_results[model] = r1, r2
+        rows.append((model, r1, r2))
+    for model, r1, r2 in sorted(rows, key=lambda x: -x[1]["net_profit"]):
         print(f" {model:<28}{r1['total_trades']:>5}{r1['win_rate']:>5.0f}%"
               f"{_pf(r1):>6}{r1['net_profit']:>8.2f}{r1['max_drawdown_pct']:>6.0f}"
               f" |{r2['total_trades']:>5}{r2['win_rate']:>5.0f}%"
@@ -92,13 +94,17 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
             print(f"   {tier:<4}{d['trades']:>6} trades  WR {wr:>5.1f}%  Net ${d['net']:>8.2f}")
 
     selected = select_models(m1_results)
-    print(f"\nSelected from Month 1 (PF>={MIN_PF}, DD<={MAX_DD_PCT:.0f}%): "
+    print(f"\nGate-passing models (PF>={MIN_PF}, DD<={MAX_DD_PCT:.0f}%): "
           f"{selected if selected else 'NONE'}")
 
+    ensemble = selected or [m for m, _, _ in sorted(rows, key=lambda x: -x[1]["net_profit"])[:3]]
+    tag = "gate-pass" if selected else "forced top-3 by net (below gate)"
+    print(f"Ensemble ({tag}): {ensemble}")
+
     portfolio = None
-    if selected:
-        print("\n########## BLIND OUT-OF-SAMPLE PORTFOLIO (Month 2) ##########")
-        portfolio = _run(m1b, m5b, tuple(selected), "portfolio_m2", dynamic=True)
+    if ensemble:
+        print("\n########## BLIND OUT-OF-SAMPLE ENSEMBLE (Month 2) ##########")
+        portfolio = _run(m1b, m5b, tuple(ensemble), "portfolio_m2", dynamic=True)
         print(f" Final: ${portfolio['final_balance']:.2f} | Net ${portfolio['net_profit']:.2f} "
               f"| PF {_pf(portfolio)} | MaxDD {portfolio['max_drawdown_pct']:.1f}% "
               f"| Trades {portfolio['total_trades']}")

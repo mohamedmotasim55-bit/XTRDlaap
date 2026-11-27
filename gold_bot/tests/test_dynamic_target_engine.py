@@ -41,7 +41,7 @@ class TestTargetTiers(unittest.TestCase):
         for score in (0.1, 0.6, 0.95):
             t = dte.select_targets(score)
             self.assertEqual(t["max_hold_minutes"], config.MAX_SCALP_HOLD_MINUTES)
-            self.assertEqual(t["max_hold_minutes"], 35)
+            self.assertEqual(t["max_hold_minutes"], 40)
 
     def test_tp_monotonic_within_tier(self):
         lo = dte.select_targets(0.10)["tp_points"]
@@ -70,9 +70,9 @@ class TestScalpTimeout(unittest.TestCase):
     def test_expiry_after_35_minutes(self):
         import pandas as pd
         from backtest_runner import BacktestRunner
-        pos = dict(open_time=pd.Timestamp("2026-01-05 10:00"), max_hold_minutes=35)
-        self.assertFalse(BacktestRunner._scalp_expired(pos, pd.Timestamp("2026-01-05 10:34")))
-        self.assertTrue(BacktestRunner._scalp_expired(pos, pd.Timestamp("2026-01-05 10:35")))
+        pos = dict(open_time=pd.Timestamp("2026-01-05 10:00"), max_hold_minutes=40)
+        self.assertFalse(BacktestRunner._scalp_expired(pos, pd.Timestamp("2026-01-05 10:39")))
+        self.assertTrue(BacktestRunner._scalp_expired(pos, pd.Timestamp("2026-01-05 10:40")))
 
     def test_no_timeout_when_unset(self):
         import pandas as pd

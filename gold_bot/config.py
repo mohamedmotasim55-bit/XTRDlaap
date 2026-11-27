@@ -108,9 +108,23 @@ SCALP_MODELS = (
     "M1_M5_MomentumLimit", "TickVelocitySurge", "M15_LiquiditySweep_M1Trigger",
     "M5_OrderBlock_Retest", "SessionOpenExpansion",
 )
-ENABLED_STRATEGIES = SCALP_MODELS
+STRATEGY_32 = (
+    "M1_M5_MomentumLimit", "M15_TrendPullbackLimit", "MACD_ZeroLineBurst",
+    "ADX_VolatilityBreakout", "DualSuperTrendFlip", "TripleEMARibbonSurge",
+    "M15_SwingLiquiditySweep", "M5_SwingLiquiditySweep", "M1_MicroStopHunt",
+    "EqualHighsLows_Raid", "AsianRange_SweepReverse", "DualWick_RejectionTrap",
+    "M5_OrderBlock_Retest", "M15_OrderBlock_Mitigation", "M5_FVG_SniperFill",
+    "Nested_M1_M5_FVG", "BreakerBlock_Flip",
+    "TickVolume_ClimaxAbsorption", "VolumeWeighted_ImpulseLimit",
+    "OBV_DivergenceSnap", "EffortVsResult_Anomaly", "TickVelocity_Breakout",
+    "M5_VWAP_ElasticSnap", "DailyPivot_S1R1_Bounce", "KeltnerChannel_Exhaustion",
+    "DoubleOscillator_Snapback", "FlatRange_BollingerSniper",
+    "LondonOpen_LiquidityBurst", "NYOpen_COMEX_Surge", "LondonFix_MeanReversion",
+    "InsideBar_CompressionBreak", "M15_KeyLevel_PinBar",
+)
+ENABLED_STRATEGIES = STRATEGY_32
 SCALP_MIN_ATR_POINTS: float = 95.0
-MAX_SCALP_HOLD_MINUTES: int = 35
+MAX_SCALP_HOLD_MINUTES: int = 40
 
 # Indicator periods
 EMA_FAST: int = 9

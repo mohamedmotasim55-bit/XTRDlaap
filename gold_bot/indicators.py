@@ -173,8 +173,95 @@ def add_indicators(df: pd.DataFrame, point: float = 0.01) -> pd.DataFrame:
     # 12-bar swing levels (M15 institutional sweep reference)
     out["swing_high_12"] = out["high"].rolling(12).max().shift(1)
     out["swing_low_12"] = out["low"].rolling(12).min().shift(1)
+    out["swing_high_20"] = out["high"].rolling(20).max().shift(1)
+    out["swing_low_20"] = out["low"].rolling(20).min().shift(1)
+
+    out["atr_ma_20"] = out["atr_14"].rolling(20).mean()
+    out["keltner_mid"] = out["ema_21"]
+    out["keltner_upper"] = out["keltner_mid"] + 1.8 * out["atr_14"]
+    out["keltner_lower"] = out["keltner_mid"] - 1.8 * out["atr_14"]
+
+    st, st_dir = _supertrend(out, 10, 2.5)
+    out["supertrend"] = st
+    out["supertrend_dir"] = st_dir
+
+    _vol = (out["tick_volume"] if "tick_volume" in out.columns
+            else pd.Series(1.0, index=out.index))
+    out["obv"] = (np.sign(out["close"].diff().fillna(0.0)) * _vol).cumsum()
+    out["obv_ema_10"] = out["obv"].ewm(span=10, adjust=False).mean()
+
+    out["inside_bar"] = ((out["high"] < out["high"].shift(1))
+                         & (out["low"] > out["low"].shift(1))).astype(int)
+
+    body = (out["close"] - out["open"]).abs()
+    out["order_block_bull"] = ((out["close"] > out["open"])
+                               & (body > 1.2 * out["atr_14"])).astype(int)
+    out["order_block_bear"] = ((out["close"] < out["open"])
+                               & (body > 1.2 * out["atr_14"])).astype(int)
+
+    for col, ser in _pivots(out).items():
+        out[col] = ser
+
+    if "time" in out.columns:
+        try:
+            ts = pd.to_datetime(out["time"])
+            day = ts.dt.date
+            asian = ts.dt.hour < 7
+            hi = out["high"].where(asian).groupby(day).cummax()
+            lo = out["low"].where(asian).groupby(day).cummin()
+            out["asian_high"] = hi.groupby(day).ffill()
+            out["asian_low"] = lo.groupby(day).ffill()
+        except (TypeError, ValueError):
+            out["asian_high"] = np.nan
+            out["asian_low"] = np.nan
+    else:
+        out["asian_high"] = np.nan
+        out["asian_low"] = np.nan
 
     return out
+
+
+def _supertrend(df, period: int = 10, mult: float = 2.5):
+    prev_close = df["close"].shift(1)
+    tr = pd.concat([df["high"] - df["low"],
+                    (df["high"] - prev_close).abs(),
+                    (df["low"] - prev_close).abs()], axis=1).max(axis=1)
+    atr = tr.rolling(period).mean().bfill().fillna(0.0)
+    hl2 = (df["high"] + df["low"]) / 2.0
+    upper = (hl2 + mult * atr).to_numpy()
+    lower = (hl2 - mult * atr).to_numpy()
+    close = df["close"].to_numpy()
+    n = len(df)
+    st = np.zeros(n)
+    direction = np.ones(n)
+    for i in range(1, n):
+        if close[i] > upper[i - 1]:
+            direction[i] = 1
+        elif close[i] < lower[i - 1]:
+            direction[i] = -1
+        else:
+            direction[i] = direction[i - 1]
+        st[i] = lower[i] if direction[i] == 1 else upper[i]
+    return pd.Series(st, index=df.index), pd.Series(direction, index=df.index)
+
+
+def _pivots(df):
+    empty = {k: pd.Series(np.nan, index=df.index)
+             for k in ("pivot_p", "pivot_r1", "pivot_s1")}
+    if "time" not in df.columns or len(df) < 2:
+        return empty
+    try:
+        day = pd.to_datetime(df["time"]).dt.date
+    except (TypeError, ValueError):
+        return empty
+    g = df.groupby(day).agg(h=("high", "max"), l=("low", "min"), c=("close", "last"))
+    p = (g["h"] + g["l"] + g["c"]) / 3.0
+    g["p"] = p
+    g["r1"] = 2 * p - g["l"]
+    g["s1"] = 2 * p - g["h"]
+    g = g.shift(1)
+    return {"pivot_p": day.map(g["p"]), "pivot_r1": day.map(g["r1"]),
+            "pivot_s1": day.map(g["s1"])}
 
 
 def vwap_bands(df, sigma: float = 1.35):

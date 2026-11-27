@@ -15,6 +15,7 @@ from typing import Optional
 import pandas as pd
 
 import config
+import adaptive_trailing
 import indicators
 import regime_detector
 import strategy_engine
@@ -40,6 +41,53 @@ def _session_mode(ts):
     return config.SESSION_MODE_STOP
 
 
+_PREP_CACHE = {}
+
+
+def _prepare_frames(m1_df, m5_df, point):
+    key = (id(m1_df), len(m1_df), id(m5_df) if m5_df is not None else None, point)
+    hit = _PREP_CACHE.get(key)
+    if hit is not None:
+        return hit
+    m1 = indicators.add_indicators(m1_df.copy().reset_index(drop=True), point=point)
+    m5 = None
+    if m5_df is not None:
+        m5 = m5_df.reset_index(drop=True).copy()
+        if {"high", "low", "close"}.issubset(m5.columns):
+            m5["m5_ema_21"] = m5["close"].ewm(span=21, adjust=False).mean()
+            m5["m5_ema_50"] = m5["close"].ewm(span=config.EMA_SLOW, adjust=False).mean()
+            m5["m5_ema21_slope"] = m5["m5_ema_21"].diff()
+            m5["m5_adx_14"] = indicators._adx(m5, 14)
+            v, up, lo = indicators.vwap_bands(m5, 1.75)
+            m5["m5_vwap"], m5["m5_vwap_upper"], m5["m5_vwap_lower"] = v, up, lo
+            prev_close = m5["close"].shift(1)
+            tr = pd.concat([m5["high"] - m5["low"],
+                            (m5["high"] - prev_close).abs(),
+                            (m5["low"] - prev_close).abs()], axis=1).max(axis=1)
+            m5_atr = tr.rolling(14).mean()
+            body = (m5["close"] - m5["open"]).abs()
+            m5["m5_ob_bull"] = ((m5["close"] > m5["open"]) & (body > 1.2 * m5_atr)).astype(int)
+            m5["m5_ob_bear"] = ((m5["close"] < m5["open"]) & (body > 1.2 * m5_atr)).astype(int)
+            m5["order_block_bull"] = m5["m5_ob_bull"]
+            m5["order_block_bear"] = m5["m5_ob_bear"]
+            m5["fvg_bull"] = (m5["low"] > m5["high"].shift(2)).astype(int)
+            m5["fvg_bear"] = (m5["high"] < m5["low"].shift(2)).astype(int)
+            m5["swing_high_20"] = m5["high"].rolling(20).max().shift(1)
+            m5["swing_low_20"] = m5["low"].rolling(20).min().shift(1)
+            m5["inside_bar"] = ((m5["high"] < m5["high"].shift(1))
+                                & (m5["low"] > m5["low"].shift(1))).astype(int)
+            st, st_dir = indicators._supertrend(m5, 10, 2.5)
+            m5["supertrend"] = st
+            m5["supertrend_dir"] = st_dir
+    m15 = BacktestRunner._resample_m15(m1_df)
+    if m15 is not None:
+        m15 = indicators.add_indicators(m15, point=point)
+    if len(_PREP_CACHE) > 8:
+        _PREP_CACHE.clear()
+    _PREP_CACHE[key] = (m1, m5, m15)
+    return m1, m5, m15
+
+
 class BacktestRunner:
     def __init__(self, m1_df, m5_df=None, initial_balance=10.0, spread_points=26.0,
                  point=0.01, warmup=60, journal_path="logs/backtest_results.csv",
@@ -55,28 +103,7 @@ class BacktestRunner:
         if strategies is not None:
             self.overrides["ENABLED_STRATEGIES"] = tuple(strategies)
         self._sizer = DynamicLotSizer(mt5_module=None)
-        self.m1 = indicators.add_indicators(m1_df.copy().reset_index(drop=True), point=point)
-        self.m5 = m5_df.reset_index(drop=True) if m5_df is not None else None
-        if self.m5 is not None and {"high", "low", "close"}.issubset(self.m5.columns):
-            self.m5["m5_ema_21"] = self.m5["close"].ewm(span=21, adjust=False).mean()
-            self.m5["m5_ema_50"] = self.m5["close"].ewm(span=config.EMA_SLOW, adjust=False).mean()
-            self.m5["m5_ema21_slope"] = self.m5["m5_ema_21"].diff()
-            self.m5["m5_adx_14"] = indicators._adx(self.m5, 14)
-            v, up, lo = indicators.vwap_bands(self.m5, 1.75)
-            self.m5["m5_vwap"], self.m5["m5_vwap_upper"], self.m5["m5_vwap_lower"] = v, up, lo
-            prev_close = self.m5["close"].shift(1)
-            tr = pd.concat([self.m5["high"] - self.m5["low"],
-                            (self.m5["high"] - prev_close).abs(),
-                            (self.m5["low"] - prev_close).abs()], axis=1).max(axis=1)
-            m5_atr = tr.rolling(14).mean()
-            body = (self.m5["close"] - self.m5["open"]).abs()
-            self.m5["m5_ob_bull"] = ((self.m5["close"] > self.m5["open"]) & (body > 1.2 * m5_atr)).astype(int)
-            self.m5["m5_ob_bear"] = ((self.m5["close"] < self.m5["open"]) & (body > 1.2 * m5_atr)).astype(int)
-            self.m5["fvg_bull"] = (self.m5["low"] > self.m5["high"].shift(2)).astype(int)
-            self.m5["fvg_bear"] = (self.m5["high"] < self.m5["low"].shift(2)).astype(int)
-        self.m15 = self._resample_m15(m1_df)
-        if self.m15 is not None:
-            self.m15 = indicators.add_indicators(self.m15, point=point)
+        self.m1, self.m5, self.m15 = _prepare_frames(m1_df, m5_df, point)
 
     @staticmethod
     def _resample_m15(m1_df):
@@ -207,15 +234,20 @@ class BacktestRunner:
                     if row["high"] >= p["tp"]:
                         close_pos(p, p["tp"], "TP"); positions.remove(p); continue
                     prof = (row["close"] - p["entry"]) / self.point
-                    if prof >= p.get("be_trigger", config.BREAKEVEN_TRIGGER_POINTS) \
-                            and p["sl"] < p["entry"]:
-                        p["sl"] = p["entry"] + p.get("be_lock", config.BREAKEVEN_LOCK_POINTS) * self.point
-                    if prof >= p.get("trail_start", config.TRAILING_START_POINTS):
-                        atr = float(row.get("atr_14", 0.0) or 0.0)
-                        if atr > 0:
-                            cand = row["close"] - config.TRAILING_ATR_MULT * atr
-                            if cand > p["sl"]:
-                                p["sl"] = cand
+                    if p.get("tier") in ("T1", "T2", "T3"):
+                        new_sl = self._adaptive_sl(p, row, i, m1)
+                        if new_sl is not None and new_sl > p["sl"]:
+                            p["sl"] = new_sl
+                    else:
+                        if prof >= p.get("be_trigger", config.BREAKEVEN_TRIGGER_POINTS) \
+                                and p["sl"] < p["entry"]:
+                            p["sl"] = p["entry"] + p.get("be_lock", config.BREAKEVEN_LOCK_POINTS) * self.point
+                        if prof >= p.get("trail_start", config.TRAILING_START_POINTS):
+                            atr = float(row.get("atr_14", 0.0) or 0.0)
+                            if atr > 0:
+                                cand = row["close"] - config.TRAILING_ATR_MULT * atr
+                                if cand > p["sl"]:
+                                    p["sl"] = cand
                     if self._scalp_expired(p, ts):
                         close_pos(p, row["close"], "TIME"); positions.remove(p); continue
                 else:
@@ -224,15 +256,20 @@ class BacktestRunner:
                     if row["low"] <= p["tp"]:
                         close_pos(p, p["tp"], "TP"); positions.remove(p); continue
                     prof = (p["entry"] - row["close"]) / self.point
-                    if prof >= p.get("be_trigger", config.BREAKEVEN_TRIGGER_POINTS) \
-                            and (p["sl"] == 0 or p["sl"] > p["entry"]):
-                        p["sl"] = p["entry"] - p.get("be_lock", config.BREAKEVEN_LOCK_POINTS) * self.point
-                    if prof >= p.get("trail_start", config.TRAILING_START_POINTS):
-                        atr = float(row.get("atr_14", 0.0) or 0.0)
-                        if atr > 0:
-                            cand = row["close"] + config.TRAILING_ATR_MULT * atr
-                            if cand < p["sl"]:
-                                p["sl"] = cand
+                    if p.get("tier") in ("T1", "T2", "T3"):
+                        new_sl = self._adaptive_sl(p, row, i, m1)
+                        if new_sl is not None and (p["sl"] == 0 or new_sl < p["sl"]):
+                            p["sl"] = new_sl
+                    else:
+                        if prof >= p.get("be_trigger", config.BREAKEVEN_TRIGGER_POINTS) \
+                                and (p["sl"] == 0 or p["sl"] > p["entry"]):
+                            p["sl"] = p["entry"] - p.get("be_lock", config.BREAKEVEN_LOCK_POINTS) * self.point
+                        if prof >= p.get("trail_start", config.TRAILING_START_POINTS):
+                            atr = float(row.get("atr_14", 0.0) or 0.0)
+                            if atr > 0:
+                                cand = row["close"] + config.TRAILING_ATR_MULT * atr
+                                if cand < p["sl"]:
+                                    p["sl"] = cand
                     if self._scalp_expired(p, ts):
                         close_pos(p, row["close"], "TIME"); positions.remove(p); continue
 
@@ -331,9 +368,26 @@ class BacktestRunner:
 
         return self._report(trades, balance, max_dd, audit)
 
+    def _adaptive_sl(self, p, row, i, m1):
+        prof = ((row["close"] - p["entry"]) / self.point if p["dir"] == "BUY"
+                else (p["entry"] - row["close"]) / self.point)
+        prev_rsi = None
+        try:
+            if i > 0:
+                prev_rsi = float(m1["rsi_7"].iloc[i - 1])
+        except (KeyError, TypeError, ValueError):
+            prev_rsi = None
+        lock = adaptive_trailing.lock_points(
+            p["dir"], prof, p.get("atr_points", 0.0), row.get("rsi_7"), prev_rsi,
+            row.get("tick_volume"), row.get("vol_ma_10"), row.get("adx_14"))
+        if lock is None:
+            return None
+        return (p["entry"] + lock * self.point if p["dir"] == "BUY"
+                else p["entry"] - lock * self.point)
+
     @staticmethod
     def _meta(sig):
-        return dict(tier=sig.tier or "NA", score=sig.score,
+        return dict(tier=sig.tier or "NA", score=sig.score, atr_points=sig.atr_points,
                     be_trigger=sig.be_trigger or config.BREAKEVEN_TRIGGER_POINTS,
                     be_lock=sig.be_lock or config.BREAKEVEN_LOCK_POINTS,
                     trail_start=sig.trail_start or config.TRAILING_START_POINTS,

@@ -26,6 +26,8 @@ import pandas as pd
 
 import indicators
 import dynamic_target_engine
+from strategies import ALL as STRATEGIES_32
+from strategies.base import Ctx
 
 import config
 import regime_detector
@@ -184,6 +186,8 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
     volume_ok = vol is not None and vol_ma is not None and vol > vol_ma
     cands: List[dict] = []
     enabled = set(config.ENABLED_STRATEGIES)
+    if enabled & set(config.STRATEGY_32):
+        return _build_32_signal(df, df_m5, df_m15, regime, enabled, sig)
 
     # ---- 1. MomentumBreakout --------------------------------------------
     m5_ok_buy = m5_ok_sell = True
@@ -528,3 +532,47 @@ def _institutional_models(cands, enabled, df, df_m5, df_m15, close, open_, high,
         if m15_rsi is not None and m15_rsi < 22 and close > open_:
             cands.append(_build("BUY", "LondonFixReversal", close, atr, atr_points,
                                 config.SL_ATR_MULT, config.TP_ATR_MULT, 0.66))
+
+
+def _build_32_signal(df, df_m5, df_m15, regime, enabled, base_sig):
+    ctx = Ctx(df, df_m5, df_m15)
+    found = []
+    for name, fn in STRATEGIES_32:
+        if name not in enabled:
+            continue
+        try:
+            cand = fn(ctx)
+        except Exception:  # noqa: BLE001 - a broken model must not kill the engine
+            cand = None
+        if cand:
+            found.append(cand)
+    if not found:
+        base_sig.reason = "no 32-model match"
+        return base_sig
+
+    winner = max(found, key=lambda c: (c["confidence"], c["strategy"]))
+    agree = [c for c in found if c["direction"] == winner["direction"]]
+    targets = dynamic_target_engine.build(
+        winner["direction"], ctx.adx, ctx.m5_adx, ctx.atr_ratio, ctx.vol_ratio,
+        ctx.m1_up, ctx.m5_up, ctx.m15_up, consensus=len(agree))
+
+    point = ctx.point or 0.01
+    sl_pts, tp_pts = targets["sl_points"], targets["tp_points"]
+    if winner["direction"] == "BUY":
+        sl, tp = ctx.close - sl_pts * point, ctx.close + tp_pts * point
+    else:
+        sl, tp = ctx.close + sl_pts * point, ctx.close - tp_pts * point
+
+    conf = min(1.0, winner["confidence"] + 0.08 * (len(agree) - 1))
+    return Signal(
+        signal=winner["direction"], strategy=winner["strategy"],
+        entry=round(ctx.close, 5), sl=round(sl, 5), tp=round(tp, 5),
+        atr_points=round(ctx.atr_points or 0.0, 1), confidence_score=round(conf, 3),
+        regime=regime.regime if regime else "",
+        reason=f"{winner['strategy']} ({len(agree)} agree)",
+        entry_type=winner["entry_type"], limit_price=winner["limit_price"],
+        tp_points=tp_pts, sl_points=sl_pts, be_trigger=targets["be_trigger"],
+        be_lock=targets["be_lock"], trail_start=targets["trail_start"],
+        max_hold_minutes=targets["max_hold_minutes"], tier=targets["tier"],
+        score=targets["score"],
+    )
