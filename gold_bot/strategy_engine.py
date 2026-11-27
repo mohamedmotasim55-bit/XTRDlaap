@@ -41,6 +41,8 @@ class Signal:
     confidence_score: float = 0.0
     regime: str = ""
     reason: str = ""
+    entry_type: str = "MARKET"    # "MARKET" | "LIMIT"
+    limit_price: float = 0.0
 
     def __bool__(self) -> bool:
         return self.signal in ("BUY", "SELL")
@@ -77,15 +79,28 @@ def _clamp_sl_tp(direction, entry, atr, atr_points):
     return entry + sl_dist, entry - tp_dist
 
 
-def _build(direction, strategy, entry, atr, atr_points, sl_mult, tp_mult, confidence):
+def _build(direction, strategy, entry, atr, atr_points, sl_mult, tp_mult, confidence,
+           entry_type="MARKET", limit_price=0.0):
     sl, tp = _clamp_sl_tp(direction, entry, atr, atr_points)
     return dict(direction=direction, strategy=strategy, entry=round(entry, 5),
                 sl=round(sl, 5), tp=round(tp, 5), atr_points=round(atr_points, 1),
-                confidence=round(confidence, 3))
+                confidence=round(confidence, 3), entry_type=entry_type,
+                limit_price=round(limit_price, 5))
+
+
+def _limit_entry(direction, close, high, low, atr, atr_points):
+    """35% retracement of the trigger candle, clamped to 12-16 points."""
+    if not atr or not atr_points:
+        return 0.0
+    point = atr / atr_points
+    if point <= 0:
+        return 0.0
+    off_pts = min(16.0, max(12.0, 0.35 * (high - low) / point))
+    return close - off_pts * point if direction == "BUY" else close + off_pts * point
 
 
 def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] = None,
-                    regime=None) -> Signal:
+                    regime=None, df_m15: Optional[pd.DataFrame] = None) -> Signal:
     sig = Signal()
     min_rows = max(config.EMA_SLOW, config.BB_PERIOD, config.ATR_PERIOD,
                    config.SWING_LOOKBACK) + 2
@@ -286,6 +301,9 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
                 cands.append(_build("SELL", "VWAPReversion", close, atr, atr_points,
                                     config.SL_ATR_MULT, config.TP_ATR_MULT, 0.67))
 
+    _institutional_models(cands, enabled, df, df_m5, df_m15, close, open_, high, low,
+                          atr, atr_points, rsi, vol, vol_ma, candle_range, body, adx, m5_adx)
+
     if not cands:
         sig.reason = "no strategy matched"
         return sig
@@ -302,4 +320,161 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
         atr_points=winner["atr_points"], confidence_score=round(conf, 3),
         regime=regime.regime,
         reason=f"{winner['strategy']} ({len(agree)} agree)",
+        entry_type=winner.get("entry_type", "MARKET"),
+        limit_price=winner.get("limit_price", 0.0),
     )
+
+
+# ---------------------------------------------------------------------------
+# Institutional multi-timeframe models (Step 13)
+# ---------------------------------------------------------------------------
+def _institutional_models(cands, enabled, df, df_m5, df_m15, close, open_, high, low,
+                          atr, atr_points, rsi, vol, vol_ma, candle_range, body,
+                          adx, m5_adx):
+    models = set(config.NEW_MODELS) & set(enabled)
+    if not models:
+        return
+
+    def val(frame, col, default=None):
+        if frame is None or col not in frame.columns or len(frame) == 0:
+            return default
+        return _num(frame[col].iloc[-1])
+
+    def last_zone(frame, flag):
+        if frame is None or flag not in frame.columns or "high" not in frame.columns:
+            return None
+        for _, r in frame.tail(10).iloc[::-1].iterrows():
+            try:
+                if int(r[flag]) == 1:
+                    return float(r["high"]), float(r["low"])
+            except (TypeError, ValueError):
+                continue
+        return None
+
+    m5_close = val(df_m5, "close")
+    m5_ema21 = val(df_m5, "m5_ema_21")
+    m5_adx_v = val(df_m5, "m5_adx_14", m5_adx)
+    m5_slope = val(df_m5, "m5_ema21_slope", 0.0)
+    m5_vup = val(df_m5, "m5_vwap_upper")
+    m5_vlo = val(df_m5, "m5_vwap_lower")
+
+    m15_ema21 = val(df_m15, "ema_21")
+    m15_ema50 = val(df_m15, "ema_50")
+    m15_adx = val(df_m15, "adx_14")
+    m15_rsi = val(df_m15, "rsi_7")
+    m15_sw_hi = val(df_m15, "swing_high_12")
+    m15_sw_lo = val(df_m15, "swing_low_12")
+
+    ts = None
+    if df is not None and "time" in df.columns and len(df):
+        ts = df["time"].iloc[-1]
+    hour = minute = None
+    if ts is not None:
+        try:
+            hour, minute = int(ts.hour), int(ts.minute)
+        except (AttributeError, TypeError, ValueError):
+            hour = None
+    hf = (hour + minute / 60.0) if hour is not None else None
+
+    m15_up = m15_ema21 is not None and m15_ema50 is not None and m15_ema21 > m15_ema50
+    m15_dn = m15_ema21 is not None and m15_ema50 is not None and m15_ema21 < m15_ema50
+    m5_up = m5_close is not None and m5_ema21 is not None and m5_close > m5_ema21
+    m5_dn = m5_close is not None and m5_ema21 is not None and m5_close < m5_ema21
+    vol_13 = vol is not None and vol_ma is not None and vol > 1.3 * vol_ma
+    vol_12 = vol is not None and vol_ma is not None and vol > 1.2 * vol_ma
+    vol_20 = vol is not None and vol_ma is not None and vol > 2.0 * vol_ma
+
+    def limit_price(direction):
+        return _limit_entry(direction, close, high, low, atr, atr_points)
+
+    # 1. M1_M5_MomentumLimit
+    if ("M1_M5_MomentumLimit" in models and m5_adx_v is not None and m5_adx_v > 22
+            and body > 1.2 * atr and vol_13):
+        if m15_up and m5_up and close > open_:
+            cands.append(_build("BUY", "M1_M5_MomentumLimit", close, atr, atr_points,
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.72,
+                                "LIMIT", limit_price("BUY")))
+        if m15_dn and m5_dn and close < open_:
+            cands.append(_build("SELL", "M1_M5_MomentumLimit", close, atr, atr_points,
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.72,
+                                "LIMIT", limit_price("SELL")))
+
+    # 2. SessionOpenExpansion
+    if ("SessionOpenExpansion" in models and hf is not None
+            and (8.0 <= hf < 10.5 or 13.5 <= hf < 16.5) and candle_range > 1.5 * atr):
+        if m5_up and close > open_ and (m15_up or m15_ema21 is None):
+            cands.append(_build("BUY", "SessionOpenExpansion", close, atr, atr_points,
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70,
+                                "LIMIT", limit_price("BUY")))
+        if m5_dn and close < open_ and (m15_dn or m15_ema21 is None):
+            cands.append(_build("SELL", "SessionOpenExpansion", close, atr, atr_points,
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70,
+                                "LIMIT", limit_price("SELL")))
+
+    # 3. M15_LiquiditySweep_M1Trigger
+    if ("M15_LiquiditySweep_M1Trigger" in models and candle_range > 0):
+        lower_wick = min(open_, close) - low
+        upper_wick = high - max(open_, close)
+        if (m15_sw_lo is not None and low < m15_sw_lo and close > m15_sw_lo
+                and lower_wick >= 0.45 * candle_range and vol_12):
+            cands.append(_build("BUY", "M15_LiquiditySweep_M1Trigger", close, atr,
+                                atr_points, config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70))
+        if (m15_sw_hi is not None and high > m15_sw_hi and close < m15_sw_hi
+                and upper_wick >= 0.45 * candle_range and vol_12):
+            cands.append(_build("SELL", "M15_LiquiditySweep_M1Trigger", close, atr,
+                                atr_points, config.SL_ATR_MULT, config.TP_ATR_MULT, 0.70))
+
+    # 4. M5_OrderBlock_Retest
+    if "M5_OrderBlock_Retest" in models:
+        bull_zone = last_zone(df_m5, "m5_ob_bull")
+        bear_zone = last_zone(df_m5, "m5_ob_bear")
+        if bull_zone and low <= bull_zone[0] and close > bull_zone[0] and close > open_:
+            cands.append(_build("BUY", "M5_OrderBlock_Retest", close, atr, atr_points,
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68))
+        if bear_zone and high >= bear_zone[1] and close < bear_zone[1] and close < open_:
+            cands.append(_build("SELL", "M5_OrderBlock_Retest", close, atr, atr_points,
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68))
+
+    # 5. VWAP_SessionMagnet
+    if ("VWAP_SessionMagnet" in models and m15_adx is not None and m15_adx < 22
+            and m5_vlo is not None):
+        if low <= m5_vlo and rsi < 35 and close > open_:
+            cands.append(_build("BUY", "VWAP_SessionMagnet", close, atr, atr_points,
+                                config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.67))
+        if m5_vup is not None and high >= m5_vup and rsi > 65 and close < open_:
+            cands.append(_build("SELL", "VWAP_SessionMagnet", close, atr, atr_points,
+                                config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.67))
+
+    # 6. TickVelocitySurge
+    if ("TickVelocitySurge" in models and vol_20 and candle_range > 0
+            and m5_slope is not None and m5_slope > 0):
+        if close >= low + 0.8 * candle_range and m5_up:
+            cands.append(_build("BUY", "TickVelocitySurge", close, atr, atr_points,
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68,
+                                "LIMIT", limit_price("BUY")))
+        if close <= low + 0.2 * candle_range and m5_dn:
+            cands.append(_build("SELL", "TickVelocitySurge", close, atr, atr_points,
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68,
+                                "LIMIT", limit_price("SELL")))
+
+    # 7. FVG_InstitutionalFill
+    if "FVG_InstitutionalFill" in models:
+        fvg_bull = last_zone(df_m5, "fvg_bull")
+        fvg_bear = last_zone(df_m5, "fvg_bear")
+        if (m15_up and fvg_bull and low <= fvg_bull[0] and close > fvg_bull[0]
+                and close > open_):
+            cands.append(_build("BUY", "FVG_InstitutionalFill", close, atr, atr_points,
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.67))
+        if (m15_dn and fvg_bear and high >= fvg_bear[1] and close < fvg_bear[1]
+                and close < open_):
+            cands.append(_build("SELL", "FVG_InstitutionalFill", close, atr, atr_points,
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.67))
+
+    # 8. LondonFixReversal
+    if "LondonFixReversal" in models and hf is not None and 15.75 <= hf < 18.0:
+        if m15_rsi is not None and m15_rsi > 78 and close < open_:
+            cands.append(_build("SELL", "LondonFixReversal", close, atr, atr_points,
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.66))
+        if m15_rsi is not None and m15_rsi < 22 and close > open_:
+            cands.append(_build("BUY", "LondonFixReversal", close, atr, atr_points,
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.66))

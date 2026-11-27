@@ -93,12 +93,18 @@ ATR_SPREAD_MULT: float = 3.8     # require ATR >= 3.8x spread (>=99 pts at 26)
 # ---------------------------------------------------------------------------
 # Strategy enablement (surgical reversal/liquidity pivot)
 # ---------------------------------------------------------------------------
-ALL_STRATEGIES = (
+LEGACY_STRATEGIES = (
     "MomentumBreakout", "LiquiditySweep", "BollingerBounce", "EMARibbonPullback",
     "FastMACDCross", "FairValueGapScalp", "MicroEngulfingReversal", "RSISnapback",
     "VWAPReversion",
 )
-ENABLED_STRATEGIES = ("LiquiditySweep", "BollingerBounce", "RSISnapback", "VWAPReversion")
+NEW_MODELS = (
+    "M1_M5_MomentumLimit", "SessionOpenExpansion", "M15_LiquiditySweep_M1Trigger",
+    "M5_OrderBlock_Retest", "VWAP_SessionMagnet", "TickVelocitySurge",
+    "FVG_InstitutionalFill", "LondonFixReversal",
+)
+ALL_STRATEGIES = LEGACY_STRATEGIES + NEW_MODELS
+ENABLED_STRATEGIES = NEW_MODELS
 
 # Indicator periods
 EMA_FAST: int = 9
@@ -119,6 +125,9 @@ RANGE_TP_ATR_MULT: float = 2.00
 # ---------------------------------------------------------------------------
 ENABLE_LIVE_TRADING: bool = True        # master switch: send real/demo orders to MT5
 DEVIATION_POINTS: int = 20              # max allowed slippage (points)
+LIMIT_TTL_SECONDS: int = 45             # micro-limit order lifetime
+LIMIT_OFFSET_MIN_POINTS: float = 12.0   # min price improvement vs trigger close
+LIMIT_OFFSET_MAX_POINTS: float = 16.0
 BREAKEVEN_TRIGGER_POINTS: float = 35.0  # Step 11 sweep winner: lock early, let TP run
 BREAKEVEN_LOCK_POINTS: float = 10.0     # lock this many points beyond entry at BE
 TRAILING_START_POINTS: float = 115.0    # only trail after +115 pts (room for TP)

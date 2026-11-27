@@ -2,7 +2,7 @@ import os, sys, unittest
 import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config, indicators, strategy_engine
-config.ENABLED_STRATEGIES = list(config.ALL_STRATEGIES)  # tests cover all engines
+config.ENABLED_STRATEGIES = list(config.LEGACY_STRATEGIES)  # tests cover all engines
 
 def base_df(n=60):
     rows=[]

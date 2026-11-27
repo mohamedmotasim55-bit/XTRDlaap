@@ -24,6 +24,10 @@ from dynamic_lot_sizer import DynamicLotSizer
 log = logging.getLogger(__name__)
 
 
+def _limit_hit(direction, limit, low, high):
+    return (direction == "BUY" and low <= limit) or (direction == "SELL" and high >= limit)
+
+
 def _session_mode(ts):
     try:
         t = ts.time()
@@ -39,7 +43,7 @@ def _session_mode(ts):
 class BacktestRunner:
     def __init__(self, m1_df, m5_df=None, initial_balance=10.0, spread_points=26.0,
                  point=0.01, warmup=60, journal_path="logs/backtest_results.csv",
-                 verbose=True, use_dynamic_lots=True):
+                 verbose=True, use_dynamic_lots=True, strategies=None, overrides=None):
         self.point = point
         self.spread_points = float(spread_points)
         self.initial_balance = float(initial_balance)
@@ -47,13 +51,50 @@ class BacktestRunner:
         self.journal_path = journal_path
         self.verbose = verbose
         self.use_dynamic_lots = use_dynamic_lots
+        self.overrides = dict(overrides or {})
+        if strategies is not None:
+            self.overrides["ENABLED_STRATEGIES"] = tuple(strategies)
         self._sizer = DynamicLotSizer(mt5_module=None)
         self.m1 = indicators.add_indicators(m1_df.copy().reset_index(drop=True), point=point)
         self.m5 = m5_df.reset_index(drop=True) if m5_df is not None else None
         if self.m5 is not None and {"high", "low", "close"}.issubset(self.m5.columns):
             self.m5["m5_ema_21"] = self.m5["close"].ewm(span=21, adjust=False).mean()
             self.m5["m5_ema_50"] = self.m5["close"].ewm(span=config.EMA_SLOW, adjust=False).mean()
+            self.m5["m5_ema21_slope"] = self.m5["m5_ema_21"].diff()
             self.m5["m5_adx_14"] = indicators._adx(self.m5, 14)
+            v, up, lo = indicators.vwap_bands(self.m5, 1.75)
+            self.m5["m5_vwap"], self.m5["m5_vwap_upper"], self.m5["m5_vwap_lower"] = v, up, lo
+            prev_close = self.m5["close"].shift(1)
+            tr = pd.concat([self.m5["high"] - self.m5["low"],
+                            (self.m5["high"] - prev_close).abs(),
+                            (self.m5["low"] - prev_close).abs()], axis=1).max(axis=1)
+            m5_atr = tr.rolling(14).mean()
+            body = (self.m5["close"] - self.m5["open"]).abs()
+            self.m5["m5_ob_bull"] = ((self.m5["close"] > self.m5["open"]) & (body > 1.2 * m5_atr)).astype(int)
+            self.m5["m5_ob_bear"] = ((self.m5["close"] < self.m5["open"]) & (body > 1.2 * m5_atr)).astype(int)
+            self.m5["fvg_bull"] = (self.m5["low"] > self.m5["high"].shift(2)).astype(int)
+            self.m5["fvg_bear"] = (self.m5["high"] < self.m5["low"].shift(2)).astype(int)
+        self.m15 = self._resample_m15(m1_df)
+        if self.m15 is not None:
+            self.m15 = indicators.add_indicators(self.m15, point=point)
+
+    @staticmethod
+    def _resample_m15(m1_df):
+        if m1_df is None or "time" not in m1_df.columns or len(m1_df) < 15:
+            return None
+        d = m1_df.copy()
+        d["time"] = pd.to_datetime(d["time"])
+        agg = dict(open="first", high="max", low="min", close="last")
+        if "tick_volume" in d.columns:
+            agg["tick_volume"] = "sum"
+        g = d.set_index("time").resample("15min").agg(agg).dropna(
+            subset=["open", "high", "low", "close"]).reset_index()
+        return g if len(g) else None
+
+    def _m15_slice(self, i):
+        if self.m15 is None:
+            return None
+        return self.m15.iloc[: max(1, i // 15 + 1)]
 
     def _m5_slice(self, i):
         if self.m5 is None:
@@ -61,6 +102,18 @@ class BacktestRunner:
         return self.m5.iloc[: max(1, i // 5 + 1)]
 
     def run(self):
+        if not self.overrides:
+            return self._run()
+        old = {k: getattr(config, k) for k in self.overrides}
+        try:
+            for k, v in self.overrides.items():
+                setattr(config, k, v)
+            return self._run()
+        finally:
+            for k, v in old.items():
+                setattr(config, k, v)
+
+    def _run(self):
         m1 = self.m1
         n = len(m1)
         balance = self.initial_balance
@@ -71,7 +124,9 @@ class BacktestRunner:
         day_start_equity, ratchet_peak, ratchet_locked = balance, 0.0, False
         ticket = 1
         audit = dict(raw=0, conf=0, spread=0, cooldown=0, margin=0,
-                     daily_dd=0, pause=0, daycap=0, opened=0)
+                     daily_dd=0, pause=0, daycap=0, opened=0,
+                     limit_placed=0, limit_filled=0, limit_expired=0)
+        pending = None
         trades_today = 0
         last_entry_i = -10 ** 9
         consec_losses = 0
@@ -91,6 +146,40 @@ class BacktestRunner:
                                confidence=p.get("conf", 0.0), close_reason=reason))
             brain.record_trade(p["strategy"], pnl, now=cur_time)
             consec_losses = consec_losses + 1 if pnl < 0 else 0
+
+        def open_position(i, direction, entry, sl, tp, strategy, conf):
+            nonlocal ticket, last_entry_i, trades_today
+            n_open = len(positions)
+            can = n_open == 0
+            if not can and n_open == 1 and config.ENABLE_ZERO_RISK_PYRAMID \
+                    and n_open < config.MAX_TOTAL_TRADES_WITH_PYRAMID:
+                ex = positions[0]
+                same = ex["dir"] == direction
+                risk_free = (ex["sl"] >= ex["entry"]) if ex["dir"] == "BUY" else (ex["sl"] <= ex["entry"] and ex["sl"] > 0)
+                can = same and risk_free
+            if not can:
+                return False
+            cooldown_bars = max(1, int(config.COOLDOWN_SECONDS // 60))
+            if i - last_entry_i < cooldown_bars:
+                audit["cooldown"] += 1
+                return False
+            lot = config.LOT_SIZE
+            if self.use_dynamic_lots:
+                lot = self._sizer.size(equity, peak_equity, price=entry)
+                if n_open >= 1:
+                    lot = min(lot, 0.01)
+            margin_needed = lot * config.CONTRACT_SIZE * entry / config.ACCOUNT_LEVERAGE
+            if (equity - margin_needed) < config.MIN_FREE_MARGIN_USD:
+                audit["margin"] += 1
+                return False
+            positions.append(dict(ticket=ticket, dir=direction, entry=entry,
+                                  sl=sl, tp=tp, lots=lot,
+                                  strategy=strategy, conf=conf))
+            ticket += 1
+            last_entry_i = i
+            trades_today += 1
+            audit["opened"] += 1
+            return True
 
         for i in range(self.warmup, n):
             row = m1.iloc[i]
@@ -165,10 +254,29 @@ class BacktestRunner:
                 audit["daily_dd"] += 1
                 continue
 
+            if pending is not None:
+                if positions:
+                    pending = None
+                else:
+                    hit = _limit_hit(pending["dir"], pending["limit"],
+                                     row["low"], row["high"])
+                    if hit and i > pending["placed_i"]:
+                        delta = pending["limit"] - pending["sig"].entry
+                        if open_position(i, pending["dir"], pending["limit"],
+                                         pending["sl"] + delta, pending["tp"] + delta,
+                                         pending["strategy"], pending["conf"]):
+                            audit["limit_filled"] += 1
+                        pending = None
+                    elif i - pending["placed_i"] >= pending["ttl"]:
+                        audit["limit_expired"] += 1
+                        pending = None
+
             sub = m1.iloc[: i + 1]
             m5sub = self._m5_slice(i)
+            m15sub = self._m15_slice(i)
             regime = regime_detector.RegimeDetector.classify(sub, m5sub)
-            sig = strategy_engine.generate_signal(sub, mode, m5sub, regime=regime)
+            sig = strategy_engine.generate_signal(sub, mode, m5sub, regime=regime,
+                                                  df_m15=m15sub)
             if not sig:
                 continue
             audit["raw"] += 1
@@ -189,40 +297,15 @@ class BacktestRunner:
                 audit["daycap"] += 1
                 continue
 
-            n_open = len(positions)
-            can = n_open == 0
-            if not can and n_open == 1 and config.ENABLE_ZERO_RISK_PYRAMID \
-                    and n_open < config.MAX_TOTAL_TRADES_WITH_PYRAMID:
-                ex = positions[0]
-                same = ex["dir"] == sig.signal
-                risk_free = (ex["sl"] >= ex["entry"]) if ex["dir"] == "BUY" else (ex["sl"] <= ex["entry"] and ex["sl"] > 0)
-                can = same and risk_free
-            if not can:
+            if sig.entry_type == "LIMIT" and sig.limit_price > 0 and pending is None:
+                pending = dict(sig=sig, dir=sig.signal, limit=sig.limit_price,
+                               sl=sig.sl, tp=sig.tp, strategy=sig.strategy,
+                               conf=conf, placed_i=i, ttl=1)
+                audit["limit_placed"] += 1
                 continue
 
-            cooldown_bars = max(1, int(config.COOLDOWN_SECONDS // 60))
-            if i - last_entry_i < cooldown_bars:
-                audit["cooldown"] += 1
-                continue
-
-            lot = config.LOT_SIZE
-            if self.use_dynamic_lots:
-                lot = self._sizer.size(equity, peak_equity, price=row["close"])
-                if n_open >= 1:
-                    lot = min(lot, 0.01)
-
-            margin_needed = lot * config.CONTRACT_SIZE * row["close"] / config.ACCOUNT_LEVERAGE
-            if (equity - margin_needed) < config.MIN_FREE_MARGIN_USD:
-                audit["margin"] += 1
-                continue
-
-            positions.append(dict(ticket=ticket, dir=sig.signal, entry=row["close"],
-                                  sl=sig.sl, tp=sig.tp, lots=lot,
-                                  strategy=sig.strategy, conf=conf))
-            ticket += 1
-            last_entry_i = i
-            trades_today += 1
-            audit["opened"] += 1
+            open_position(i, sig.signal, row["close"], sig.sl, sig.tp,
+                          sig.strategy, conf)
 
         if positions:
             last = m1.iloc[-1]
@@ -282,7 +365,9 @@ class BacktestRunner:
               f"spread_rej={a.get('spread',0)} cool_rej={a.get('cooldown',0)} "
               f"margin_rej={a.get('margin',0)} dailyDD_rej={a.get('daily_dd',0)} "
               f"pause_rej={a.get('pause',0)} daycap_rej={a.get('daycap',0)} "
-              f"opened={a.get('opened',0)}")
+              f"limit_placed={a.get('limit_placed',0)} "
+              f"limit_filled={a.get('limit_filled',0)} "
+              f"limit_expired={a.get('limit_expired',0)} opened={a.get('opened',0)}")
         print("-" * 64)
         print(f" {'Strategy':<22}{'Trades':>7}{'Win%':>8}{'Net$':>10}")
         for name, d in r["by_strategy"].items():

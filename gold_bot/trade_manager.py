@@ -238,6 +238,14 @@ class TradeManager:
 
         is_buy = signal.signal == "BUY"
         entry = tick.ask if is_buy else tick.bid
+        limit_price = float(getattr(signal, "limit_price", 0.0) or 0.0)
+        use_limit = getattr(signal, "entry_type", "MARKET") == "LIMIT" and limit_price > 0
+        if use_limit:
+            valid = limit_price < tick.ask if is_buy else limit_price > tick.bid
+            if valid:
+                entry = limit_price
+            else:
+                use_limit = False
 
         # Recompute SL/TP distances from the LIVE entry price.
         sl_dist = abs(entry - float(signal.sl))
@@ -265,20 +273,37 @@ class TradeManager:
 
         comment = (signal.strategy or "XTRD")[:31]
         for filling in self._filling_candidates():
-            request = {
-                "action": mt5.TRADE_ACTION_DEAL,
-                "symbol": self.symbol,
-                "volume": float(lot),
-                "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
-                "price": entry,
-                "sl": sl,
-                "tp": tp,
-                "deviation": config.DEVIATION_POINTS,
-                "magic": config.MAGIC_NUMBER,
-                "comment": comment,
-                "type_time": mt5.ORDER_TIME_GTC,
-                "type_filling": filling,
-            }
+            if use_limit:
+                request = {
+                    "action": mt5.TRADE_ACTION_PENDING,
+                    "symbol": self.symbol,
+                    "volume": float(lot),
+                    "type": (mt5.ORDER_TYPE_BUY_LIMIT if is_buy
+                             else mt5.ORDER_TYPE_SELL_LIMIT),
+                    "price": entry,
+                    "sl": sl,
+                    "tp": tp,
+                    "magic": config.MAGIC_NUMBER,
+                    "comment": comment,
+                    "type_time": mt5.ORDER_TIME_SPECIFIED,
+                    "expiration": datetime.now() + timedelta(seconds=config.LIMIT_TTL_SECONDS),
+                    "type_filling": filling,
+                }
+            else:
+                request = {
+                    "action": mt5.TRADE_ACTION_DEAL,
+                    "symbol": self.symbol,
+                    "volume": float(lot),
+                    "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
+                    "price": entry,
+                    "sl": sl,
+                    "tp": tp,
+                    "deviation": config.DEVIATION_POINTS,
+                    "magic": config.MAGIC_NUMBER,
+                    "comment": comment,
+                    "type_time": mt5.ORDER_TIME_GTC,
+                    "type_filling": filling,
+                }
 
             check = mt5.order_check(request)
             if check is None:
@@ -298,8 +323,9 @@ class TradeManager:
             if result.retcode in (mt5.TRADE_RETCODE_DONE, mt5.TRADE_RETCODE_PLACED):
                 spread_pts = (tick.ask - tick.bid) / point
                 log.info(
-                    "ORDER FILLED: ticket=%s %s %s | vol=%.2f | entry=%.3f | "
+                    "ORDER %s: ticket=%s %s %s | vol=%.2f | entry=%.3f | "
                     "SL=%.3f | TP=%.3f | spread=%.1f pts",
+                    "LIMIT PLACED" if use_limit else "FILLED",
                     result.order, signal.signal, signal.strategy,
                     lot, result.price if result.price else entry,
                     sl, tp, spread_pts,

@@ -166,22 +166,31 @@ def add_indicators(df: pd.DataFrame, point: float = 0.01) -> pd.DataFrame:
     out["fvg_bull"] = (out["low"] > out["high"].shift(2)).astype(int)
     out["fvg_bear"] = (out["high"] < out["low"].shift(2)).astype(int)
 
-    # Intraday VWAP (resets at 00:00 server time) + 20-bar 1.6-sigma bands
-    typical = (out["high"] + out["low"] + out["close"]) / 3.0
-    vol = (out["tick_volume"] if "tick_volume" in out.columns
-           else pd.Series(1.0, index=out.index))
-    if "time" in out.columns:
-        try:
-            day_key = pd.to_datetime(out["time"]).dt.date
-        except (TypeError, ValueError):
-            day_key = pd.Series(0, index=out.index)
-    else:
-        day_key = pd.Series(0, index=out.index)
-    cum_pv = (typical * vol).groupby(day_key).cumsum()
-    cum_v = vol.groupby(day_key).cumsum().replace(0.0, np.nan)
-    out["vwap"] = cum_pv / cum_v
-    out["vwap_sd"] = (typical - out["vwap"]).rolling(20).std()
-    out["vwap_upper"] = out["vwap"] + 1.35 * out["vwap_sd"]
-    out["vwap_lower"] = out["vwap"] - 1.35 * out["vwap_sd"]
+    # Intraday VWAP (resets at 00:00 server time) + 20-bar sigma bands
+    out["vwap"], out["vwap_upper"], out["vwap_lower"] = vwap_bands(out, 1.35)
+    out["vwap_sd"] = (out["vwap_upper"] - out["vwap"]) / 1.35
+
+    # 12-bar swing levels (M15 institutional sweep reference)
+    out["swing_high_12"] = out["high"].rolling(12).max().shift(1)
+    out["swing_low_12"] = out["low"].rolling(12).min().shift(1)
 
     return out
+
+
+def vwap_bands(df, sigma: float = 1.35):
+    """Return (vwap, upper, lower) with a daily reset at 00:00 server time."""
+    typical = (df["high"] + df["low"] + df["close"]) / 3.0
+    vol = (df["tick_volume"] if "tick_volume" in df.columns
+           else pd.Series(1.0, index=df.index))
+    if "time" in df.columns:
+        try:
+            day_key = pd.to_datetime(df["time"]).dt.date
+        except (TypeError, ValueError):
+            day_key = pd.Series(0, index=df.index)
+    else:
+        day_key = pd.Series(0, index=df.index)
+    cum_pv = (typical * vol).groupby(day_key).cumsum()
+    cum_v = vol.groupby(day_key).cumsum().replace(0.0, np.nan)
+    vwap = cum_pv / cum_v
+    sd = (typical - vwap).rolling(20).std()
+    return vwap, vwap + sigma * sd, vwap - sigma * sd

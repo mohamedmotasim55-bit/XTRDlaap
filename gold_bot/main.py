@@ -169,6 +169,7 @@ def run() -> int:
                         if closed:
                             log.warning("Closed %d position(s) before news.", closed)
 
+                df_m15 = None
                 tradeable = (
                     mode in (config.SESSION_MODE_ASIAN, config.SESSION_MODE_MOMENTUM)
                     and spread_ok and dd_ok
@@ -179,6 +180,10 @@ def run() -> int:
                         connector.get_candles(count=config.CANDLE_LOOKBACK), point=point)
                     latest_atr = float(df["atr_14"].iloc[-1])
                     df_m5 = connector.get_candles(count=120, timeframe_name="M5")
+                    try:
+                        df_m15 = connector.get_candles(count=120, timeframe_name="M15")
+                    except MT5ConnectionError:
+                        df_m15 = None
             except MT5ConnectionError as exc:
                 log.error("Data refresh failed: %s", exc)
                 acc, spread, spread_ok, dd_ok = None, None, False, False
@@ -209,7 +214,8 @@ def run() -> int:
                         log.debug("Entry blocked: daily profit ratchet locked.")
                     else:
                         regime = regime_detector.RegimeDetector.classify(df, df_m5)
-                        sig = strategy_engine.generate_signal(df, mode, df_m5, regime=regime)
+                        sig = strategy_engine.generate_signal(
+                            df, mode, df_m5, regime=regime, df_m15=df_m15)
                         if sig:
                             allowed, conf, why = brain.evaluate(sig, regime)
                             if not allowed:
