@@ -112,7 +112,7 @@ void Resolve(const long now)
             // first passage per level (UP/DOWN relative to mid), window short
             for(int l=0;l<LVL;l++)
             {
-               double lev=g_lvl_mult[l]*sp;
+               double lev=g_lvl_mult[l]*sp*g_point;
                long upT=-1, dnT=-1;
                for(int k=0;k<n;k++)
                {
