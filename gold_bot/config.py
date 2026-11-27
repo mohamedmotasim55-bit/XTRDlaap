@@ -96,6 +96,19 @@ RANGE_SL_ATR_MULT: float = 1.3
 RANGE_TP_ATR_MULT: float = 1.8
 
 # ---------------------------------------------------------------------------
+# Execution & trade management
+# ---------------------------------------------------------------------------
+ENABLE_LIVE_TRADING: bool = True        # master switch: send real/demo orders to MT5
+DEVIATION_POINTS: int = 20              # max allowed slippage (points)
+BREAKEVEN_TRIGGER_POINTS: float = 32.0  # profit needed before SL moves to break-even
+BREAKEVEN_LOCK_POINTS: float = 5.0      # lock this many points beyond entry at BE
+TRAILING_START_POINTS: float = 45.0     # profit needed before trailing begins
+TRAILING_ATR_MULT: float = 1.0          # trailing distance = mult * current ATR
+MIN_FREE_MARGIN_USD: float = 3.50       # keep this free-margin buffer on the $10 account
+SL_SAFETY_BUFFER_POINTS: float = 5.0    # extra SL distance beyond broker stops_level
+TRAIL_MIN_STEP_POINTS: float = 3.0      # ignore SL moves smaller than this (avoid spam)
+
+# ---------------------------------------------------------------------------
 # Loop / logging
 # ---------------------------------------------------------------------------
 LOOP_INTERVAL_SEC: float = 1.0
