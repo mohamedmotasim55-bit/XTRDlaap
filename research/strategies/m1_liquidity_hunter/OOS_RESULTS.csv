@@ -1,0 +1,18 @@
+kind,side,horizon,seg,n,mean_gross,mean_net,pctpos,verdict
+SWEEP_PD_HIGH,SELL,30m,discovery,217,-68.77,42.77,59.4,inconclusive
+SWEEP_PD_HIGH,SELL,30m,validation,18,623.17,-649.17,33.3,small sample
+SWEEP_PD_LOW,BUY,5m,discovery,236,-0.35,-26.35,43.2,inconclusive
+SWEEP_PD_LOW,BUY,5m,validation,49,36.39,10.39,51.0,small sample
+SWEEP_PD_LOW,BUY,5m,oos,98,-28.36,-54.36,45.9,small sample
+SWEEP_SW_HIGH,SELL,60m,discovery,1468,-97.85,71.83,53.7,inconclusive
+SWEEP_SW_HIGH,SELL,60m,validation,530,-25.43,-0.57,53.2,inconclusive
+SWEEP_SW_HIGH,SELL,60m,oos,373,-157.4,131.4,57.1,inconclusive
+SWEEP_SW_LOW,BUY,10m,discovery,1910,-2.3,-28.3,44.0,negative
+SWEEP_SW_LOW,BUY,10m,validation,655,-4.2,-30.21,45.5,inconclusive
+SWEEP_SW_LOW,BUY,10m,oos,567,4.99,-21.01,42.9,inconclusive
+WICK_HIGH,SELL,60m,discovery,1433,-38.2,12.2,48.8,inconclusive
+WICK_HIGH,SELL,60m,validation,555,-15.83,-10.2,52.8,inconclusive
+WICK_HIGH,SELL,60m,oos,521,-159.53,133.53,58.2,inconclusive
+WICK_LOW,BUY,1m,discovery,1513,-6.23,-32.25,36.0,negative
+WICK_LOW,BUY,1m,validation,492,1.21,-24.8,41.7,negative
+WICK_LOW,BUY,1m,oos,464,-3.67,-29.67,41.8,negative
