@@ -1,0 +1,98 @@
+name: GoldBot JustMarkets Backtest
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  INSTALLER_URL: https://download.mql5.com/cdn/web/just.global.markets/mt5/justmarkets5setup.exe
+  MT5_DIR: C:\mt5
+jobs:
+  backtest:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate required secrets
+        shell: pwsh
+        env:
+          MT5_LOGIN: ${{ secrets.MT5_LOGIN }}
+          MT5_PASSWORD: ${{ secrets.MT5_PASSWORD }}
+          MT5_SERVER: ${{ secrets.MT5_SERVER }}
+        run: |
+          $missing=@()
+          if([string]::IsNullOrWhiteSpace($env:MT5_LOGIN)){$missing+='MT5_LOGIN'}
+          if([string]::IsNullOrWhiteSpace($env:MT5_PASSWORD)){$missing+='MT5_PASSWORD'}
+          if([string]::IsNullOrWhiteSpace($env:MT5_SERVER)){$missing+='MT5_SERVER'}
+          if($missing.Count -gt 0){Write-Error ("Missing secrets: "+($missing -join ', ')); exit 1}
+      - name: Restore MT5 cache
+        id: mt5cache
+        uses: actions/cache@v4
+        with:
+          path: C:\mt5
+          key: mt5-justmarkets-v2
+      - name: Install JustMarkets MT5 (silent)
+        if: steps.mt5cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $installer=Join-Path $env:RUNNER_TEMP 'justmarkets5setup.exe'
+          Invoke-WebRequest -Uri $env:INSTALLER_URL -OutFile $installer -UseBasicParsing
+          $p=Start-Process -FilePath $installer -ArgumentList '/auto' -Wait -PassThru
+          Write-Host "installer exit $($p.ExitCode)"
+          $found=@()
+          foreach($root in @('C:\Program Files','C:\Program Files (x86)',$env:LOCALAPPDATA)){
+            if(Test-Path $root){
+              $found+=Get-ChildItem -Path $root -Filter 'terminal64.exe' -Recurse -ErrorAction SilentlyContinue |
+                Where-Object { Test-Path (Join-Path $_.DirectoryName 'metaeditor64.exe') }
+            }
+          }
+          if($found.Count -eq 0){Write-Error 'terminal64.exe not found'; exit 1}
+          $src=$found[0].DirectoryName
+          New-Item -ItemType Directory -Force -Path $env:MT5_DIR | Out-Null
+          Copy-Item -Path (Join-Path $src '*') -Destination $env:MT5_DIR -Recurse -Force
+      - name: Save MT5 cache
+        if: always() && steps.mt5cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: C:\mt5
+          key: mt5-justmarkets-v2
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install MetaTrader5 pandas numpy
+      - name: Login MT5 terminal
+        shell: pwsh
+        env:
+          MT5_LOGIN: ${{ secrets.MT5_LOGIN }}
+          MT5_PASSWORD: ${{ secrets.MT5_PASSWORD }}
+          MT5_SERVER: ${{ secrets.MT5_SERVER }}
+        run: |
+          $ini=Join-Path $env:MT5_DIR 'login.ini'
+          @('[Common]',"Login=$env:MT5_LOGIN","Password=$env:MT5_PASSWORD","Server=$env:MT5_SERVER",'KeepPrivate=0','[StartUp]') |
+            Set-Content -Path $ini -Encoding ASCII
+          Start-Process -FilePath (Join-Path $env:MT5_DIR 'terminal64.exe') -ArgumentList '/portable',"/config:$ini"
+          Start-Sleep -Seconds 45
+          Get-Process terminal64 -ErrorAction SilentlyContinue | Select-Object Id,ProcessName | Format-Table
+      - name: Run JustMarkets backtest
+        shell: pwsh
+        run: |
+          cd gold_bot
+          New-Item -ItemType Directory -Force -Path logs | Out-Null
+          python run_justmarkets_backtest.py 2>&1 | Tee-Object -FilePath logs_run.txt
+          exit $LASTEXITCODE
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: goldbot-backtest
+          path: |
+            gold_bot/logs/
+            gold_bot/logs_run.txt
+      - name: Stop terminal
+        if: always()
+        shell: pwsh
+        run: Get-Process terminal64 -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue

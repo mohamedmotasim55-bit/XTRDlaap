@@ -37,12 +37,13 @@ def _session_mode(ts):
 
 class BacktestRunner:
     def __init__(self, m1_df, m5_df=None, initial_balance=10.0, spread_points=26.0,
-                 point=0.01, warmup=60, journal_path="logs/backtest_results.csv"):
+                 point=0.01, warmup=60, journal_path="logs/backtest_results.csv", verbose=True):
         self.point = point
         self.spread_points = float(spread_points)
         self.initial_balance = float(initial_balance)
         self.warmup = int(warmup)
         self.journal_path = journal_path
+        self.verbose = verbose
         self.m1 = indicators.add_indicators(m1_df.copy().reset_index(drop=True), point=point)
         self.m5 = m5_df.reset_index(drop=True) if m5_df is not None else None
 
@@ -189,7 +190,8 @@ class BacktestRunner:
                    max_drawdown_pct=(100 * max_dd / self.initial_balance if self.initial_balance else 0.0),
                    by_strategy=by)
         self._save(trades)
-        self._print(res)
+        if self.verbose:
+            self._print(res)
         return res
 
     def _save(self, trades):
