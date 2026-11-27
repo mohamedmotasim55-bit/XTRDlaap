@@ -5,6 +5,7 @@ Reference capital: **10.0 USD** (fixed).
 | file | size | sha256 | trading? | indicators |
 |---|---:|---|---|---|
 | XTRD_EDGE_DISCOVERY.mq5 | 13254 | 690cf0771c87e2f0… | no | CopyTicksRange |
+| XTRD_EDGE_DISCOVERY_LONG.mq5 | 13212 | 4465d2e22ba6acde… | no | CopyTicksRange |
 | XTRD_OMIGA_CAMP.mq5 | 8149 | 2abd79ac4b275d70… | YES | - |
 | XTRD_OMIGA_CAMP2.mq5 | 8239 | 2f7cbcdbcc401a60… | YES | - |
 | XTRD_OMIGA_CENT_ENGINE_V2_0_4_H2_CENT_TEST.mq5 | 24068 | dab5f09f3ee48913… | YES | - |
