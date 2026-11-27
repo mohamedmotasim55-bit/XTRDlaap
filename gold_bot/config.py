@@ -45,28 +45,55 @@ MAGIC_NUMBER: int = 202699
 # ---------------------------------------------------------------------------
 # Risk / safety
 # ---------------------------------------------------------------------------
-MAX_SPREAD_POINTS: float = 30.0      # block entries when spread (points) exceeds this
-RISK_PER_TRADE_PCT: float = 1.0      # % of account balance risked per trade
-MAX_DAILY_DRAWDOWN_PCT: float = 4.0  # stop trading for the day past this loss %
+LOT_SIZE: float = 0.01               # fixed lot for the $10 micro-account
+MAX_SPREAD_POINTS: float = 38.0      # JustMarkets base ~26 pts; 38 tolerates normal vol
+MAX_OPEN_TRADES: int = 1             # strict single-position cap to protect $10
+DAILY_LOSS_LIMIT_USD: float = 3.00   # stop for the day past this realised+floating loss
+RISK_PER_TRADE_PCT: float = 1.0      # kept for reference / future dynamic sizing
+MAX_DAILY_DRAWDOWN_PCT: float = 4.0  # legacy % cap (superseded by DAILY_LOSS_LIMIT_USD)
 
 # ---------------------------------------------------------------------------
 # Trading sessions (broker / server time)
 # ---------------------------------------------------------------------------
-# Asian session -> range/mean-reversion mode.
+# Session windows use EXCLUSIVE end times, so the last active minute is
+# (end - 1 minute). This makes the intended ranges inclusive:
+#   ASIAN   : 01:00 .. 09:29  -> END = 09:30
+#   MOMENTUM: 09:30 .. 21:00  -> END = 21:01
+#   STOP    : 21:01 .. 00:59  (everything else)
 ASIAN_RANGE_START: time = time(1, 0)
-ASIAN_RANGE_END: time = time(9, 0)
+ASIAN_RANGE_END: time = time(9, 30)
 
 # London/NY session -> momentum mode.
 MOMENTUM_START: time = time(9, 30)
-MOMENTUM_END: time = time(21, 0)
-
-# Dead zone (no trading): 21:01 -> 00:59 is implied by being outside both
-# windows above, so no explicit constant is required.
+MOMENTUM_END: time = time(21, 1)
 
 # Canonical session-mode strings returned by safety_guard.check_session().
 SESSION_MODE_ASIAN: str = "ASIAN_RANGE"
 SESSION_MODE_MOMENTUM: str = "MOMENTUM"
 SESSION_MODE_STOP: str = "STOP"
+
+# ---------------------------------------------------------------------------
+# Strategy parameters
+# ---------------------------------------------------------------------------
+ATR_PERIOD: int = 14
+MIN_ATR_POINTS: float = 35.0     # skip dead market (spread cannot be covered)
+SL_ATR_MULT: float = 1.6         # momentum-mode stop distance (x ATR)
+TP_ATR_MULT: float = 2.4         # momentum-mode target distance (x ATR)
+COOLDOWN_SECONDS: int = 45       # wait after a close before a new entry
+
+# Indicator periods
+EMA_FAST: int = 9
+EMA_MID: int = 21
+EMA_SLOW: int = 50
+RSI_PERIOD: int = 7
+BB_PERIOD: int = 20
+BB_STD: float = 2.0
+VOL_MA_PERIOD: int = 10
+SWING_LOOKBACK: int = 15
+
+# Range-mode (Asian) tighter targets
+RANGE_SL_ATR_MULT: float = 1.3
+RANGE_TP_ATR_MULT: float = 1.8
 
 # ---------------------------------------------------------------------------
 # Loop / logging

@@ -1,15 +1,14 @@
 """
 main.py
 =======
-Entry point for the XAUUSD Gold Scalping Bot (Step 1: connection + guards).
+Entry point for the XAUUSD Gold Scalping Bot.
 
-Runs a 1-second loop that:
-  1. Refreshes connection state.
-  2. Evaluates the three safety guards (spread, session, daily drawdown).
-  3. Logs a single, readable status line.
-
-No trading entries are placed in this step. This file is intentionally small
-so that strategy/execution modules can be layered on later.
+Step 2 = DRY-RUN / SIGNAL SCANNER mode:
+  * 1-second loop with the three safety guards.
+  * Fetches recent M1 candles, computes indicators, and evaluates the
+    multi-strategy brain for the active session mode.
+  * Prints a clear "SIGNAL DETECTED" alert when a setup fires.
+  * NO real orders are placed.
 """
 
 from __future__ import annotations
@@ -21,19 +20,21 @@ import time as _time
 from typing import Optional
 
 import config
+import indicators
+import strategy_engine
 from mt5_connector import MT5Connector, MT5ConnectionError
 from safety_guard import SafetyGuard
 
 log = logging.getLogger("gold_bot")
 
-# Set by the SIGINT/SIGTERM handler to break the main loop cleanly.
 _STOP = False
+_LAST_SIGNAL_TS: Optional[float] = None  # monotonic time of last printed signal
 
 
-def _handle_signal(signum, frame) -> None:  # noqa: ANN001 - signal signature
+def _handle_signal(signum, frame) -> None:  # noqa: ANN001
     global _STOP
     _STOP = True
-    log.info("Shutdown signal received (%s); stopping loop...", signum)
+    log.info("Shutdown signal received (%s); stopping...", signum)
 
 
 def _configure_logging() -> None:
@@ -44,15 +45,7 @@ def _configure_logging() -> None:
     )
 
 
-def _format_status(
-    mode: str,
-    spread: Optional[float],
-    spread_ok: bool,
-    dd_ok: bool,
-    acc: Optional[dict],
-    server_time: Optional[str],
-) -> str:
-    """Build one human-readable status line."""
+def _format_status(mode, spread, spread_ok, dd_ok, acc, server_time) -> str:
     spread_txt = f"{spread:5.1f} pts" if spread is not None else "  n/a  "
     if acc is not None:
         money = (
@@ -68,10 +61,47 @@ def _format_status(
     )
 
 
+def _scan_for_signal(connector: MT5Connector, mode: str, spread_ok: bool, dd_ok: bool) -> None:
+    """Fetch candles, evaluate the brain, and print any actionable signal."""
+    global _LAST_SIGNAL_TS
+
+    if mode == config.SESSION_MODE_STOP:
+        return
+    if not (spread_ok and dd_ok):
+        return
+
+    try:
+        point = connector.symbol_info().get("point", 0.01)
+        df = connector.get_candles(count=config.CANDLE_LOOKBACK)
+        df = indicators.add_indicators(df, point=point)
+        sig = strategy_engine.generate_signal(df, mode)
+    except MT5ConnectionError as exc:
+        log.error("Signal scan failed: %s", exc)
+        return
+
+    if not sig:
+        return
+
+    # Cooldown: avoid spamming the same setup on consecutive ticks.
+    now = _time.monotonic()
+    if _LAST_SIGNAL_TS is not None and (now - _LAST_SIGNAL_TS) < config.COOLDOWN_SECONDS:
+        return
+    _LAST_SIGNAL_TS = now
+
+    log.warning(
+        "SIGNAL DETECTED: %s via %s | Entry=%.3f | SL=%.3f | TP=%.3f | ATR=%.1f pts",
+        sig.signal,
+        sig.strategy,
+        sig.entry,
+        sig.sl,
+        sig.tp,
+        sig.atr_points,
+    )
+
+
 def run() -> int:
-    """Connect, then run the monitoring loop. Returns a process exit code."""
     _configure_logging()
-    log.info("Starting XAUUSD Gold Scalping Bot — Step 1 (connection + guards)")
+    log.info("Starting XAUUSD Gold Bot — Step 2 (dry-run signal scanner)")
 
     connector = MT5Connector()
     try:
@@ -86,11 +116,10 @@ def run() -> int:
     if hasattr(signal, "SIGTERM"):
         signal.signal(signal.SIGTERM, _handle_signal)
 
-    log.info("Monitoring started. Press Ctrl+C to stop.")
+    log.info("Scanner started. Press Ctrl+C to stop. (No orders are placed.)")
     try:
         while not _STOP:
             loop_start = _time.monotonic()
-
             try:
                 mode = guard.check_session()
                 spread = connector.current_spread_points()
@@ -103,20 +132,16 @@ def run() -> int:
                 acc, spread, spread_ok, dd_ok = None, None, False, False
                 mode, srv_time = "UNKNOWN", None
 
-            log.info(
-                "%s",
-                _format_status(mode, spread, spread_ok, dd_ok, acc, srv_time),
-            )
+            log.info("%s", _format_status(mode, spread, spread_ok, dd_ok, acc, srv_time))
+            _scan_for_signal(connector, mode, spread_ok, dd_ok)
 
-            # Sleep the remainder of the interval (keeps cadence steady).
             elapsed = _time.monotonic() - loop_start
             _time.sleep(max(0.0, config.LOOP_INTERVAL_SEC - elapsed))
-    except KeyboardInterrupt:  # pragma: no cover - interactive
+    except KeyboardInterrupt:  # pragma: no cover
         log.info("KeyboardInterrupt received.")
     finally:
         connector.shutdown()
         log.info("Bot stopped.")
-
     return 0
 
 

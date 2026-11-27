@@ -117,17 +117,17 @@ class SafetyGuard:
                 day_start_balance = acc.balance or 1.0
 
             daily_pnl = realised + floating
-            loss_pct = (-daily_pnl / day_start_balance) * 100.0 if daily_pnl < 0 else 0.0
+            loss_usd = -daily_pnl if daily_pnl < 0 else 0.0
 
-            ok = loss_pct < config.MAX_DAILY_DRAWDOWN_PCT
+            ok = loss_usd < config.DAILY_LOSS_LIMIT_USD
             if not ok:
                 log.warning(
-                    "Daily drawdown limit hit: loss=%.2f%% (realised=%.2f, "
-                    "floating=%.2f) vs max %.2f%%.",
-                    loss_pct,
+                    "Daily loss limit hit: loss=$%.2f (realised=%.2f, "
+                    "floating=%.2f) vs max $%.2f.",
+                    loss_usd,
                     realised,
                     floating,
-                    config.MAX_DAILY_DRAWDOWN_PCT,
+                    config.DAILY_LOSS_LIMIT_USD,
                 )
             return ok
         except MT5ConnectionError as exc:
