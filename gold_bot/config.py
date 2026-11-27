@@ -48,7 +48,7 @@ MAGIC_NUMBER: int = 202699
 LOT_SIZE: float = 0.01               # fixed lot for the $10 micro-account
 MAX_SPREAD_POINTS: float = 38.0      # JustMarkets base ~26 pts; 38 tolerates normal vol
 MAX_OPEN_TRADES: int = 1             # strict single-position cap to protect $10
-DAILY_LOSS_LIMIT_USD: float = 3.50   # stop for the day past this realised+floating loss
+DAILY_LOSS_LIMIT_USD: float = 4.50   # generous day cap; 3-loss pause handles micro-DD
 RISK_PER_TRADE_PCT: float = 1.0      # kept for reference / future dynamic sizing
 MAX_DAILY_DRAWDOWN_PCT: float = 4.0  # legacy % cap (superseded by DAILY_LOSS_LIMIT_USD)
 
@@ -77,16 +77,25 @@ SESSION_MODE_STOP: str = "STOP"
 # ---------------------------------------------------------------------------
 ATR_PERIOD: int = 14
 MIN_ATR_POINTS: float = 35.0     # skip dead market (spread cannot be covered)
-SL_ATR_MULT: float = 0.75        # momentum-mode stop distance (x ATR)
-TP_ATR_MULT: float = 1.65        # momentum-mode target distance (x ATR)
+SL_ATR_MULT: float = 0.65        # momentum-mode stop distance (x ATR)
+TP_ATR_MULT: float = 1.60        # momentum-mode target distance (x ATR)
 COOLDOWN_SECONDS: int = 20       # wait after a close before a new entry
 
 # Hard SL/TP calibration (points) sized for $3770 gold on a $10 account.
 MIN_SL_POINTS: float = 55.0
-MAX_SL_POINTS: float = 105.0
-MIN_TP_POINTS: float = 100.0
-MAX_TP_POINTS: float = 220.0
+MAX_SL_POINTS: float = 90.0      # max risk $0.90 per 0.01 lot
+MIN_TP_POINTS: float = 110.0
+MAX_TP_POINTS: float = 190.0
 SPREAD_SL_RATIO: float = 0.45    # block if spread > 45% of the SL distance
+
+# ---------------------------------------------------------------------------
+# Strategy enablement (surgical reversal/liquidity pivot)
+# ---------------------------------------------------------------------------
+ALL_STRATEGIES = (
+    "MomentumBreakout", "LiquiditySweep", "BollingerBounce", "EMARibbonPullback",
+    "FastMACDCross", "FairValueGapScalp", "MicroEngulfingReversal", "RSISnapback",
+)
+ENABLED_STRATEGIES = ("LiquiditySweep", "BollingerBounce", "RSISnapback")
 
 # Indicator periods
 EMA_FAST: int = 9
@@ -99,18 +108,18 @@ VOL_MA_PERIOD: int = 10
 SWING_LOOKBACK: int = 15
 
 # Range-mode (Asian) tighter targets
-RANGE_SL_ATR_MULT: float = 0.75
-RANGE_TP_ATR_MULT: float = 1.65
+RANGE_SL_ATR_MULT: float = 0.65
+RANGE_TP_ATR_MULT: float = 1.60
 
 # ---------------------------------------------------------------------------
 # Execution & trade management
 # ---------------------------------------------------------------------------
 ENABLE_LIVE_TRADING: bool = True        # master switch: send real/demo orders to MT5
 DEVIATION_POINTS: int = 20              # max allowed slippage (points)
-BREAKEVEN_TRIGGER_POINTS: float = 48.0  # covers 26-pt spread + 22 pts, then locks
+BREAKEVEN_TRIGGER_POINTS: float = 45.0  # covers 26-pt spread + 19 pts, then locks
 BREAKEVEN_LOCK_POINTS: float = 8.0      # lock this many points beyond entry at BE
-TRAILING_START_POINTS: float = 70.0     # profit needed before trailing begins
-TRAILING_ATR_MULT: float = 0.65         # trailing distance = mult * current ATR
+TRAILING_START_POINTS: float = 105.0    # only trail after +105 pts (room for TP)
+TRAILING_ATR_MULT: float = 0.85         # trailing distance = mult * current ATR
 MIN_FREE_MARGIN_USD: float = 1.20       # realistic 1:3000 free-margin buffer
 SL_SAFETY_BUFFER_POINTS: float = 5.0    # extra SL distance beyond broker stops_level
 TRAIL_MIN_STEP_POINTS: float = 3.0      # ignore SL moves smaller than this (avoid spam)
@@ -146,9 +155,13 @@ ATR_SPIKE_FACTOR: float = 1.4
 # Adaptive brain
 # ---------------------------------------------------------------------------
 ROLLING_WINDOW: int = 20
-STRATEGY_MUTE_MINUTES: int = 120
-MIN_CONFIDENCE_TO_TRADE: float = 0.50
+STRATEGY_MUTE_MINUTES: int = 45
+MIN_CONFIDENCE_TO_TRADE: float = 0.55
 REGIME_BOOST: float = 0.15
+CONF_MULT_FLOOR: float = 0.90      # never decay a valid signal below 90%
+MUTE_MIN_TRADES: int = 6           # need 6 completed trades before muting
+CONSECUTIVE_LOSS_TRIGGER: int = 3
+CONSECUTIVE_LOSS_PAUSE_MIN: int = 45
 
 # ---------------------------------------------------------------------------
 # Zero-risk pyramiding

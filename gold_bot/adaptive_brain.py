@@ -67,7 +67,8 @@ class AdaptiveBrain:
             self.consec_losses[strategy] = 0
         else:
             self.consec_losses[strategy] += 1
-            if self.consec_losses[strategy] >= 3:
+            if (self.consec_losses[strategy] >= 3
+                    and len(self.history[strategy]) >= config.MUTE_MIN_TRADES):
                 self.muted_until[strategy] = now + timedelta(minutes=self.mute_minutes)
 
     # ---------------------------------------------------------------- status
@@ -96,10 +97,11 @@ class AdaptiveBrain:
         wr = self.win_rate(strategy)
         lo, hi = 0.35, 0.65
         if wr <= lo:
-            return 0.7
+            return config.CONF_MULT_FLOOR
         if wr >= hi:
             return 1.3
-        return 0.7 + (wr - lo) / (hi - lo) * 0.6
+        raw = config.CONF_MULT_FLOOR + (wr - lo) / (hi - lo) * (1.3 - config.CONF_MULT_FLOOR)
+        return max(config.CONF_MULT_FLOOR, raw)
 
     def regime_boost(self, strategy: str, regime) -> float:
         regime_name = getattr(regime, "regime", regime)

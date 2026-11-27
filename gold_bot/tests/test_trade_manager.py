@@ -121,7 +121,7 @@ class TestTradeManager(unittest.TestCase):
         m.manage_open_positions(current_atr=0.30)
         req=f.sent_requests[-1]
         self.assertEqual(req["action"], FakeMT5.TRADE_ACTION_SLTP)
-        self.assertAlmostEqual(req["sl"], 2001.005, places=2)  # 2001.20 - 0.65*0.30
+        self.assertAlmostEqual(req["sl"], 2000.945, places=2)  # 2001.20 - 0.85*0.30
 
     def test_no_backward_trail(self):
         m,f=make_tm()

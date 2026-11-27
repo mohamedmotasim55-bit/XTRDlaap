@@ -66,11 +66,14 @@ class BacktestRunner:
         day = None
         day_start_equity, ratchet_peak, ratchet_locked = balance, 0.0, False
         ticket = 1
-        audit = dict(raw=0, conf=0, spread=0, cooldown=0, margin=0, daily_dd=0, opened=0)
+        audit = dict(raw=0, conf=0, spread=0, cooldown=0, margin=0,
+                     daily_dd=0, pause=0, opened=0)
         last_entry_i = -10 ** 9
+        consec_losses = 0
+        pause_until_i = -1
 
         def close_pos(p, price, reason):
-            nonlocal balance
+            nonlocal balance, consec_losses
             raw = (price - p["entry"]) / self.point if p["dir"] == "BUY" else (p["entry"] - price) / self.point
             net = raw - self.spread_points
             pnl = net * p["lots"]
@@ -81,6 +84,7 @@ class BacktestRunner:
                                profit_usd=round(pnl, 2), profit_points=round(net, 1),
                                confidence=p.get("conf", 0.0), close_reason=reason))
             brain.record_trade(p["strategy"], pnl)
+            consec_losses = consec_losses + 1 if pnl < 0 else 0
 
         for i in range(self.warmup, n):
             row = m1.iloc[i]
@@ -139,6 +143,14 @@ class BacktestRunner:
 
             mode = _session_mode(ts)
             if mode == config.SESSION_MODE_STOP:
+                continue
+
+            if consec_losses >= config.CONSECUTIVE_LOSS_TRIGGER:
+                pause_until_i = max(pause_until_i,
+                                    i + int(config.CONSECUTIVE_LOSS_PAUSE_MIN))
+                consec_losses = 0
+            if i < pause_until_i:
+                audit["pause"] += 1
                 continue
 
             if day_pnl <= -config.DAILY_LOSS_LIMIT_USD:
@@ -255,7 +267,7 @@ class BacktestRunner:
         print(f" Signals: raw={a.get('raw',0)} conf_rej={a.get('conf',0)} "
               f"spread_rej={a.get('spread',0)} cool_rej={a.get('cooldown',0)} "
               f"margin_rej={a.get('margin',0)} dailyDD_rej={a.get('daily_dd',0)} "
-              f"opened={a.get('opened',0)}")
+              f"pause_rej={a.get('pause',0)} opened={a.get('opened',0)}")
         print("-" * 64)
         print(f" {'Strategy':<22}{'Trades':>7}{'Win%':>8}{'Net$':>10}")
         for name, d in r["by_strategy"].items():

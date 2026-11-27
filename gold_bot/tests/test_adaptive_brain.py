@@ -11,13 +11,13 @@ class Sig:
 class TestAdaptiveBrain(unittest.TestCase):
     def test_mute_after_3_losses(self):
         b=AdaptiveBrain(); now=datetime(2026,1,5,10,0)
-        for _ in range(3):
+        for _ in range(config.MUTE_MIN_TRADES):
             b.record_trade("MomentumBreakout",-1.0, now=now)
         self.assertTrue(b.is_muted("MomentumBreakout", now=now))
 
     def test_mute_expires(self):
         b=AdaptiveBrain(); now=datetime(2026,1,5,10,0)
-        for _ in range(3):
+        for _ in range(config.MUTE_MIN_TRADES):
             b.record_trade("LiquiditySweep",-1.0, now=now)
         self.assertTrue(b.is_muted("LiquiditySweep", now=now))
         later=now+timedelta(minutes=config.STRATEGY_MUTE_MINUTES+1)
@@ -28,7 +28,7 @@ class TestAdaptiveBrain(unittest.TestCase):
         for _ in range(10): b.record_trade("FastMACDCross", 1.0)
         self.assertAlmostEqual(b.multiplier("FastMACDCross"),1.3,places=3)
         for _ in range(10): b.record_trade("MicroEngulfingReversal", -1.0)
-        self.assertAlmostEqual(b.multiplier("MicroEngulfingReversal"),0.7,places=3)
+        self.assertAlmostEqual(b.multiplier("MicroEngulfingReversal"),0.9,places=3)
 
     def test_regime_boost(self):
         b=AdaptiveBrain()

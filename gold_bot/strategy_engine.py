@@ -120,6 +120,7 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
     bb_up = _last(df, "bb_upper"); bb_lo = _last(df, "bb_lower")
     vol = _last(df, "tick_volume"); vol_ma = _last(df, "vol_ma_10")
     sw_hi = _last(df, "swing_high_15"); sw_lo = _last(df, "swing_low_15")
+    sw_hi8 = _last(df, "swing_high_8"); sw_lo8 = _last(df, "swing_low_8")
     macd_hist = _last(df, "macd_hist"); macd_prev = _last(df, "macd_hist", -2)
     stoch_k = _last(df, "stoch_k"); stoch_d = _last(df, "stoch_d")
     stoch_k_p = _last(df, "stoch_k", -2); stoch_d_p = _last(df, "stoch_d", -2)
@@ -141,6 +142,7 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
     body = abs(close - open_)
     volume_ok = vol is not None and vol_ma is not None and vol > vol_ma
     cands: List[dict] = []
+    enabled = set(config.ENABLED_STRATEGIES)
 
     # ---- 1. MomentumBreakout --------------------------------------------
     m5_ok_buy = m5_ok_sell = True
@@ -154,34 +156,41 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
             pass
     bull_break = (close > bb_up) or (body > 1.2 * atr and close > open_)
     bear_break = (close < bb_lo) or (body > 1.2 * atr and close < open_)
-    if close > ema50 and ema9 > ema21 and bull_break and 60 <= rsi <= 82 and volume_ok and m5_ok_buy:
+    if ("MomentumBreakout" in enabled and close > ema50 and ema9 > ema21
+            and bull_break and 60 <= rsi <= 82 and volume_ok and m5_ok_buy):
         cands.append(_build("BUY", "MomentumBreakout", close, atr, atr_points,
                             config.SL_ATR_MULT, config.TP_ATR_MULT, 0.72))
-    if close < ema50 and ema9 < ema21 and bear_break and 18 <= rsi <= 40 and volume_ok and m5_ok_sell:
+    if ("MomentumBreakout" in enabled and close < ema50 and ema9 < ema21
+            and bear_break and 18 <= rsi <= 40 and volume_ok and m5_ok_sell):
         cands.append(_build("SELL", "MomentumBreakout", close, atr, atr_points,
                             config.SL_ATR_MULT, config.TP_ATR_MULT, 0.72))
 
-    # ---- 2. LiquiditySweep ----------------------------------------------
-    if candle_range > 0 and sw_lo is not None and sw_hi is not None:
+    # ---- 2. LiquiditySweep (24/5 micro-swing sweeps) ---------------------
+    if "LiquiditySweep" in enabled and candle_range > 0:
         lower_wick = min(open_, close) - low
         upper_wick = high - max(open_, close)
-        if low < sw_lo and lower_wick > 0.45 * candle_range and close > sw_lo and rsi < 35:
+        broke_lo = ((sw_lo is not None and low < sw_lo)
+                    or (sw_lo8 is not None and low < sw_lo8))
+        broke_hi = ((sw_hi is not None and high > sw_hi)
+                    or (sw_hi8 is not None and high > sw_hi8))
+        if broke_lo and lower_wick >= 0.38 * candle_range and rsi < 40:
             cands.append(_build("BUY", "LiquiditySweep", close, atr, atr_points,
-                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.66))
-        if high > sw_hi and upper_wick > 0.45 * candle_range and close < sw_hi and rsi > 65:
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68))
+        if broke_hi and upper_wick >= 0.38 * candle_range and rsi > 60:
             cands.append(_build("SELL", "LiquiditySweep", close, atr, atr_points,
-                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.66))
+                                config.SL_ATR_MULT, config.TP_ATR_MULT, 0.68))
 
-    # ---- 3. BollingerBounce ---------------------------------------------
-    if low <= bb_lo and rsi < 28 and close > open_:
-        cands.append(_build("BUY", "BollingerBounce", close, atr, atr_points,
-                            config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.60))
-    if high >= bb_up and rsi > 72 and close < open_:
-        cands.append(_build("SELL", "BollingerBounce", close, atr, atr_points,
-                            config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.60))
+    # ---- 3. BollingerBounce (24/5 mean reversion) -----------------------
+    if "BollingerBounce" in enabled:
+        if low <= bb_lo and rsi < 32 and close > open_:
+            cands.append(_build("BUY", "BollingerBounce", close, atr, atr_points,
+                                config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.65))
+        if high >= bb_up and rsi > 68 and close < open_:
+            cands.append(_build("SELL", "BollingerBounce", close, atr, atr_points,
+                                config.RANGE_SL_ATR_MULT, config.RANGE_TP_ATR_MULT, 0.65))
 
     # ---- 4. EMARibbonPullback (trending regimes only) -------------------
-    if regime.is_trending and ema5 is not None and ema13 is not None:
+    if "EMARibbonPullback" in enabled and regime.is_trending and ema5 is not None and ema13 is not None:
         if ema5 > ema13 > ema21 and low <= ema13 and close > open_ and close > ema13:
             cands.append(_build("BUY", "EMARibbonPullback", close, atr, atr_points,
                                 1.5, 2.2, 0.70))
@@ -190,7 +199,7 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
                                 1.5, 2.2, 0.70))
 
     # ---- 5. FastMACDCross -----------------------------------------------
-    if None not in (macd_hist, macd_prev, stoch_k, stoch_d, stoch_k_p, stoch_d_p):
+    if "FastMACDCross" in enabled and None not in (macd_hist, macd_prev, stoch_k, stoch_d, stoch_k_p, stoch_d_p):
         if (macd_prev <= 0 < macd_hist and close > ema50
                 and stoch_k_p < stoch_d_p and stoch_k > stoch_d and stoch_k_p < 25):
             cands.append(_build("BUY", "FastMACDCross", close, atr, atr_points,
@@ -203,21 +212,34 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
     # ---- 6. FairValueGapScalp -------------------------------------------
     recent_bull_fvg = bool(fvg_bull) or bool(fvg_bull_1) or bool(fvg_bull_2)
     recent_bear_fvg = bool(fvg_bear) or bool(fvg_bear_1) or bool(fvg_bear_2)
-    if recent_bull_fvg and close > open_:
+    if "FairValueGapScalp" in enabled and recent_bull_fvg and close > open_:
         cands.append(_build("BUY", "FairValueGapScalp", close, atr, atr_points,
                             1.4, 2.0, 0.60))
-    if recent_bear_fvg and close < open_:
+    if "FairValueGapScalp" in enabled and recent_bear_fvg and close < open_:
         cands.append(_build("SELL", "FairValueGapScalp", close, atr, atr_points,
                             1.4, 2.0, 0.60))
 
     # ---- 7. MicroEngulfingReversal --------------------------------------
-    if prev_open is not None and prev_close is not None and body > 1.3 * atr and volume_ok:
+    if ("MicroEngulfingReversal" in enabled and prev_open is not None
+            and prev_close is not None and body > 1.3 * atr and volume_ok):
         if prev_close < prev_open and close > open_ and close >= prev_open and open_ <= prev_close:
             cands.append(_build("BUY", "MicroEngulfingReversal", close, atr, atr_points,
                                 1.5, 2.2, 0.70))
         if prev_close > prev_open and close < open_ and close <= prev_open and open_ >= prev_close:
             cands.append(_build("SELL", "MicroEngulfingReversal", close, atr, atr_points,
                                 1.5, 2.2, 0.70))
+
+    # ---- 8. RSISnapback (high-frequency exhaustion reversal) ------------
+    if "RSISnapback" in enabled:
+        c2 = _last(df, "close", -3)
+        two_candle_move = abs(close - c2) if c2 is not None else 0.0
+        if two_candle_move > 1.6 * atr:
+            if rsi < 22 and close > open_:
+                cands.append(_build("BUY", "RSISnapback", close, atr, atr_points,
+                                    config.SL_ATR_MULT, config.TP_ATR_MULT, 0.64))
+            if rsi > 78 and close < open_:
+                cands.append(_build("SELL", "RSISnapback", close, atr, atr_points,
+                                    config.SL_ATR_MULT, config.TP_ATR_MULT, 0.64))
 
     if not cands:
         sig.reason = "no strategy matched"

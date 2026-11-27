@@ -136,6 +136,9 @@ def add_indicators(df: pd.DataFrame, point: float = 0.01) -> pd.DataFrame:
     # Swing levels of the previous SWING_LOOKBACK closed candles (exclude current)
     out["swing_high_15"] = out["high"].rolling(config.SWING_LOOKBACK).max().shift(1)
     out["swing_low_15"] = out["low"].rolling(config.SWING_LOOKBACK).min().shift(1)
+    # Micro-swing (8-bar) for high-frequency liquidity sweeps.
+    out["swing_high_8"] = out["high"].rolling(8).max().shift(1)
+    out["swing_low_8"] = out["low"].rolling(8).min().shift(1)
 
     # Ultra-fast scalping ribbon
     out["ema_5"] = _ema(close, 5)

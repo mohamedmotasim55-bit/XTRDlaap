@@ -2,6 +2,7 @@ import os, sys, unittest
 import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import indicators, strategy_engine, config
+config.ENABLED_STRATEGIES = list(config.ALL_STRATEGIES)  # tests cover all engines
 
 def base_df(n=60):
     rows=[]
@@ -35,7 +36,7 @@ class TestStrategy(unittest.TestCase):
         s=strategy_engine.generate_signal(d, config.SESSION_MODE_MOMENTUM)
         self.assertEqual(s.signal,"BUY"); self.assertEqual(s.strategy,"MomentumBreakout")
         self.assertAlmostEqual(s.sl, 2010-0.55, places=3)   # MIN_SL_POINTS clamp
-        self.assertAlmostEqual(s.tp, 2010+1.00, places=3)   # MIN_TP_POINTS clamp
+        self.assertAlmostEqual(s.tp, 2010+1.10, places=3)   # MIN_TP_POINTS clamp
 
     def test_momentum_breakout_sell(self):
         d=force_last(self.df, open=2005, high=2005.5, low=2000, close=2000, tick_volume=500,
@@ -67,29 +68,31 @@ class TestStrategy(unittest.TestCase):
         d=force_last(self.df, open=1990, high=1992.5, low=1988, close=1992, tick_volume=200,
                      ema_9=1995, ema_21=1998, ema_50=2000, bb_upper=2000, bb_lower=1989.5, bb_mid=1995,
                      rsi_7=20, atr_14=0.5, atr_points=50, vol_ma_10=200,
-                     swing_high_15=2005, swing_low_15=1985)
+                     swing_high_15=2005, swing_low_15=1985,
+                     swing_high_8=2030, swing_low_8=1980)
         s=strategy_engine.generate_signal(d, config.SESSION_MODE_ASIAN)
         self.assertEqual(s.signal,"BUY"); self.assertEqual(s.strategy,"BollingerBounce")
         self.assertAlmostEqual(s.sl, 1992-0.55, places=3)
-        self.assertAlmostEqual(s.tp, 1992+1.00, places=3)
+        self.assertAlmostEqual(s.tp, 1992+1.10, places=3)
 
     def test_bollinger_bounce_sell(self):
         d=force_last(self.df, open=2010, high=2012, low=2007.5, close=2008, tick_volume=200,
                      ema_9=2005, ema_21=2002, ema_50=2000, bb_upper=2011, bb_lower=1990, bb_mid=2000,
                      rsi_7=80, atr_14=0.5, atr_points=50, vol_ma_10=200,
-                     swing_high_15=2015, swing_low_15=1990)
+                     swing_high_15=2015, swing_low_15=1990,
+                     swing_high_8=2030, swing_low_8=1970)
         s=strategy_engine.generate_signal(d, config.SESSION_MODE_ASIAN)
         self.assertEqual(s.signal,"SELL"); self.assertEqual(s.strategy,"BollingerBounce")
 
     def test_sl_tp_clamp_bounds(self):
         # point = atr/atr_points = 0.01; high ATR -> MAX caps
         sl, tp = strategy_engine._clamp_sl_tp("BUY", 3770.0, 1.5, 150)
-        self.assertAlmostEqual(3770 - sl, 1.05, places=2)   # MAX_SL 105 pts
-        self.assertAlmostEqual(tp - 3770, 2.20, places=2)   # MAX_TP 220 pts
+        self.assertAlmostEqual(3770 - sl, 0.90, places=2)   # MAX_SL 90 pts
+        self.assertAlmostEqual(tp - 3770, 1.90, places=2)   # MAX_TP 190 pts
         # low ATR -> MIN floors (no 5-point stops possible)
         sl2, tp2 = strategy_engine._clamp_sl_tp("SELL", 3770.0, 0.4, 40)
         self.assertAlmostEqual(sl2 - 3770, 0.55, places=2)  # MIN_SL 55 pts
-        self.assertAlmostEqual(3770 - tp2, 1.00, places=2)  # MIN_TP 100 pts
+        self.assertAlmostEqual(3770 - tp2, 1.10, places=2)  # MIN_TP 110 pts
 
     def test_stop_mode_none(self):
         d=force_last(self.df, atr_14=0.5, atr_points=50)
