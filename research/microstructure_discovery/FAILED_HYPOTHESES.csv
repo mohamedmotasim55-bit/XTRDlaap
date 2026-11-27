@@ -1,0 +1,14 @@
+feature,horizon,IG,classification
+tickdir_dn,1s,0.00137,No Predictive Information
+reversals,1s,0.00130,No Predictive Information
+tickdir_zero,1s,0.00122,No Predictive Information
+imb2s,1s,0.00109,No Predictive Information
+mom5s,1s,0.00101,No Predictive Information
+iat_ms,1s,0.00080,No Predictive Information
+imb5s,1s,0.00047,No Predictive Information
+imb10s,1s,0.00023,No Predictive Information
+bid_upd_rate,1s,0.00000,No Predictive Information
+ask_upd_rate,1s,0.00000,No Predictive Information
+upd_asym,1s,0.00000,No Predictive Information
+spread_avg,1s,0.00000,No Predictive Information
+spread_chg,1s,0.00000,No Predictive Information
