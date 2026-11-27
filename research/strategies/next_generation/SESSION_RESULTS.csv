@@ -1,0 +1,15 @@
+family,direction,horizon,n,mean_gross,mean_net,pctpos,ci_lo,ci_hi,verdict
+SESSION,BUY,10s,447,-2.55,-28.55,24.6,-34.19,-23.59,negative
+SESSION,BUY,30s,447,-2.03,-28.03,30.2,-35.81,-20.23,negative
+SESSION,BUY,60s,447,-14.29,-40.29,32.2,-50.23,-31.86,negative
+SESSION,BUY,120s,447,-16.97,-42.97,39.4,-54.64,-32.14,negative
+SESSION,BUY,300s,447,-9.83,-35.83,42.3,-58.33,-13.24,negative
+SESSION,BUY,600s,447,-2.57,-28.57,44.7,-63.35,9.5,inconclusive
+SESSION,BUY,1800s,447,-26.87,-52.87,45.6,-132.01,48.38,inconclusive
+SESSION,SELL,10s,465,0.08,-26.08,25.4,-29.32,-20.67,negative
+SESSION,SELL,30s,465,1.53,-27.57,31.6,-34.44,-18.8,negative
+SESSION,SELL,60s,465,1.74,-27.74,35.3,-38.57,-18.52,negative
+SESSION,SELL,120s,465,5.73,-31.73,40.2,-45.59,-20.6,negative
+SESSION,SELL,300s,465,-1.47,-24.53,43.7,-43.59,-5.86,negative
+SESSION,SELL,600s,465,-10.07,-15.93,46.2,-52.81,17.83,inconclusive
+SESSION,SELL,1800s,465,3.02,-29.02,45.4,-125.62,41.98,inconclusive

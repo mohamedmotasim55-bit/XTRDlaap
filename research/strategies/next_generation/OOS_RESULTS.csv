@@ -1,0 +1,13 @@
+family,side,horizon,seg,n,mean_gross,mean_net,pctpos,verdict
+COMPRESSION_BREAK,SELL,1800s,discovery,689,-72.62,46.62,53.8,inconclusive
+COMPRESSION_BREAK,SELL,1800s,validation,227,-31.48,5.48,51.1,inconclusive
+COMPRESSION_BREAK,SELL,1800s,oos,138,-162.27,136.09,57.2,inconclusive
+IMPULSE,SELL,1800s,discovery,3363,-26.53,0.53,50.9,inconclusive
+IMPULSE,SELL,1800s,validation,1252,11.52,-37.54,47.9,inconclusive
+IMPULSE,SELL,1800s,oos,1043,-53.16,27.13,52.3,inconclusive
+SESSION,SELL,600s,discovery,465,-10.07,-15.93,46.2,inconclusive
+SESSION,SELL,600s,validation,166,11.53,-37.53,48.8,inconclusive
+SESSION,SELL,600s,oos,150,-52.97,26.97,51.3,inconclusive
+SWEEP,SELL,1800s,discovery,2691,-63.21,37.21,52.4,inconclusive
+SWEEP,SELL,1800s,validation,1054,23.81,-49.83,48.7,inconclusive
+SWEEP,SELL,1800s,oos,833,-122.44,96.44,55.8,inconclusive

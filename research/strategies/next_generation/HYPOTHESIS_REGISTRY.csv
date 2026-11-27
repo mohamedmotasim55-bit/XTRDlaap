@@ -1,0 +1,6 @@
+id,family,hypothesis,result
+H_COMPRESSION_BREAK,COMPRESSION_BREAK,event direction persists after detection,see COMPRESSION_BREAK_RESULTS.csv
+H_IMPULSE,IMPULSE,event direction persists after detection,see IMPULSE_RESULTS.csv
+H_SESSION,SESSION,event direction persists after detection,see SESSION_RESULTS.csv
+H_SWEEP,SWEEP,event direction persists after detection,see SWEEP_RESULTS.csv
+H_CROSS,cross_asset,gold vs DXY/silver lead-lag,NOT TESTED (no external data in MT5 tick feed)

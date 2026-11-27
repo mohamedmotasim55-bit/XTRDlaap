@@ -1,0 +1,9 @@
+family,side,horizon,n,mean_gross,mean_net,pctpos,verdict
+COMPRESSION_BREAK,BUY,60s,701,2.84,-23.16,36.1,negative
+COMPRESSION_BREAK,SELL,60s,689,-1.44,-24.56,34.7,negative
+IMPULSE,BUY,60s,3334,-0.18,-26.19,37.9,negative
+IMPULSE,SELL,60s,3363,-3.26,-22.75,38.7,negative
+SESSION,BUY,60s,447,-14.29,-40.29,32.2,negative
+SESSION,SELL,60s,465,1.74,-27.74,35.3,negative
+SWEEP,BUY,60s,2933,1.39,-24.61,38.6,negative
+SWEEP,SELL,60s,2691,-4.35,-21.65,41.8,negative

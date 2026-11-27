@@ -1,0 +1,5 @@
+rank,family,best_side,best_horizon,n,mean_net,verdict,oos_positive
+1,COMPRESSION_BREAK,SELL,1800s,689,46.62,inconclusive,no
+2,SWEEP,SELL,1800s,2691,37.21,inconclusive,no
+3,IMPULSE,SELL,1800s,3363,0.53,inconclusive,no
+4,SESSION,SELL,600s,465,-15.93,inconclusive,no
