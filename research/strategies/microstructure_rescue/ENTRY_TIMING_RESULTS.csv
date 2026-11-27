@@ -1,0 +1,11 @@
+mode,side,horizon,n,mean_net,pctpos,ci_lo,ci_hi,verdict
+immediate,BUY,60s,8452,-25.42,37.7,-27.82,-22.81,negative
+immediate,BUY,120s,8452,-25.7,40.5,-29.22,-22.03,negative
+delay1s_hold60s,BUY,-,8452,-27.54,36.7,-29.98,-24.99,negative
+delay5s_hold60s,BUY,-,8452,-27.83,36.6,-30.48,-25.24,negative
+delay1s_hold120s,BUY,-,8452,-27.74,39.6,-31.31,-24.2,negative
+immediate,SELL,60s,8303,-23.81,39.2,-26.39,-21.51,negative
+immediate,SELL,120s,8303,-22.7,43.1,-26.71,-18.78,negative
+delay1s_hold60s,SELL,-,8303,-25.78,38.5,-28.37,-23.52,negative
+delay5s_hold60s,SELL,-,8303,-26.02,38.5,-28.84,-23.75,negative
+delay1s_hold120s,SELL,-,8303,-24.67,42.3,-28.73,-20.73,negative
