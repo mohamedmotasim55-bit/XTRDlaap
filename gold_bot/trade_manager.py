@@ -106,15 +106,46 @@ class TradeManager:
         return (datetime.now() - last).total_seconds() < config.COOLDOWN_SECONDS
 
     # ---------------------------------------------------------- open gating
-    def can_open_new_trade(self) -> bool:
-        """Return True only if a new entry is allowed by every guard."""
-        self.last_error = ""
+    def _bot_positions(self) -> list:
+        return [p for p in self._positions() if p.magic == config.MAGIC_NUMBER]
 
-        if self.count_bot_positions() >= config.MAX_OPEN_TRADES:
+    @staticmethod
+    def _position_is_risk_free(pos) -> bool:
+        """True if SL is at or beyond break-even (locked in profit)."""
+        if mt5 is None or not getattr(pos, "sl", 0.0):
+            return False
+        if pos.type == mt5.POSITION_TYPE_BUY:
+            return pos.sl >= pos.price_open
+        return pos.sl <= pos.price_open
+
+    def can_open_new_trade(self, direction: Optional[str] = None) -> bool:
+        """Return True if a base entry OR a zero-risk pyramid add-on is allowed."""
+        self.last_error = ""
+        n = self.count_bot_positions()
+
+        if n == 0:
+            pass  # normal base entry
+        elif (
+            n == 1
+            and config.ENABLE_ZERO_RISK_PYRAMID
+            and n < config.MAX_TOTAL_TRADES_WITH_PYRAMID
+            and direction in ("BUY", "SELL")
+        ):
+            existing = self._bot_positions()[0]
+            want_buy = direction == "BUY"
+            same_dir = (existing.type == mt5.POSITION_TYPE_BUY) == want_buy
+            if not same_dir:
+                self.last_error = "pyramid direction mismatch"
+                return False
+            if not self._position_is_risk_free(existing):
+                self.last_error = "pyramid blocked: existing trade not risk-free"
+                return False
+        else:
             self.last_error = "max open trades reached"
             return False
 
-        if self._cooldown_active():
+        # Cooldown gates fresh base entries only, not pyramid add-ons.
+        if n == 0 and self._cooldown_active():
             self.last_error = "cooldown after last close"
             return False
 
@@ -124,9 +155,10 @@ class TradeManager:
             self.last_error = "symbol info/tick unavailable"
             return False
 
-        margin = mt5.order_calc_margin(
-            mt5.ORDER_TYPE_BUY, self.symbol, config.LOT_SIZE, tick.ask
-        )
+        is_buy = direction != "SELL"
+        price = tick.ask if is_buy else tick.bid
+        order_type = mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL
+        margin = mt5.order_calc_margin(order_type, self.symbol, config.LOT_SIZE, price)
         acc = mt5.account_info()
         if margin is None or acc is None:
             self.last_error = "margin/account unavailable"

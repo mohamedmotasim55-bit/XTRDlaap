@@ -22,8 +22,10 @@ from typing import Optional
 
 import config
 import indicators
+import regime_detector
 import strategy_engine
 import trade_manager as tm_module
+from adaptive_brain import AdaptiveBrain
 from analytics_logger import AnalyticsLogger
 from mt5_connector import MT5Connector, MT5ConnectionError
 from news_filter import NewsFilter
@@ -107,6 +109,8 @@ def run() -> int:
 
     guard = SafetyGuard(connector)
     manager = tm_module.TradeManager(connector)
+    brain = AdaptiveBrain()
+    adaptive_fed = 0
     news = NewsFilter()
     analytics = AnalyticsLogger()
     news.refresh()
@@ -172,6 +176,11 @@ def run() -> int:
             try:
                 manager.manage_open_positions(latest_atr)
                 analytics.sync_from_mt5(tm_module.mt5)
+                while adaptive_fed < len(analytics.closed_trades):
+                    _t = analytics.closed_trades[adaptive_fed]
+                    brain.record_trade(_t.get("strategy", ""),
+                                       float(_t.get("profit_usd", 0) or 0))
+                    adaptive_fed += 1
             except Exception as exc:  # noqa: BLE001
                 log.error("Position management error: %s", exc)
 
@@ -181,12 +190,19 @@ def run() -> int:
                 try:
                     if analytics.in_loss_cooldown():
                         log.debug("Entry blocked: consecutive-loss cooldown.")
-                    elif manager.can_open_new_trade():
-                        sig = strategy_engine.generate_signal(df, mode, df_m5)
-                        if sig and manager.execute_signal(sig):
-                            _register_new_position(manager, analytics, sig, mode, spread, latest_atr)
-                    elif manager.last_error:
-                        log.debug("Entry blocked: %s", manager.last_error)
+                    elif not guard.check_profit_ratchet():
+                        log.debug("Entry blocked: daily profit ratchet locked.")
+                    else:
+                        regime = regime_detector.RegimeDetector.classify(df, df_m5)
+                        sig = strategy_engine.generate_signal(df, mode, df_m5, regime=regime)
+                        if sig:
+                            allowed, conf, why = brain.evaluate(sig, regime)
+                            if not allowed:
+                                log.debug("Signal blocked by brain: %s", why)
+                            elif manager.can_open_new_trade(sig.signal) \
+                                    and manager.execute_signal(sig):
+                                _register_new_position(manager, analytics, sig, mode,
+                                                       spread, latest_atr)
                 except Exception as exc:  # noqa: BLE001
                     log.error("Signal/execution error: %s", exc)
 

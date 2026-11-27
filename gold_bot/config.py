@@ -136,6 +136,27 @@ ADX_TREND_THRESHOLD: float = 25.0
 ATR_SPIKE_FACTOR: float = 1.4
 
 # ---------------------------------------------------------------------------
+# Adaptive brain
+# ---------------------------------------------------------------------------
+ROLLING_WINDOW: int = 20
+STRATEGY_MUTE_MINUTES: int = 120
+MIN_CONFIDENCE_TO_TRADE: float = 0.62
+REGIME_BOOST: float = 0.15
+
+# ---------------------------------------------------------------------------
+# Zero-risk pyramiding
+# ---------------------------------------------------------------------------
+MAX_BASE_TRADES: int = 1
+MAX_TOTAL_TRADES_WITH_PYRAMID: int = 2
+ENABLE_ZERO_RISK_PYRAMID: bool = True
+
+# ---------------------------------------------------------------------------
+# Daily profit ratchet (equity lock)
+# ---------------------------------------------------------------------------
+PROFIT_RATCHET_START_USD: float = 3.00
+PROFIT_RATCHET_KEEP_PCT: float = 0.70
+
+# ---------------------------------------------------------------------------
 # Loop / logging
 # ---------------------------------------------------------------------------
 LOOP_INTERVAL_SEC: float = 1.0

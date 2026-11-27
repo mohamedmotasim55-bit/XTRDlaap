@@ -36,6 +36,10 @@ class SafetyGuard:
 
     def __init__(self, connector: MT5Connector) -> None:
         self.conn = connector
+        # Daily profit ratchet state
+        self.peak_daily_profit: float = 0.0
+        self.ratchet_locked: bool = False
+        self._ratchet_day = None
 
     # ------------------------------------------------------------------ spread
     def check_spread(self) -> bool:
@@ -162,6 +166,45 @@ class SafetyGuard:
             # DEAL_ENTRY_OUT / OUT_BY mark closing deals; include any profit-bearing deal.
             total += float(d.profit) + float(d.swap) + float(d.commission)
         return total
+
+    def _daily_pnl(self) -> float:
+        """Today's realised + floating PnL in USD."""
+        day_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        return self._realised_pnl_since(day_start, datetime.now()) + self._floating_pnl()
+
+    def check_profit_ratchet(self, daily_pnl: Optional[float] = None,
+                             now: Optional[datetime] = None) -> bool:
+        """Return True if trading may continue; False once gains are locked in.
+
+        Once peak daily profit >= PROFIT_RATCHET_START_USD, if current daily
+        profit falls below PROFIT_RATCHET_KEEP_PCT * peak, lock the day.
+        """
+        now = now or datetime.now()
+        if self._ratchet_day != now.date():
+            self._ratchet_day = now.date()
+            self.peak_daily_profit = 0.0
+            self.ratchet_locked = False
+
+        if daily_pnl is None:
+            try:
+                daily_pnl = self._daily_pnl()
+            except Exception:  # noqa: BLE001
+                daily_pnl = 0.0
+
+        if daily_pnl > self.peak_daily_profit:
+            self.peak_daily_profit = daily_pnl
+
+        if self.peak_daily_profit >= config.PROFIT_RATCHET_START_USD:
+            if daily_pnl < config.PROFIT_RATCHET_KEEP_PCT * self.peak_daily_profit:
+                if not self.ratchet_locked:
+                    log.warning(
+                        "PROFIT RATCHET locked: daily=%.2f < %.0f%% of peak=%.2f",
+                        daily_pnl, config.PROFIT_RATCHET_KEEP_PCT * 100,
+                        self.peak_daily_profit,
+                    )
+                self.ratchet_locked = True
+
+        return not self.ratchet_locked
 
     @staticmethod
     def _floating_pnl() -> float:
