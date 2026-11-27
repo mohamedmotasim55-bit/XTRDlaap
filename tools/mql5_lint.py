@@ -71,6 +71,8 @@ MQL5_BUILTINS = {
     "HistoryDealsTotal", "HistoryOrderGetDouble", "HistoryOrderGetInteger",
     "HistoryOrderGetString", "HistoryOrdersTotal", "HistoryOrderSelect",
     "iATR", "iRSI", "iMA", "iCustom", "iClose", "iOpen", "iHigh", "iLow",
+    "iADX", "iBands", "iMACD", "iStochastic", "iCCI", "iMomentum", "iWPR",
+    "iDeMarker", "iSAR", "iEnvelopes", "iStdDev", "iIchimoku", "iFractals",
     "IndicatorRelease", "IndicatorCreate", "EventSetMillisecondTimer",
     "EventSetTimer", "EventKillTimer", "FileOpen", "FileClose", "FileWrite",
     "FileWriteString", "FileReadString", "FileReadNumber", "FileReadDatetime",
