@@ -26,8 +26,8 @@ import pandas as pd
 
 import indicators
 import dynamic_target_engine
-from strategies import ALL as STRATEGIES_32
-from strategies.base import Ctx
+import market_pulse
+from market_pulse import PulseContext
 
 import config
 import regime_detector
@@ -142,9 +142,9 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
         sig.reason = f"mode '{mode}' not tradeable"
         return sig
 
-    if set(config.ENABLED_STRATEGIES) & set(config.STRATEGY_32):
-        return _build_32_signal(df, df_m5, df_m15, regime,
-                                set(config.ENABLED_STRATEGIES), sig)
+    if set(config.ENABLED_STRATEGIES) & set(config.PULSE_MODELS):
+        return _build_pulse_signal(df, df_m5, df_m15, regime,
+                                   set(config.ENABLED_STRATEGIES), sig)
 
     atr = _last(df, "atr_14")
     atr_points = _last(df, "atr_points")
@@ -422,9 +422,8 @@ def _institutional_models(cands, enabled, df, df_m5, df_m15, close, open_, high,
     vol_ratio = (vol / vol_ma) if vol_ma else 0.0
     scalp_ok = atr_points >= config.SCALP_MIN_ATR_POINTS
 
-    def targets_for(direction):
-        return dynamic_target_engine.build(direction, adx, m5_adx_v, atr_ratio,
-                                           vol_ratio, m1_up, m5_up, m15_up)
+    def targets_for(direction):  # legacy models keep the static ATR clamp
+        return None
 
     m15_up = m15_ema21 is not None and m15_ema50 is not None and m15_ema21 > m15_ema50
     m15_dn = m15_ema21 is not None and m15_ema50 is not None and m15_ema21 < m15_ema50
@@ -536,52 +535,88 @@ def _institutional_models(cands, enabled, df, df_m5, df_m15, close, open_, high,
                                 config.SL_ATR_MULT, config.TP_ATR_MULT, 0.66))
 
 
-def _build_32_signal(df, df_m5, df_m15, regime, enabled, base_sig):
-    ctx = Ctx(df, df_m5, df_m15)
-    if ctx.atr is None or ctx.atr_points is None or ctx.atr_points <= 0:
-        base_sig.reason = "ATR unavailable"
+def _cand(c, name, direction, confidence, entry_type="MARKET"):
+    return dict(direction=direction, strategy=name, entry=round(c.close, 5),
+                confidence=confidence, entry_type=entry_type,
+                limit_price=c.limit_price(direction) if entry_type == "LIMIT" else 0.0)
+
+
+def _build_pulse_signal(df, df_m5, df_m15, regime, enabled, base_sig):
+    c = PulseContext(df, df_m5, df_m15)
+    if c.close is None or c.atr is None or c.atr_points is None:
+        base_sig.reason = "pulse indicators unavailable"
         return base_sig
-    if ctx.atr_points < config.MIN_ATR_POINTS:
-        base_sig.reason = (f"ATR {ctx.atr_points:.1f} pts < min "
-                           f"{config.MIN_ATR_POINTS:.0f}")
+    if c.atr_points < config.PULSE_MIN_ATR_POINTS:
+        base_sig.reason = f"ATR {c.atr_points:.1f} < pulse min {config.PULSE_MIN_ATR_POINTS:.0f}"
         return base_sig
-    base_sig.atr_points = round(ctx.atr_points, 1)
+    if not c.session_active:
+        base_sig.reason = "outside institutional pulse session"
+        return base_sig
+    base_sig.atr_points = round(c.atr_points, 1)
     if regime is None:
         regime = regime_detector.RegimeDetector.classify(df, df_m5)
-    found = []
-    for name, fn in STRATEGIES_32:
-        if name not in enabled:
-            continue
-        try:
-            cand = fn(ctx)
-        except Exception:  # noqa: BLE001 - a broken model must not kill the engine
-            cand = None
-        if cand:
-            found.append(cand)
-    if not found:
-        base_sig.reason = "no 32-model match"
+
+    rng = c.range or 1e-9
+    cands = []
+
+    if "Pulse_ClimaxAbsorption" in enabled and c.pulse >= 1.75 and c.evr >= 2.2 \
+            and c.body <= 0.48 * rng and c.near_level():
+        if c.wick_low >= 0.42 * rng and c.close > c.open_:
+            cands.append(_cand(c, "Pulse_ClimaxAbsorption", "BUY", 0.75))
+        if c.wick_high >= 0.42 * rng and c.close < c.open_:
+            cands.append(_cand(c, "Pulse_ClimaxAbsorption", "SELL", 0.75))
+
+    if "Pulse_LiquiditySweep_Snap" in enabled and c.pulse >= 1.45:
+        swept_lo = ((c.swing_lo is not None and c.low < c.swing_lo and c.close > c.swing_lo)
+                    or (c.m15_sw_lo is not None and c.low < c.m15_sw_lo and c.close > c.m15_sw_lo))
+        swept_hi = ((c.swing_hi is not None and c.high > c.swing_hi and c.close < c.swing_hi)
+                    or (c.m15_sw_hi is not None and c.high > c.m15_sw_hi and c.close < c.m15_sw_hi))
+        if swept_lo and c.wick_low >= 0.45 * rng:
+            cands.append(_cand(c, "Pulse_LiquiditySweep_Snap", "BUY", 0.72))
+        if swept_hi and c.wick_high >= 0.45 * rng:
+            cands.append(_cand(c, "Pulse_LiquiditySweep_Snap", "SELL", 0.72))
+
+    if ("Pulse_MomentumRetest_Limit" in enabled and c.m5_adx is not None
+            and c.m5_adx > 21 and c.pulse >= 1.50 and rng > 1.2 * c.atr):
+        if c.aligned_buy and c.close > c.open_:
+            cands.append(_cand(c, "Pulse_MomentumRetest_Limit", "BUY", 0.70, "LIMIT"))
+        if c.aligned_sell and c.close < c.open_:
+            cands.append(_cand(c, "Pulse_MomentumRetest_Limit", "SELL", 0.70, "LIMIT"))
+
+    if "Pulse_ExhaustionDivergence" in enabled and c.pulse >= 1.60 and c.rsi is not None:
+        stretched_lo = ((c.m5_vwap_lo is not None and c.low <= c.m5_vwap_lo)
+                        or (c.kelt_lo is not None and c.low <= c.kelt_lo))
+        stretched_hi = ((c.m5_vwap_up is not None and c.high >= c.m5_vwap_up)
+                        or (c.kelt_up is not None and c.high >= c.kelt_up))
+        if stretched_lo and c.rsi < 25 and c.close > c.open_:
+            cands.append(_cand(c, "Pulse_ExhaustionDivergence", "BUY", 0.73))
+        if stretched_hi and c.rsi > 75 and c.close < c.open_:
+            cands.append(_cand(c, "Pulse_ExhaustionDivergence", "SELL", 0.73))
+
+    if not cands:
+        base_sig.reason = "no pulse-engine match"
         return base_sig
 
-    winner = max(found, key=lambda c: (c["confidence"], c["strategy"]))
-    agree = [c for c in found if c["direction"] == winner["direction"]]
-    targets = dynamic_target_engine.build(
-        winner["direction"], ctx.adx, ctx.m5_adx, ctx.atr_ratio, ctx.vol_ratio,
-        ctx.m1_up, ctx.m5_up, ctx.m15_up, consensus=len(agree))
+    winner = max(cands, key=lambda x: (x["confidence"], x["strategy"]))
+    agree = [x for x in cands if x["direction"] == winner["direction"]]
+    aligned = c.aligned_buy if winner["direction"] == "BUY" else c.aligned_sell
+    targets = dynamic_target_engine.select_targets(
+        c.pulse, c.atr_points, m5_aligned=aligned, consensus=len(agree))
 
-    point = ctx.point or 0.01
+    point = c.point or 0.01
     sl_pts, tp_pts = targets["sl_points"], targets["tp_points"]
     if winner["direction"] == "BUY":
-        sl, tp = ctx.close - sl_pts * point, ctx.close + tp_pts * point
+        sl, tp = c.close - sl_pts * point, c.close + tp_pts * point
     else:
-        sl, tp = ctx.close + sl_pts * point, ctx.close - tp_pts * point
+        sl, tp = c.close + sl_pts * point, c.close - tp_pts * point
 
-    conf = min(1.0, winner["confidence"] + 0.08 * (len(agree) - 1))
     return Signal(
         signal=winner["direction"], strategy=winner["strategy"],
-        entry=round(ctx.close, 5), sl=round(sl, 5), tp=round(tp, 5),
-        atr_points=round(ctx.atr_points or 0.0, 1), confidence_score=round(conf, 3),
+        entry=round(c.close, 5), sl=round(sl, 5), tp=round(tp, 5),
+        atr_points=round(c.atr_points, 1),
+        confidence_score=round(min(1.0, winner["confidence"] + 0.08 * (len(agree) - 1)), 3),
         regime=regime.regime if regime else "",
-        reason=f"{winner['strategy']} ({len(agree)} agree)",
+        reason=f"{winner['strategy']} pulse={c.pulse:.2f} ({len(agree)} agree)",
         entry_type=winner["entry_type"], limit_price=winner["limit_price"],
         tp_points=tp_pts, sl_points=sl_pts, be_trigger=targets["be_trigger"],
         be_lock=targets["be_lock"], trail_start=targets["trail_start"],

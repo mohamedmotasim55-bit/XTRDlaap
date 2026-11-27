@@ -48,7 +48,7 @@ MAGIC_NUMBER: int = 202699
 LOT_SIZE: float = 0.01               # fixed lot for the $10 micro-account
 MAX_SPREAD_POINTS: float = 38.0      # JustMarkets base ~26 pts; 38 tolerates normal vol
 MAX_OPEN_TRADES: int = 1             # strict single-position cap to protect $10
-DAILY_LOSS_LIMIT_USD: float = 1.85   # equity guard; 3-loss pause handles micro-DD
+DAILY_LOSS_LIMIT_USD: float = 2.00   # equity guard; 3-loss pause handles micro-DD
 MAX_TRADES_PER_DAY: int = 12         # keep quality high, volume 50-80/week
 RISK_PER_TRADE_PCT: float = 1.0      # kept for reference / future dynamic sizing
 MAX_DAILY_DRAWDOWN_PCT: float = 4.0  # legacy % cap (superseded by DAILY_LOSS_LIMIT_USD)
@@ -104,27 +104,16 @@ NEW_MODELS = (
     "FVG_InstitutionalFill", "LondonFixReversal",
 )
 ALL_STRATEGIES = LEGACY_STRATEGIES + NEW_MODELS
-SCALP_MODELS = (
-    "M1_M5_MomentumLimit", "TickVelocitySurge", "M15_LiquiditySweep_M1Trigger",
-    "M5_OrderBlock_Retest", "SessionOpenExpansion",
+PULSE_MODELS = (
+    "Pulse_ClimaxAbsorption", "Pulse_LiquiditySweep_Snap",
+    "Pulse_MomentumRetest_Limit", "Pulse_ExhaustionDivergence",
 )
-STRATEGY_32 = (
-    "M1_M5_MomentumLimit", "M15_TrendPullbackLimit", "MACD_ZeroLineBurst",
-    "ADX_VolatilityBreakout", "DualSuperTrendFlip", "TripleEMARibbonSurge",
-    "M15_SwingLiquiditySweep", "M5_SwingLiquiditySweep", "M1_MicroStopHunt",
-    "EqualHighsLows_Raid", "AsianRange_SweepReverse", "DualWick_RejectionTrap",
-    "M5_OrderBlock_Retest", "M15_OrderBlock_Mitigation", "M5_FVG_SniperFill",
-    "Nested_M1_M5_FVG", "BreakerBlock_Flip",
-    "TickVolume_ClimaxAbsorption", "VolumeWeighted_ImpulseLimit",
-    "OBV_DivergenceSnap", "EffortVsResult_Anomaly", "TickVelocity_Breakout",
-    "M5_VWAP_ElasticSnap", "DailyPivot_S1R1_Bounce", "KeltnerChannel_Exhaustion",
-    "DoubleOscillator_Snapback", "FlatRange_BollingerSniper",
-    "LondonOpen_LiquidityBurst", "NYOpen_COMEX_Surge", "LondonFix_MeanReversion",
-    "InsideBar_CompressionBreak", "M15_KeyLevel_PinBar",
-)
-ENABLED_STRATEGIES = STRATEGY_32
-SCALP_MIN_ATR_POINTS: float = 95.0
-MAX_SCALP_HOLD_MINUTES: int = 40
+ENABLED_STRATEGIES = PULSE_MODELS
+PULSE_MIN_ATR_POINTS: float = 95.0
+SCALP_MIN_ATR_POINTS: float = 95.0  # legacy alias
+PULSE_SESSION_START: float = 8.0
+PULSE_SESSION_END: float = 18.5
+MAX_SCALP_HOLD_MINUTES: int = 50
 
 # Indicator periods
 EMA_FAST: int = 9
@@ -193,7 +182,7 @@ REGIME_BOOST: float = 0.15
 CONF_MULT_FLOOR: float = 0.90      # never decay a valid signal below 90%
 MUTE_MIN_TRADES: int = 6           # need 6 completed trades before muting
 CONSECUTIVE_LOSS_TRIGGER: int = 2
-CONSECUTIVE_LOSS_PAUSE_MIN: int = 30
+CONSECUTIVE_LOSS_PAUSE_MIN: int = 45
 
 # ---------------------------------------------------------------------------
 # Zero-risk pyramiding

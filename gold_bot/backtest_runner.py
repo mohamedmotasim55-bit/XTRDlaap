@@ -413,8 +413,11 @@ class BacktestRunner:
         gp = sum(t["profit_usd"] for t in trades if t["profit_usd"] > 0)
         gl = -sum(t["profit_usd"] for t in trades if t["profit_usd"] < 0)
         pf = gp / gl if gl > 0 else (float("inf") if gp > 0 else 0.0)
-        by = {}
+        by, byd = {}, {}
         for t in trades:
+            d = byd.setdefault(t["direction"], {"n": 0, "wins": 0, "net": 0.0})
+            d["n"] += 1; d["net"] += t["profit_usd"]
+            if t["profit_usd"] > 0: d["wins"] += 1
             s = by.setdefault(t["strategy"], {"n": 0, "wins": 0, "net": 0.0})
             s["n"] += 1; s["net"] += t["profit_usd"]
             if t["profit_usd"] > 0: s["wins"] += 1
@@ -424,7 +427,7 @@ class BacktestRunner:
                    net_profit=round(final_balance - self.initial_balance, 2),
                    max_drawdown_usd=round(max_dd, 2),
                    max_drawdown_pct=(100 * max_dd / self.initial_balance if self.initial_balance else 0.0),
-                   by_strategy=by, signal_audit=audit or {},
+                   by_strategy=by, by_direction=byd, signal_audit=audit or {},
                    tiers=(audit or {}).get("tiers", {}))
         self._save(trades)
         if self.verbose:
@@ -465,6 +468,10 @@ class BacktestRunner:
         print("-" * 64)
         print(f" {'Strategy':<22}{'Trades':>7}{'Win%':>8}{'Net$':>10}")
         for name, d in r["by_strategy"].items():
+            wr = (100 * d["wins"] / d["n"]) if d["n"] else 0.0
+            print(f" {name:<22}{d['n']:>7}{wr:>8.1f}{d['net']:>10.2f}")
+        print("-" * 64)
+        for name, d in (r.get("by_direction") or {}).items():
             wr = (100 * d["wins"] / d["n"]) if d["n"] else 0.0
             print(f" {name:<22}{d['n']:>7}{wr:>8.1f}{d['net']:>10.2f}")
         tiers = r.get("tiers") or {}

@@ -96,9 +96,6 @@ class TestEightModels(unittest.TestCase):
         self.assertEqual(s.strategy, "M1_M5_MomentumLimit")
         self.assertEqual(s.entry_type, "LIMIT")
         self.assertLess(s.limit_price, s.entry)
-        self.assertIn(s.tier, ("T1", "T2", "T3"))
-        self.assertEqual(s.max_hold_minutes, 40)
-        self.assertGreaterEqual(s.tp_points, 85.0)
 
     def test_model_2_session_open(self):
         d = m1_df(open=2000, high=2001.3, low=2000, close=2001,

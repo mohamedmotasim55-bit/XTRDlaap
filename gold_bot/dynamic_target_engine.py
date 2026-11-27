@@ -1,60 +1,37 @@
-"""
-dynamic_target_engine.py
-========================
-Indicator-driven TP/SL selector for pure M1/M5 scalping.
+"""Spread-proof dynamic SL/TP for the 4 Market-Pulse engines.
 
-A 0-1 momentum score (ADX strength, ATR expansion, volume surge, triple-TF
-EMA alignment) picks one of three exit tiers.  Every scalp is force-closed
-after MAX_SCALP_HOLD_MINUTES so capital never sits in a stalled trade.
+SL is volatility-scaled and hard-capped at 78 pts ($0.78 on 0.01 lot) so a
+$10 account never risks more than ~8%.  TP is pulse-scaled and clamped to
+165-380 pts while keeping Reward/Risk inside 2.5x-4.2x.
 """
 from __future__ import annotations
 
 import config
 
 
-def _clamp01(x: float) -> float:
-    return max(0.0, min(1.0, x))
+def _clamp(x, lo, hi):
+    return max(lo, min(hi, x))
 
 
-def momentum_score(direction, m1_adx, m5_adx, atr_ratio, vol_ratio,
-                   m1_up, m5_up, m15_up) -> float:
-    adx = [v for v in (m1_adx, m5_adx) if v is not None]
-    adx_avg = sum(adx) / len(adx) if adx else 0.0
-    adx_s = _clamp01((adx_avg - 20.0) / 25.0)
-    atr_s = _clamp01((float(atr_ratio or 0.0) - 0.8) / 0.8)
-    vol_s = _clamp01((float(vol_ratio or 0.0) - 1.0) / 1.5)
+def select_targets(pulse_intensity, atr_points, m5_aligned=False, consensus=0) -> dict:
+    pulse = _clamp(float(pulse_intensity or 0.0), 1.0, 4.0)
+    atr_points = float(atr_points or 0.0)
 
-    bullish = direction == "BUY"
-    flags = [bool(v) == bullish for v in (m1_up, m5_up, m15_up)]
-    align = sum(flags) / 3.0
+    sl = _clamp(0.62 * atr_points, 58.0, 78.0)
 
-    return round(_clamp01(0.30 * adx_s + 0.25 * atr_s + 0.20 * vol_s + 0.25 * align), 4)
+    strength = _clamp((pulse - 1.45) / 1.35, 0.0, 1.0)
+    tp = 165.0 + 215.0 * strength
+    if m5_aligned:
+        tp += 25.0
+    if consensus >= 3:
+        tp += 20.0
 
+    tp = min(tp, 380.0)
+    tp = max(tp, 165.0, 2.5 * sl)
+    tp = min(tp, 4.2 * sl)
 
-def select_targets(score: float, consensus: int = 0) -> dict:
-    score = _clamp01(float(score))
-    if consensus >= 3 and score <= 0.75:
-        score = 0.76
-    if score < 0.45:
-        f = score / 0.45
-        tier, tp, sl = "T1", 85.0 + f * 45.0, 55.0 + f * 13.0
-        be, lock, trail = 38.0, 10.0, 65.0
-    elif score <= 0.75:
-        f = (score - 0.45) / 0.30
-        tier, tp, sl = "T2", 150.0 + f * 100.0, 65.0 + f * 17.0
-        be, lock, trail = 45.0, 12.0, 110.0
-    else:
-        f = (score - 0.75) / 0.25
-        tier, tp, sl = "T3", 280.0 + f * 120.0, 75.0 + f * 17.0
-        be, lock, trail = 55.0, 15.0, 180.0
-    return dict(tier=tier, score=round(score, 4), consensus=int(consensus),
-                tp_points=round(tp, 1),
-                sl_points=round(sl, 1), be_trigger=be, be_lock=lock,
-                trail_start=trail, max_hold_minutes=config.MAX_SCALP_HOLD_MINUTES)
-
-
-def build(direction, m1_adx, m5_adx, atr_ratio, vol_ratio, m1_up, m5_up, m15_up,
-          consensus: int = 0) -> dict:
-    return select_targets(momentum_score(direction, m1_adx, m5_adx, atr_ratio,
-                                         vol_ratio, m1_up, m5_up, m15_up),
-                          consensus=consensus)
+    tier = "T1" if tp < 220.0 else ("T2" if tp < 300.0 else "T3")
+    return dict(tier=tier, score=round(_clamp((pulse - 1.0) / 2.0, 0.0, 1.0), 4),
+                consensus=int(consensus), tp_points=round(tp, 1),
+                sl_points=round(sl, 1), be_trigger=42.0, be_lock=12.0,
+                trail_start=75.0, max_hold_minutes=config.MAX_SCALP_HOLD_MINUTES)

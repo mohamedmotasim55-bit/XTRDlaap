@@ -15,10 +15,10 @@ import config
 from backtest_runner import BacktestRunner
 
 TOURNAMENT_OVERRIDES = dict(
-    MIN_SL_POINTS=65.0, MAX_SL_POINTS=95.0, SL_ATR_MULT=0.52,
-    MIN_TP_POINTS=150.0, MAX_TP_POINTS=260.0, TP_ATR_MULT=2.0,
-    BREAKEVEN_TRIGGER_POINTS=45.0, BREAKEVEN_LOCK_POINTS=12.0,
-    TRAILING_START_POINTS=95.0, TRAILING_ATR_MULT=0.85,
+    MIN_SL_POINTS=58.0, MAX_SL_POINTS=78.0, SL_ATR_MULT=0.62,
+    MIN_TP_POINTS=165.0, MAX_TP_POINTS=380.0, TP_ATR_MULT=2.5,
+    BREAKEVEN_TRIGGER_POINTS=42.0, BREAKEVEN_LOCK_POINTS=12.0,
+    TRAILING_START_POINTS=75.0, TRAILING_ATR_MULT=0.75,
 )
 
 MIN_PF = 1.15
@@ -60,6 +60,23 @@ _spread = 26.0
 _point = 0.01
 
 
+def _line(label, r):
+    pf = r.get("profit_factor", 0.0)
+    pf = "inf" if pf == float("inf") else f"{pf:.2f}"
+    return (f" {label:<34}{r['total_trades']:>6}{r['win_rate']:>6.1f}%"
+            f"{pf:>7}{r['net_profit']:>9.2f}{r['max_drawdown_pct']:>7.1f}")
+
+
+def _dir_line(label, r):
+    d = r.get("by_direction") or {}
+    buy = d.get("BUY", {"n": 0, "wins": 0, "net": 0.0})
+    sell = d.get("SELL", {"n": 0, "wins": 0, "net": 0.0})
+    bwr = 100 * buy["wins"] / buy["n"] if buy["n"] else 0.0
+    swr = 100 * sell["wins"] / sell["n"] if sell["n"] else 0.0
+    print(f" {label}: BUY {buy['n']:>3} ({bwr:>4.1f}% WR, ${buy['net']:>6.2f})"
+          f" | SELL {sell['n']:>3} ({swr:>4.1f}% WR, ${sell['net']:>6.2f})")
+
+
 def run_tournament(m1, m5, spread=26.0, point=0.01):
     global _spread, _point
     _spread, _point = float(spread), float(point)
@@ -67,51 +84,44 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
     print(f"Month 1: {m1a['time'].iloc[0]} -> {m1a['time'].iloc[-1]} ({len(m1a)} bars)")
     print(f"Month 2: {m1b['time'].iloc[0]} -> {m1b['time'].iloc[-1]} ({len(m1b)} bars)")
 
-    print("\n########## 32-STRATEGY SCALPING TOURNAMENT ##########")
-    print(f" {'Model':<28}{'M1 T':>5}{'WR':>6}{'PF':>6}{'Net$':>8}{'DD%':>6}"
-          f" |{'M2 T':>5}{'WR':>6}{'PF':>6}{'Net$':>8}{'DD%':>6}")
+    print("\n########## 4-ENGINE MARKET-PULSE TOURNAMENT ##########")
+    header = (f" {'Engine':<34}{'T':>6}{'WR':>7}{'PF':>7}{'Net$':>9}{'DD%':>7}")
+    print(header)
     m1_results, m2_results, rows = {}, {}, []
-    for model in config.STRATEGY_32:
+    for model in config.PULSE_MODELS:
         r1 = _run(m1a, m5a, (model,), f"{model}_m1")
         r2 = _run(m1b, m5b, (model,), f"{model}_m2")
         m1_results[model], m2_results[model] = r1, r2
         rows.append((model, r1, r2))
-    for model, r1, r2 in sorted(rows, key=lambda x: -x[1]["net_profit"]):
-        print(f" {model:<28}{r1['total_trades']:>5}{r1['win_rate']:>5.0f}%"
-              f"{_pf(r1):>6}{r1['net_profit']:>8.2f}{r1['max_drawdown_pct']:>6.0f}"
-              f" |{r2['total_trades']:>5}{r2['win_rate']:>5.0f}%"
-              f"{_pf(r2):>6}{r2['net_profit']:>8.2f}{r2['max_drawdown_pct']:>6.0f}")
 
-    print("\n########## DYNAMIC TARGET TIER BREAKDOWN ##########")
-    for label, results in (("Month 1", m1_results), ("Month 2", m2_results)):
-        agg = _agg_tiers(results)
-        print(f" {label}:")
-        for tier in ("T1", "T2", "T3", "NA"):
-            d = agg.get(tier)
+    print(" -- Month 1 (in-sample) --")
+    for model, r1, _ in sorted(rows, key=lambda x: -x[1]["net_profit"]):
+        print(_line(model, r1))
+    print(" -- Month 2 (blind) --")
+    for model, _, r2 in sorted(rows, key=lambda x: -x[2]["net_profit"]):
+        print(_line(model, r2))
+
+    print("\n########## COMBINED 4-ENGINE PORTFOLIO (dynamic lots) ##########")
+    p1 = _run(m1a, m5a, config.PULSE_MODELS, "portfolio_m1", dynamic=True)
+    p2 = _run(m1b, m5b, config.PULSE_MODELS, "portfolio_m2", dynamic=True)
+    print(f" {'Window':<34}{'T':>6}{'WR':>7}{'PF':>7}{'Net$':>9}{'DD%':>7}")
+    print(_line("Month 1", p1))
+    print(_line("Month 2 (blind)", p2))
+    print(f" Month 1: ${p1['initial_balance']:.2f} -> ${p1['final_balance']:.2f}"
+          f" | Month 2: ${p2['initial_balance']:.2f} -> ${p2['final_balance']:.2f}")
+    _dir_line("Month 1", p1)
+    _dir_line("Month 2", p2)
+
+    print("\n########## TARGET TIER BREAKDOWN ##########")
+    for label, r in (("Month 1", p1), ("Month 2", p2)):
+        for tier in ("T1", "T2", "T3"):
+            d = (r.get("tiers") or {}).get(tier)
             if not d or not d["trades"]:
                 continue
             wr = 100 * d["wins"] / d["trades"]
-            print(f"   {tier:<4}{d['trades']:>6} trades  WR {wr:>5.1f}%  Net ${d['net']:>8.2f}")
+            print(f" {label} {tier}: {d['trades']:>4} trades  WR {wr:>5.1f}%  Net ${d['net']:>7.2f}")
 
-    selected = select_models(m1_results)
-    print(f"\nGate-passing models (PF>={MIN_PF}, DD<={MAX_DD_PCT:.0f}%): "
-          f"{selected if selected else 'NONE'}")
-
-    ensemble = selected or [m for m, _, _ in sorted(rows, key=lambda x: -x[1]["net_profit"])[:3]]
-    tag = "gate-pass" if selected else "forced top-3 by net (below gate)"
-    print(f"Ensemble ({tag}): {ensemble}")
-
-    portfolio = None
-    if ensemble:
-        print("\n########## BLIND OUT-OF-SAMPLE ENSEMBLE (Month 2) ##########")
-        portfolio = _run(m1b, m5b, tuple(ensemble), "portfolio_m2", dynamic=True)
-        print(f" Final: ${portfolio['final_balance']:.2f} | Net ${portfolio['net_profit']:.2f} "
-              f"| PF {_pf(portfolio)} | MaxDD {portfolio['max_drawdown_pct']:.1f}% "
-              f"| Trades {portfolio['total_trades']}")
-    else:
-        print(" No model survived Month 1 — no portfolio traded on Month 2.")
-
-    return dict(m1=m1_results, m2=m2_results, selected=selected, portfolio=portfolio, cut=cut)
+    return dict(m1=m1_results, m2=m2_results, portfolio_m1=p1, portfolio_m2=p2, cut=cut)
 
 
 def _agg_tiers(results):

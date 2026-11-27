@@ -24,6 +24,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+import market_pulse
+
 import config
 
 REQUIRED_COLUMNS = ("open", "high", "low", "close")
@@ -221,7 +223,7 @@ def add_indicators(df: pd.DataFrame, point: float = 0.01) -> pd.DataFrame:
         out["asian_high"] = np.nan
         out["asian_low"] = np.nan
 
-    return out
+    return market_pulse.add_pulse(out)
 
 
 def add_zone_levels(df, flags, n: int = 10):
