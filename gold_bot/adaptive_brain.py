@@ -107,6 +107,28 @@ class AdaptiveBrain:
         return config.REGIME_BOOST if strategy in favoured else 0.0
 
     # -------------------------------------------------------------- evaluate
+    # ------------------------------------------------------------- persistence
+    def export_state(self) -> dict:
+        return {
+            "history": {k: list(v) for k, v in self.history.items()},
+            "consec_losses": dict(self.consec_losses),
+            "muted_until": {k: (v.isoformat() if v else None)
+                            for k, v in self.muted_until.items()},
+        }
+
+    def import_state(self, data: Optional[dict]) -> None:
+        if not data:
+            return
+        for k, v in (data.get("history") or {}).items():
+            if k in self.history:
+                self.history[k] = [bool(x) for x in v][-self.window:]
+        for k, v in (data.get("consec_losses") or {}).items():
+            if k in self.consec_losses:
+                self.consec_losses[k] = int(v)
+        for k, v in (data.get("muted_until") or {}).items():
+            if k in self.muted_until:
+                self.muted_until[k] = datetime.fromisoformat(v) if v else None
+
     def evaluate(self, signal, regime, now: Optional[datetime] = None):
         """Return (allowed, final_confidence, reason)."""
         if signal is None or getattr(signal, "signal", "NONE") not in ("BUY", "SELL"):

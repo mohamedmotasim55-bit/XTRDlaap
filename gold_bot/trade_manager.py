@@ -31,6 +31,7 @@ except ImportError:  # pragma: no cover
     mt5 = None  # type: ignore
 
 import config
+from dynamic_lot_sizer import DynamicLotSizer
 
 log = logging.getLogger(__name__)
 
@@ -49,6 +50,8 @@ class TradeManager:
     def __init__(self, connector) -> None:
         self.conn = connector
         self.last_error: str = ""
+        self.peak_equity: float = 0.0
+        self.lot_sizer = DynamicLotSizer(symbol=getattr(connector, "symbol", None))
 
     # ------------------------------------------------------------------ utils
     @property
@@ -158,7 +161,8 @@ class TradeManager:
         is_buy = direction != "SELL"
         price = tick.ask if is_buy else tick.bid
         order_type = mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL
-        margin = mt5.order_calc_margin(order_type, self.symbol, config.LOT_SIZE, price)
+        lot_for_margin = self._compute_lot("BUY" if is_buy else "SELL", price)
+        margin = mt5.order_calc_margin(order_type, self.symbol, lot_for_margin, price)
         acc = mt5.account_info()
         if margin is None or acc is None:
             self.last_error = "margin/account unavailable"
@@ -192,6 +196,24 @@ class TradeManager:
         return out
 
     # ---------------------------------------------------------------- execute
+    def _compute_lot(self, direction: str, price: float) -> float:
+        """Dynamic lot from equity/peak/free-margin; ultra-safe on pyramid."""
+        if mt5 is None:
+            return float(config.LOT_SIZE)
+        acc = mt5.account_info()
+        equity = float(getattr(acc, "equity", 0.0) or 0.0) if acc else 0.0
+        if equity <= 0:
+            equity = float(getattr(acc, "balance", 0.0) or 0.0) if acc else 0.0
+        if equity <= 0:
+            equity = 10.0
+        self.peak_equity = max(self.peak_equity, equity)
+        free_margin = float(getattr(acc, "margin_free", 0.0) or 0.0) if acc else None
+        lot = self.lot_sizer.size(equity, self.peak_equity,
+                                  free_margin=free_margin, price=price)
+        if self.count_bot_positions() >= 1:
+            lot = min(lot, 0.01)  # 2nd zero-risk pyramid add-on stays ultra-safe
+        return lot
+
     def execute_signal(self, signal) -> bool:
         """Send a market order for ``signal``. Returns True on a filled order."""
         if not config.ENABLE_LIVE_TRADING:
@@ -234,12 +256,14 @@ class TradeManager:
         sl = round(sl, digits)
         tp = round(tp, digits)
 
+        lot = self._compute_lot(signal.signal, entry)
+
         comment = (signal.strategy or "XTRD")[:31]
         for filling in self._filling_candidates():
             request = {
                 "action": mt5.TRADE_ACTION_DEAL,
                 "symbol": self.symbol,
-                "volume": float(config.LOT_SIZE),
+                "volume": float(lot),
                 "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
                 "price": entry,
                 "sl": sl,
@@ -272,7 +296,7 @@ class TradeManager:
                     "ORDER FILLED: ticket=%s %s %s | vol=%.2f | entry=%.3f | "
                     "SL=%.3f | TP=%.3f | spread=%.1f pts",
                     result.order, signal.signal, signal.strategy,
-                    config.LOT_SIZE, result.price if result.price else entry,
+                    lot, result.price if result.price else entry,
                     sl, tp, spread_pts,
                 )
                 self.last_error = ""

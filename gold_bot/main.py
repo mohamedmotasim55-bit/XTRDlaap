@@ -27,6 +27,7 @@ import strategy_engine
 import trade_manager as tm_module
 from adaptive_brain import AdaptiveBrain
 from analytics_logger import AnalyticsLogger
+from state_persistence import StatePersistence
 from mt5_connector import MT5Connector, MT5ConnectionError
 from news_filter import NewsFilter
 from safety_guard import SafetyGuard
@@ -114,6 +115,20 @@ def run() -> int:
     news = NewsFilter()
     analytics = AnalyticsLogger()
     news.refresh()
+
+    # --- restore persisted 30-day state -------------------------------------
+    sp = StatePersistence()
+    _state = sp.load()
+    if _state:
+        try:
+            brain.import_state(_state.get("adaptive_brain"))
+            manager.peak_equity = float(_state.get("peak_equity", 0.0) or 0.0)
+            guard.peak_daily_profit = float(_state.get("peak_daily_profit", 0.0) or 0.0)
+            guard.ratchet_locked = bool(_state.get("ratchet_locked", False))
+            log.info("State restored: peak_equity=%.2f peak_daily=%.2f locked=%s",
+                     manager.peak_equity, guard.peak_daily_profit, guard.ratchet_locked)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("State restore failed: %s", exc)
 
     _signal.signal(_signal.SIGINT, _handle_signal)
     if hasattr(_signal, "SIGTERM"):
@@ -205,6 +220,23 @@ def run() -> int:
                                                        spread, latest_atr)
                 except Exception as exc:  # noqa: BLE001
                     log.error("Signal/execution error: %s", exc)
+
+            # Active dynamic lot (for the status line / monitoring).
+            try:
+                _eq = float(getattr(acc, "equity", 0.0) or 10.0) if acc else 10.0
+                _lot = manager.lot_sizer.size(_eq, manager.peak_equity or _eq)
+                log.info("Dynamic lot=%.2f | %s", _lot, manager.lot_sizer.last_reason)
+            except Exception:  # noqa: BLE001
+                pass
+
+            # Persist state (interval-gated) + rotate oversized logs.
+            sp.update(peak_equity=manager.peak_equity,
+                      peak_daily_profit=guard.peak_daily_profit,
+                      ratchet_locked=guard.ratchet_locked,
+                      adaptive_brain=brain.export_state())
+            sp.save()
+            if int(_time.time()) % 300 == 0:
+                sp.rotate_logs_if_needed()
 
             analytics.maybe_print_summary()
             elapsed = _time.monotonic() - loop_start

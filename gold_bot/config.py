@@ -157,6 +157,22 @@ PROFIT_RATCHET_START_USD: float = 3.00
 PROFIT_RATCHET_KEEP_PCT: float = 0.70
 
 # ---------------------------------------------------------------------------
+# Dynamic lot sizing / compounding
+# ---------------------------------------------------------------------------
+MAX_LOT_SIZE: float = 0.50
+COMPOUND_EQUITY_STEP_USD: float = 15.0
+COMPOUND_START_EQUITY_USD: float = 20.0
+DD_THROTTLE_PCT: float = 0.08
+DD_RECOVER_PCT: float = 0.03
+MARGIN_FREE_FRACTION: float = 0.40
+
+# ---------------------------------------------------------------------------
+# State persistence / log rotation
+# ---------------------------------------------------------------------------
+STATE_SAVE_INTERVAL_SEC: int = 30
+LOG_ROTATE_MAX_BYTES: int = 5 * 1024 * 1024
+
+# ---------------------------------------------------------------------------
 # Loop / logging
 # ---------------------------------------------------------------------------
 LOOP_INTERVAL_SEC: float = 1.0

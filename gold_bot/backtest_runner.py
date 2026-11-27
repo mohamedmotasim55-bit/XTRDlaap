@@ -19,6 +19,7 @@ import indicators
 import regime_detector
 import strategy_engine
 from adaptive_brain import AdaptiveBrain
+from dynamic_lot_sizer import DynamicLotSizer
 
 log = logging.getLogger(__name__)
 
@@ -37,13 +38,16 @@ def _session_mode(ts):
 
 class BacktestRunner:
     def __init__(self, m1_df, m5_df=None, initial_balance=10.0, spread_points=26.0,
-                 point=0.01, warmup=60, journal_path="logs/backtest_results.csv", verbose=True):
+                 point=0.01, warmup=60, journal_path="logs/backtest_results.csv",
+                 verbose=True, use_dynamic_lots=True):
         self.point = point
         self.spread_points = float(spread_points)
         self.initial_balance = float(initial_balance)
         self.warmup = int(warmup)
         self.journal_path = journal_path
         self.verbose = verbose
+        self.use_dynamic_lots = use_dynamic_lots
+        self._sizer = DynamicLotSizer(mt5_module=None)
         self.m1 = indicators.add_indicators(m1_df.copy().reset_index(drop=True), point=point)
         self.m5 = m5_df.reset_index(drop=True) if m5_df is not None else None
 
@@ -158,8 +162,13 @@ class BacktestRunner:
             if (equity - 1.5) < config.MIN_FREE_MARGIN_USD:
                 continue
 
+            lot = config.LOT_SIZE
+            if self.use_dynamic_lots:
+                lot = self._sizer.size(equity, peak_equity, price=row["close"])
+                if n_open >= 1:
+                    lot = min(lot, 0.01)
             positions.append(dict(ticket=ticket, dir=sig.signal, entry=row["close"],
-                                  sl=sig.sl, tp=sig.tp, lots=config.LOT_SIZE,
+                                  sl=sig.sl, tp=sig.tp, lots=lot,
                                   strategy=sig.strategy, conf=conf))
             ticket += 1
 
