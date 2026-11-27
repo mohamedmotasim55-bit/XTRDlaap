@@ -79,7 +79,7 @@ SESSION_MODE_STOP: str = "STOP"
 ATR_PERIOD: int = 14
 MIN_ATR_POINTS: float = 35.0     # skip dead market (spread cannot be covered)
 SL_ATR_MULT: float = 0.60        # momentum-mode stop distance (x ATR)
-TP_ATR_MULT: float = 1.95        # momentum-mode target distance (x ATR)
+TP_ATR_MULT: float = 2.00        # momentum-mode target distance (x ATR)
 COOLDOWN_SECONDS: int = 20       # wait after a close before a new entry
 
 # Hard SL/TP calibration (points) sized for $3770 gold on a $10 account.
@@ -112,14 +112,14 @@ SWING_LOOKBACK: int = 15
 
 # Range-mode (Asian) tighter targets
 RANGE_SL_ATR_MULT: float = 0.60
-RANGE_TP_ATR_MULT: float = 1.95
+RANGE_TP_ATR_MULT: float = 2.00
 
 # ---------------------------------------------------------------------------
 # Execution & trade management
 # ---------------------------------------------------------------------------
 ENABLE_LIVE_TRADING: bool = True        # master switch: send real/demo orders to MT5
 DEVIATION_POINTS: int = 20              # max allowed slippage (points)
-BREAKEVEN_TRIGGER_POINTS: float = 60.0  # Step 10b winner: covers spread + 34 pts
+BREAKEVEN_TRIGGER_POINTS: float = 35.0  # Step 11 sweep winner: lock early, let TP run
 BREAKEVEN_LOCK_POINTS: float = 10.0     # lock this many points beyond entry at BE
 TRAILING_START_POINTS: float = 115.0    # only trail after +115 pts (room for TP)
 TRAILING_ATR_MULT: float = 0.85         # trailing distance = mult * current ATR
