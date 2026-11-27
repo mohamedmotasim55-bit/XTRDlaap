@@ -18,3 +18,10 @@ atr, spread, c1, hh, ll, hour, pulse
 ## Next iteration
 Learn a filter from the 43 losers: find feature ranges where WR < 25%.
 Apply as EA gate, re-run MT5.
+
+# Iteration 2 — learned filter (hours 15,21 + ATR>=200)
+- Net: -$8.92 | PF 0.70 | Trades: 37 | WR 27.0% | DD $15.09 (93%)
+- The per-hour WR from iter1 did NOT transfer: filtering changed the trade
+  sequence, so historical hour-WR no longer applies.
+- Conclusion: the FADE engine's edge is too weak (WR ~27-30% vs 34.4% break-even).
+  Filters do not fix a weak base edge.
