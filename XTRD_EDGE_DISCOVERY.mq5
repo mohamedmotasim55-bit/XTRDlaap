@@ -185,8 +185,10 @@ void RecordEvent(const string type, const int dir, const double bid, const doubl
 {
    g_eventId++;
    datetime now=TimeCurrent();
-   int hour=TimeHour(now);
-   int wday=TimeDayOfWeek(now);
+   MqlDateTime dt;
+   TimeToStruct(now, dt);
+   int hour=dt.hour;
+   int wday=dt.day_of_week;
    double spreadPts=(g_point>0.0)? (ask-bid)/g_point : 0.0;
    if(g_fhEv!=INVALID_HANDLE)
    {
