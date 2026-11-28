@@ -60,8 +60,8 @@ class TestAdaptiveTrailing(unittest.TestCase):
 
 
 class TestRegistry(unittest.TestCase):
-    def test_core_three_production_engines(self):
-        self.assertEqual(len(config.PULSE_MODELS), 3)
+    def test_six_engine_registry(self):
+        self.assertEqual(len(config.PULSE_MODELS), 6)
         for retired in ("Pulse_LiquiditySweep_Snap", "InstantMomentum_SqueezeBreak",
                         "InstantMomentum_TickAcceleration", "GoldImpulse_PullbackSniper",
                         "MicroKeltner_SnapLimit", "Intraday_Level_RejectionPulse",
@@ -69,8 +69,11 @@ class TestRegistry(unittest.TestCase):
                         "M5_Absorption_M1Trigger"):
             self.assertNotIn(retired, config.PULSE_MODELS)
         for name in ("Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption",
-                     "Exhaustion_FOMOFade"):
+                     "Exhaustion_FOMOFade", "H1_Trend_Pullback_Limit",
+                     "Session_SwingSweep_Limit", "M5_OrderBlock_Rebound"):
             self.assertIn(name, config.PULSE_MODELS)
+        self.assertEqual(config.MAX_BASE_TRADES, 2)
+        self.assertEqual(config.MAX_TOTAL_TRADES_WITH_PYRAMID, 3)
 
 
 class TestPulseEngines(unittest.TestCase):

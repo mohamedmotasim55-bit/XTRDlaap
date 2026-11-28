@@ -18,6 +18,7 @@ import config
 import adaptive_trailing
 import indicators
 import regime_detector
+import safety_guard
 import strategy_engine
 from adaptive_brain import AdaptiveBrain
 from dynamic_lot_sizer import DynamicLotSizer
@@ -75,6 +76,12 @@ def _prepare_frames(m1_df, m5_df, point):
             body = (m5["close"] - m5["open"]).abs()
             m5["m5_ob_bull"] = ((m5["close"] > m5["open"]) & (body > 1.2 * m5_atr)).astype(int)
             m5["m5_ob_bear"] = ((m5["close"] < m5["open"]) & (body > 1.2 * m5_atr)).astype(int)
+            m5["m5_body"] = body
+            m5["m5_atr"] = m5_atr
+            m5["m5_ob_bull_top"] = m5["high"].where(m5["m5_ob_bull"] == 1).ffill()
+            m5["m5_ob_bull_bot"] = m5["low"].where(m5["m5_ob_bull"] == 1).ffill()
+            m5["m5_ob_bear_top"] = m5["high"].where(m5["m5_ob_bear"] == 1).ffill()
+            m5["m5_ob_bear_bot"] = m5["low"].where(m5["m5_ob_bear"] == 1).ffill()
             m5["order_block_bull"] = m5["m5_ob_bull"]
             m5["order_block_bear"] = m5["m5_ob_bear"]
             m5["fvg_bull"] = (m5["low"] > m5["high"].shift(2)).astype(int)
@@ -327,7 +334,7 @@ class BacktestRunner:
                 audit["pause"] += 1
                 continue
 
-            if day_pnl <= -config.DAILY_LOSS_LIMIT_USD:
+            if day_pnl <= -safety_guard.daily_loss_limit(equity):
                 audit["daily_dd"] += 1
                 continue
 

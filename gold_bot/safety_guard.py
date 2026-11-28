@@ -31,6 +31,13 @@ from mt5_connector import MT5Connector, MT5ConnectionError
 log = logging.getLogger(__name__)
 
 
+def daily_loss_limit(equity: float) -> float:
+    """Early account shield: tighter daily loss cap below $15 equity."""
+    if equity < config.EARLY_SHIELD_EQUITY_USD:
+        return config.DAILY_LOSS_LIMIT_EARLY_USD
+    return config.DAILY_LOSS_LIMIT_EXPANDED_USD
+
+
 class SafetyGuard:
     """Evaluates the three pre-trade safety conditions."""
 

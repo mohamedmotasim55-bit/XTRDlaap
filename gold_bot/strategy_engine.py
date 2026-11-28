@@ -588,9 +588,36 @@ def _build_pulse_signal(df, df_m5, df_m15, regime, enabled, base_sig):
         if stretched_hi and c.rsi > 74 and c.close < c.open_:
             cands.append(_cand(c, "Pulse_ExhaustionDivergence", "SELL", 0.73))
 
-    buy_ok = c.h1_up() and (c.m5_adx is None or c.m5_adx > 25)
+    buy_ok = c.h1_up() or (c.m5_adx is not None and c.m5_adx < 23)
     if not buy_ok:
         cands = [x for x in cands if x["direction"] != "BUY"]
+
+    if "H1_Trend_Pullback_Limit" in enabled and c.m5_adx is not None and c.ema21:
+        if (c.h1_up() and c.m15_up and c.m5_adx >= 23 and c.rsi is not None
+                and 38 <= c.rsi <= 48 and c.close <= c.ema21 + 0.25 * (c.atr or 0)):
+            cands.append(_cand(c, "H1_Trend_Pullback_Limit", "BUY", 0.72, "LIMIT", 14.0))
+        if (c.h1_dn() and c.m15_dn and c.m5_adx >= 23 and c.rsi is not None
+                and 52 <= c.rsi <= 62 and c.close >= c.ema21 - 0.25 * (c.atr or 0)):
+            cands.append(_cand(c, "H1_Trend_Pullback_Limit", "SELL", 0.72, "LIMIT", 14.0))
+
+    if ("Session_SwingSweep_Limit" in enabled and c.pulse >= 1.45
+            and c.swing_hi is not None and c.swing_lo is not None):
+        if (c.wick_low >= 0.45 * rng and c.low < c.swing_lo and c.close > c.open_):
+            cands.append(_cand(c, "Session_SwingSweep_Limit", "BUY", 0.72, "LIMIT", 10.0))
+        if (c.wick_high >= 0.45 * rng and c.high > c.swing_hi and c.close < c.open_):
+            cands.append(_cand(c, "Session_SwingSweep_Limit", "SELL", 0.72, "LIMIT", 10.0))
+
+    if ("M5_OrderBlock_Rebound" in enabled and c.m5_pulse is not None
+            and c.m5_body is not None and c.m5_atr and c.m5_atr > 0):
+        displacement = c.m5_pulse >= 1.60 and c.m5_body > 1.3 * c.m5_atr
+        if (displacement and c.h1_up() and c.m5_ob_bull_top is not None
+                and c.m5_ob_bull_bot is not None
+                and c.close <= c.m5_ob_bull_top + 0.5 * (c.atr or 0)):
+            cands.append(_cand(c, "M5_OrderBlock_Rebound", "BUY", 0.72, "LIMIT", 12.0))
+        if (displacement and c.h1_dn() and c.m5_ob_bear_bot is not None
+                and c.m5_ob_bear_top is not None
+                and c.close >= c.m5_ob_bear_bot - 0.5 * (c.atr or 0)):
+            cands.append(_cand(c, "M5_OrderBlock_Rebound", "SELL", 0.72, "LIMIT", 12.0))
 
     if not cands:
         base_sig.reason = "no pulse-engine match"
