@@ -9,13 +9,13 @@ class TestTargets(unittest.TestCase):
     def test_sl_range(self):
         for atr in (60, 100, 200):
             sl = dte.select_targets(2.0, atr)["sl_points"]
-            self.assertTrue(58.0 <= sl <= 78.0)
+            self.assertTrue(55.0 <= sl <= 74.0)
 
     def test_tp_range_and_rr(self):
         for pulse in (1.1, 1.6, 2.2, 3.2, 4.0):
             t = dte.select_targets(pulse, 110)
-            self.assertTrue(165.0 <= t["tp_points"] <= 380.0)
-            self.assertTrue(2.5 - 1e-6 <= t["tp_points"] / t["sl_points"] <= 4.2 + 1e-6)
+            self.assertTrue(145.0 <= t["tp_points"] <= 420.0)
+            self.assertTrue(2.4 - 1e-6 <= t["tp_points"] / t["sl_points"] <= 5.5 + 1e-6)
 
     def test_alignment_and_consensus_add(self):
         base = dte.select_targets(1.8, 110)
@@ -24,7 +24,7 @@ class TestTargets(unittest.TestCase):
 
     def test_be_and_timeout(self):
         t = dte.select_targets(2.0, 110)
-        self.assertEqual(t["be_trigger"], 42.0)
+        self.assertEqual(t["be_trigger"], 38.0)
         self.assertEqual(t["be_lock"], 12.0)
         self.assertEqual(t["max_hold_minutes"], 50)
 

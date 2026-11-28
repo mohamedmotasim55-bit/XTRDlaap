@@ -1,8 +1,8 @@
-"""Spread-proof dynamic SL/TP for the 4 Market-Pulse engines.
+"""Dynamic SL/TP calibrated for medium and explosive Gold waves.
 
-SL is volatility-scaled and hard-capped at 78 pts ($0.78 on 0.01 lot) so a
-$10 account never risks more than ~8%.  TP is pulse-scaled and clamped to
-165-380 pts while keeping Reward/Risk inside 2.5x-4.2x.
+SL: clamp(0.58 * ATR, 55, 74) pts -> max $0.74 risk per 0.01 lot.
+TP: 145-420 pts, scaled by pulse intensity, M5 ADX and ATR expansion,
+    while keeping Reward/Risk inside 2.4x-5.5x.
 """
 from __future__ import annotations
 
@@ -13,25 +13,29 @@ def _clamp(x, lo, hi):
     return max(lo, min(hi, x))
 
 
-def select_targets(pulse_intensity, atr_points, m5_aligned=False, consensus=0) -> dict:
+def select_targets(pulse_intensity, atr_points, m5_adx=0.0, atr_ratio=1.0,
+                   m5_aligned=False, consensus=0) -> dict:
     pulse = _clamp(float(pulse_intensity or 0.0), 1.0, 4.0)
     atr_points = float(atr_points or 0.0)
+    sl = _clamp(0.58 * atr_points, 55.0, 74.0)
 
-    sl = _clamp(0.62 * atr_points, 58.0, 78.0)
+    pulse_s = _clamp((pulse - 1.45) / 1.55, 0.0, 1.0)
+    adx_s = _clamp((float(m5_adx or 0.0) - 21.0) / 20.0, 0.0, 1.0)
+    atr_s = _clamp((float(atr_ratio or 1.0) - 0.9) / 0.6, 0.0, 1.0)
+    mix = 0.5 * pulse_s + 0.3 * adx_s + 0.2 * atr_s
 
-    strength = _clamp((pulse - 1.45) / 1.35, 0.0, 1.0)
-    tp = 165.0 + 215.0 * strength
+    tp = 145.0 + 275.0 * mix
     if m5_aligned:
-        tp += 25.0
+        tp += 15.0
     if consensus >= 3:
-        tp += 20.0
+        tp += 15.0
 
-    tp = min(tp, 380.0)
-    tp = max(tp, 165.0, 2.5 * sl)
-    tp = min(tp, 4.2 * sl)
+    tp = _clamp(tp, 145.0, 420.0)
+    tp = max(tp, 2.4 * sl)
+    tp = min(tp, 5.5 * sl, 420.0)
 
-    tier = "T1" if tp < 220.0 else ("T2" if tp < 300.0 else "T3")
-    return dict(tier=tier, score=round(_clamp((pulse - 1.0) / 2.0, 0.0, 1.0), 4),
+    tier = "T1" if tp < 220.0 else ("T2" if tp < 320.0 else "T3")
+    return dict(tier=tier, score=round(_clamp(mix, 0.0, 1.0), 4),
                 consensus=int(consensus), tp_points=round(tp, 1),
-                sl_points=round(sl, 1), be_trigger=42.0, be_lock=12.0,
-                trail_start=75.0, max_hold_minutes=config.MAX_SCALP_HOLD_MINUTES)
+                sl_points=round(sl, 1), be_trigger=38.0, be_lock=12.0,
+                trail_start=65.0, max_hold_minutes=config.MAX_SCALP_HOLD_MINUTES)

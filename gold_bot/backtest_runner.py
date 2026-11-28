@@ -81,9 +81,16 @@ def _prepare_frames(m1_df, m5_df, point):
             m5["supertrend_dir"] = st_dir
             indicators.add_zone_levels(m5, ("fvg_bull", "fvg_bear",
                                             "order_block_bull", "order_block_bear"), 10)
-    m15 = BacktestRunner._resample_m15(m1_df)
+    m15 = BacktestRunner._resample_tf(m1_df, "15min")
     if m15 is not None:
         m15 = indicators.add_indicators(m15, point=point)
+        h1 = BacktestRunner._resample_tf(m1_df, "60min")
+        if h1 is not None:
+            h1 = indicators.add_indicators(h1, point=point)
+            h1 = h1[["time", "close", "ema_50"]].rename(
+                columns={"close": "h1_close", "ema_50": "h1_ema_50"})
+            m15 = pd.merge_asof(m15.sort_values("time"), h1.sort_values("time"),
+                                on="time", direction="backward")
     if len(_PREP_CACHE) > 8:
         _PREP_CACHE.clear()
     _PREP_CACHE[key] = (m1, m5, m15)
@@ -109,14 +116,18 @@ class BacktestRunner:
 
     @staticmethod
     def _resample_m15(m1_df):
-        if m1_df is None or "time" not in m1_df.columns or len(m1_df) < 15:
+        return BacktestRunner._resample_tf(m1_df, "15min")
+
+    @staticmethod
+    def _resample_tf(m1_df, rule):
+        if m1_df is None or "time" not in m1_df.columns or len(m1_df) < 2:
             return None
         d = m1_df.copy()
         d["time"] = pd.to_datetime(d["time"])
         agg = dict(open="first", high="max", low="min", close="last")
         if "tick_volume" in d.columns:
             agg["tick_volume"] = "sum"
-        g = d.set_index("time").resample("15min").agg(agg).dropna(
+        g = d.set_index("time").resample(rule).agg(agg).dropna(
             subset=["open", "high", "low", "close"]).reset_index()
         return g if len(g) else None
 

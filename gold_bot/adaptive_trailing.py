@@ -5,14 +5,14 @@ from __future__ import annotations
 def lock_points(direction, profit_points, atr_points, rsi, rsi_prev,
                 vol, vol_ma, adx):
     lock = None
-    if profit_points >= 160:
-        lock = 110.0
-    elif profit_points >= 95:
-        lock = 50.0
-    elif profit_points >= 42:
+    if profit_points >= 155:
+        lock = 100.0
+    elif profit_points >= 85:
+        lock = 45.0
+    elif profit_points >= 38:
         lock = 12.0
 
-    if profit_points >= 75:
+    if profit_points >= 65:
         hooked = (rsi is not None and rsi_prev is not None and (
             (direction == "BUY" and rsi < rsi_prev)
             or (direction == "SELL" and rsi > rsi_prev)))

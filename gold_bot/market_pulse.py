@@ -96,8 +96,14 @@ class PulseContext:
         self.m5_adx, self.m5_slope = g5("m5_adx_14"), g5("m5_ema21_slope")
         self.m5_vwap_up, self.m5_vwap_lo = g5("m5_vwap_upper"), g5("m5_vwap_lower")
         self.m5_sw_hi, self.m5_sw_lo = g5("swing_high_20"), g5("swing_low_20")
+        self.m15_close = g15("close")
         self.m15_ema21, self.m15_ema50 = g15("ema_21"), g15("ema_50")
+        self.m15_adx = g15("adx_14")
         self.m15_sw_hi, self.m15_sw_lo = g15("swing_high_12"), g15("swing_low_12")
+        self.h1_close, self.h1_ema50 = g15("h1_close"), g15("h1_ema_50")
+        self.atr_ma_20 = g("atr_ma_20")
+        self.atr_ratio = ((self.atr / self.atr_ma_20)
+                          if (self.atr and self.atr_ma_20) else 1.0)
 
         self.range = (self.high - self.low) if None not in (self.high, self.low) else 0.0
         self.body = abs(self.close - self.open_) if None not in (self.close, self.open_) else 0.0
@@ -124,6 +130,16 @@ class PulseContext:
                               self.vwap_up, self.vwap_lo, self.m5_vwap_up, self.m5_vwap_lo,
                               self.pivot_r1, self.pivot_s1) if v is not None]
         return any(abs(self.close - lv) <= tol for lv in levels)
+
+    def h1_up(self):
+        if self.h1_close is not None and self.h1_ema50 is not None:
+            return self.h1_close > self.h1_ema50
+        return self.m15_up
+
+    def h1_dn(self):
+        if self.h1_close is not None and self.h1_ema50 is not None:
+            return self.h1_close < self.h1_ema50
+        return self.m15_dn
 
     def limit_price(self, direction, offset_points=15.0):
         if direction == "BUY":

@@ -101,6 +101,19 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
     for model, _, r2 in sorted(rows, key=lambda x: -x[2]["net_profit"]):
         print(_line(model, r2))
 
+    winners = [m for m, r, _ in sorted(rows, key=lambda x: -x[1]["net_profit"])
+               if (r.get("profit_factor", 0.0) >= 1.15 or r.get("profit_factor", 0.0) == float("inf"))
+               and r.get("total_trades", 0) >= 5]
+    print(f"\nAuto-filtered winners (M1 PF >= 1.15, >= 5 trades): {winners or 'NONE'}")
+    if winners:
+        ens = _run(m1b, m5b, tuple(winners), "ensemble_m2", dynamic=True)
+        print(" Ensemble Month 2 (blind):")
+        print(_line(" ".join(w[:12] for w in winners), ens))
+        print(f" ${ens['initial_balance']:.2f} -> ${ens['final_balance']:.2f}"
+              f" | Trades {ens['total_trades']} | WR {ens['win_rate']:.1f}%"
+              f" | PF {_pf(ens)} | MaxDD {ens['max_drawdown_pct']:.1f}%")
+        _dir_line("Ensemble M2", ens)
+
     print("\n########## COMBINED 4-ENGINE PORTFOLIO (dynamic lots) ##########")
     p1 = _run(m1a, m5a, config.PULSE_MODELS, "portfolio_m1", dynamic=True)
     p2 = _run(m1b, m5b, config.PULSE_MODELS, "portfolio_m2", dynamic=True)
