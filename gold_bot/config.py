@@ -105,8 +105,9 @@ NEW_MODELS = (
 )
 ALL_STRATEGIES = LEGACY_STRATEGIES + NEW_MODELS
 PULSE_MODELS = (
-    "Pulse_ClimaxAbsorption", "Pulse_LiquiditySweep_Snap",
-    "Pulse_MomentumRetest_Limit", "Pulse_ExhaustionDivergence",
+    "Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption",
+    "InstantMomentum_SqueezeBreak", "InstantMomentum_TickAcceleration",
+    "GoldImpulse_PullbackSniper",
 )
 ENABLED_STRATEGIES = PULSE_MODELS
 PULSE_MIN_ATR_POINTS: float = 95.0

@@ -25,10 +25,10 @@ def add_pulse(df: pd.DataFrame) -> pd.DataFrame:
     vol_ma20 = vol.rolling(20).mean()
     df["pulse_intensity"] = (vol / vol_ma20).fillna(1.0).clip(upper=10.0)
 
-    rng = (df["high"] - df["low"])
-    atr = df["atr_14"] if "atr_14" in df.columns else rng
-    expansion = (rng / atr.replace(0.0, pd.NA)).fillna(1.0).clip(lower=0.2)
-    df["effort_vs_result"] = (df["pulse_intensity"] / expansion).clip(upper=20.0)
+    body = (df["close"] - df["open"]).abs()
+    atr = df["atr_14"] if "atr_14" in df.columns else (df["high"] - df["low"])
+    expansion = (body / atr.replace(0.0, pd.NA)).fillna(0.15).clip(lower=0.15)
+    df["effort_vs_result"] = (df["pulse_intensity"] / expansion).clip(upper=40.0)
 
     rising = (vol > vol.shift(1)) & (vol.shift(1) > vol.shift(2))
     df["tick_accel_buy"] = (rising & (df["close"] > df["open"])).astype(int)
@@ -85,7 +85,9 @@ class PulseContext:
         self.accel_buy, self.accel_sell = g("tick_accel_buy"), g("tick_accel_sell")
         self.session_active = bool(g("session_pulse_active"))
 
-        self.ema9, self.ema21, self.ema50 = g("ema_9"), g("ema_21"), g("ema_50")
+        self.ema9, self.ema13, self.ema21, self.ema50 = (
+            g("ema_9"), g("ema_13"), g("ema_21"), g("ema_50"))
+        self.bb_width_rank = g("bb_width_rank")
         self.bb_up, self.bb_lo = g("bb_upper"), g("bb_lower")
         self.kelt_up, self.kelt_lo = g("keltner_upper"), g("keltner_lower")
         self.vwap_up, self.vwap_lo = g("vwap_upper"), g("vwap_lower")

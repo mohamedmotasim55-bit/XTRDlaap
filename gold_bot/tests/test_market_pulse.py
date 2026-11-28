@@ -28,6 +28,18 @@ class TestPulseColumns(unittest.TestCase):
         d = market_pulse.add_pulse(d)
         self.assertGreater(d["pulse_intensity"].iloc[-1], 2.5)
 
+    def test_effort_vs_result_uses_body(self):
+        d = frame(80, vol=100)
+        d.loc[d.index[-1], "tick_volume"] = 400
+        d.loc[d.index[-1], ["open", "high", "low", "close"]] = [2000.0, 2001.0, 1999.0, 2000.02]
+        d = market_pulse.add_pulse(d)
+        self.assertGreater(d["effort_vs_result"].iloc[-1], 2.2)
+        d2 = frame(80, vol=100)
+        d2.loc[d2.index[-1], "tick_volume"] = 120
+        d2.loc[d2.index[-1], ["open", "high", "low", "close"]] = [1999.0, 2001.0, 1998.9, 2001.0]
+        d2 = market_pulse.add_pulse(d2)
+        self.assertLess(d2["effort_vs_result"].iloc[-1], 1.3)
+
     def test_effort_vs_result_high_on_small_range(self):
         d = frame(80, vol=100)
         d.loc[d.index[-1], "tick_volume"] = 400

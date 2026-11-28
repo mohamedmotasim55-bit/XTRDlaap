@@ -179,6 +179,8 @@ def add_indicators(df: pd.DataFrame, point: float = 0.01) -> pd.DataFrame:
     out["swing_low_20"] = out["low"].rolling(20).min().shift(1)
 
     out["atr_ma_20"] = out["atr_14"].rolling(20).mean()
+    out["bb_width"] = (out["bb_upper"] - out["bb_lower"]).abs()
+    out["bb_width_rank"] = out["bb_width"].rolling(20).rank(pct=True)
     out["keltner_mid"] = out["ema_21"]
     out["keltner_upper"] = out["keltner_mid"] + 1.8 * out["atr_14"]
     out["keltner_lower"] = out["keltner_mid"] - 1.8 * out["atr_14"]

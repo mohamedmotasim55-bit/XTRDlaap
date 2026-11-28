@@ -14,10 +14,13 @@ def _clamp(x, lo, hi):
 
 
 def select_targets(pulse_intensity, atr_points, m5_adx=0.0, atr_ratio=1.0,
-                   m5_aligned=False, consensus=0) -> dict:
+                   m5_aligned=False, consensus=0, momentum=False) -> dict:
     pulse = _clamp(float(pulse_intensity or 0.0), 1.0, 4.0)
     atr_points = float(atr_points or 0.0)
-    sl = _clamp(0.58 * atr_points, 55.0, 74.0)
+    if momentum:
+        sl = _clamp(0.58 * atr_points, 62.0, 78.0)
+    else:
+        sl = _clamp(0.58 * atr_points, 55.0, 74.0)
 
     pulse_s = _clamp((pulse - 1.45) / 1.55, 0.0, 1.0)
     adx_s = _clamp((float(m5_adx or 0.0) - 21.0) / 20.0, 0.0, 1.0)
@@ -30,9 +33,14 @@ def select_targets(pulse_intensity, atr_points, m5_adx=0.0, atr_ratio=1.0,
     if consensus >= 3:
         tp += 15.0
 
-    tp = _clamp(tp, 145.0, 420.0)
-    tp = max(tp, 2.4 * sl)
-    tp = min(tp, 5.5 * sl, 420.0)
+    if momentum:
+        tp = _clamp(tp, 165.0, 380.0)
+        tp = max(tp, 2.5 * sl)
+        tp = min(tp, 4.5 * sl, 380.0)
+    else:
+        tp = _clamp(tp, 145.0, 420.0)
+        tp = max(tp, 2.4 * sl)
+        tp = min(tp, 5.5 * sl, 420.0)
 
     tier = "T1" if tp < 220.0 else ("T2" if tp < 320.0 else "T3")
     return dict(tier=tier, score=round(_clamp(mix, 0.0, 1.0), 4),

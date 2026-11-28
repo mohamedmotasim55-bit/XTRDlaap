@@ -12,7 +12,7 @@ def build_climax_frame():
         rows.append(dict(time=base + pd.Timedelta(minutes=i), open=c + 0.02,
                          high=c + 0.6, low=c - 0.6, close=c, tick_volume=100))
     c = 2000.0 - 90 * 0.05
-    rows.append(dict(time=base + pd.Timedelta(minutes=90), open=c + 0.05,
+    rows.append(dict(time=base + pd.Timedelta(minutes=90), open=c - 0.05,
                      high=c + 0.25, low=c - 0.65, close=c, tick_volume=500))
     return indicators.add_indicators(pd.DataFrame(rows))
 
@@ -38,6 +38,14 @@ class TestDynamicTargets(unittest.TestCase):
                 self.assertGreaterEqual(rr, 2.4 - 1e-6)
                 self.assertLessEqual(rr, 5.5 + 1e-6)
 
+    def test_momentum_geometry(self):
+        for pulse in (1.5, 2.0, 3.0, 4.0):
+            t = dynamic_target_engine.select_targets(pulse, 110, m5_adx=30, momentum=True)
+            self.assertTrue(165.0 <= t["tp_points"] <= 380.0)
+            self.assertTrue(62.0 <= t["sl_points"] <= 78.0)
+            rr = t["tp_points"] / t["sl_points"]
+            self.assertTrue(2.5 - 1e-6 <= rr <= 4.5 + 1e-6)
+
     def test_hold_time(self):
         self.assertEqual(dynamic_target_engine.select_targets(2.0, 100)["max_hold_minutes"], 50)
 
@@ -53,6 +61,13 @@ class TestAdaptiveTrailing(unittest.TestCase):
 
     def test_breathing(self):
         self.assertEqual(adaptive_trailing.lock_points("BUY", 150, 100, 60, 50, 200, 100, 30), 75.0)
+
+
+class TestRegistry(unittest.TestCase):
+    def test_five_engines_and_sweep_retired(self):
+        self.assertEqual(len(config.PULSE_MODELS), 5)
+        self.assertNotIn("Pulse_LiquiditySweep_Snap", config.PULSE_MODELS)
+        self.assertIn("GoldImpulse_PullbackSniper", config.PULSE_MODELS)
 
 
 class TestPulseEngines(unittest.TestCase):
