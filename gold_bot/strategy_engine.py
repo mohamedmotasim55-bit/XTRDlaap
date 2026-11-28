@@ -588,6 +588,10 @@ def _build_pulse_signal(df, df_m5, df_m15, regime, enabled, base_sig):
         if stretched_hi and c.rsi > 74 and c.close < c.open_:
             cands.append(_cand(c, "Pulse_ExhaustionDivergence", "SELL", 0.73))
 
+    buy_ok = c.h1_up() and (c.m5_adx is None or c.m5_adx > 25)
+    if not buy_ok:
+        cands = [x for x in cands if x["direction"] != "BUY"]
+
     if not cands:
         base_sig.reason = "no pulse-engine match"
         return base_sig

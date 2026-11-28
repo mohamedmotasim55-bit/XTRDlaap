@@ -30,7 +30,7 @@ def select_targets(pulse_intensity, atr_points, m5_adx=0.0, atr_ratio=1.0,
     if consensus >= 3:
         tp += 15.0
 
-    tp = _clamp(tp, 155.0, 420.0)
+    tp = _clamp(tp, 200.0, 420.0)
     tp = max(tp, 2.4 * sl)
     tp = min(tp, 5.5 * sl, 420.0)
 

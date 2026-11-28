@@ -14,7 +14,11 @@ def build_climax_frame():
     c = 2000.0 - 90 * 0.05
     rows.append(dict(time=base + pd.Timedelta(minutes=90), open=c - 0.05,
                      high=c + 0.25, low=c - 0.65, close=c, tick_volume=500))
-    return indicators.add_indicators(pd.DataFrame(rows))
+    df = indicators.add_indicators(pd.DataFrame(rows))
+    # Bullish HTF context required by the production BUY gate (h1_up + m5_adx>25).
+    df["ema_21"] = df["ema_50"] * 1.001
+    df["m5_adx_14"] = 30.0
+    return df
 
 
 class TestDynamicTargets(unittest.TestCase):
@@ -26,7 +30,7 @@ class TestDynamicTargets(unittest.TestCase):
     def test_tp_floor_and_cap(self):
         lo = dynamic_target_engine.select_targets(1.0, 80)
         hi = dynamic_target_engine.select_targets(4.0, 80, m5_aligned=True, consensus=3)
-        self.assertGreaterEqual(lo["tp_points"], 155.0)
+        self.assertGreaterEqual(lo["tp_points"], 200.0)
         self.assertLessEqual(hi["tp_points"], 420.0)
         self.assertGreater(hi["tp_points"], lo["tp_points"])
 
@@ -82,7 +86,7 @@ class TestPulseEngines(unittest.TestCase):
         self.assertIn(sig.strategy, config.PULSE_MODELS)
         self.assertEqual(sig.signal, "BUY")
         self.assertEqual(sig.max_hold_minutes, 50)
-        self.assertGreaterEqual(sig.tp_points, 145.0)
+        self.assertGreaterEqual(sig.tp_points, 200.0)
         self.assertLessEqual(sig.tp_points, 420.0)
 
     def test_session_gate_blocks_offhours(self):

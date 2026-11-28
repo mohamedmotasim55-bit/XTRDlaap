@@ -48,7 +48,7 @@ MAGIC_NUMBER: int = 202699
 LOT_SIZE: float = 0.01               # fixed lot for the $10 micro-account
 MAX_SPREAD_POINTS: float = 38.0      # JustMarkets base ~26 pts; 38 tolerates normal vol
 MAX_OPEN_TRADES: int = 1             # strict single-position cap to protect $10
-DAILY_LOSS_LIMIT_USD: float = 2.00   # equity guard; 3-loss pause handles micro-DD
+DAILY_LOSS_LIMIT_USD: float = 1.50   # equity guard; 3-loss pause handles micro-DD
 MAX_TRADES_PER_DAY: int = 25         # keep quality high, volume 50-80/week
 RISK_PER_TRADE_PCT: float = 1.0      # kept for reference / future dynamic sizing
 MAX_DAILY_DRAWDOWN_PCT: float = 4.0  # legacy % cap (superseded by DAILY_LOSS_LIMIT_USD)
@@ -181,7 +181,7 @@ REGIME_BOOST: float = 0.15
 CONF_MULT_FLOOR: float = 0.90      # never decay a valid signal below 90%
 MUTE_MIN_TRADES: int = 6           # need 6 completed trades before muting
 CONSECUTIVE_LOSS_TRIGGER: int = 2
-CONSECUTIVE_LOSS_PAUSE_MIN: int = 45
+CONSECUTIVE_LOSS_PAUSE_MIN: int = 60
 
 # ---------------------------------------------------------------------------
 # Zero-risk pyramiding
