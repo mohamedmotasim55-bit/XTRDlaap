@@ -84,7 +84,7 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
     print(f"Month 1: {m1a['time'].iloc[0]} -> {m1a['time'].iloc[-1]} ({len(m1a)} bars)")
     print(f"Month 2: {m1b['time'].iloc[0]} -> {m1b['time'].iloc[-1]} ({len(m1b)} bars)")
 
-    print("\n########## 3-ENGINE CORE PRODUCTION TOURNAMENT ##########")
+    print(f"\n########## {len(config.PULSE_MODELS)}-ENGINE TOURNAMENT ##########")
     header = (f" {'Engine':<34}{'T':>6}{'WR':>7}{'PF':>7}{'Net$':>9}{'DD%':>7}")
     print(header)
     m1_results, m2_results, rows = {}, {}, []
@@ -113,9 +113,10 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
               f" | PF {_pf(ens)} | MaxDD {ens['max_drawdown_pct']:.1f}%")
         _dir_line("Ensemble M2", ens)
 
-    print("\n########## CORE-3 PRODUCTION PORTFOLIO (dynamic lots) ##########")
-    p1 = _run(m1a, m5a, config.PULSE_MODELS, "portfolio_m1", dynamic=True)
-    p2 = _run(m1b, m5b, config.PULSE_MODELS, "portfolio_m2", dynamic=True)
+    production = tuple(winners) or tuple(config.PULSE_MODELS)
+    print(f"\n########## PRODUCTION PORTFOLIO ({len(production)} dual-month engines) ##########")
+    p1 = _run(m1a, m5a, production, "portfolio_m1", dynamic=True)
+    p2 = _run(m1b, m5b, production, "portfolio_m2", dynamic=True)
     print(f" {'Window':<34}{'T':>6}{'WR':>7}{'PF':>7}{'Net$':>9}{'DD%':>7}")
     print(_line("Month 1", p1))
     print(_line("Month 2 (blind)", p2))
@@ -124,7 +125,7 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
     _dir_line("Month 1", p1)
     _dir_line("Month 2", p2)
 
-    full = _run(m1, m5, config.PULSE_MODELS, "portfolio_full60", dynamic=True)
+    full = _run(m1, m5, production, "portfolio_full60", dynamic=True)
     print("\n########## FULL 60-DAY CONTINUOUS RUN (dynamic lots) ##########")
     print(_line("Full 60 days", full))
     _dir_line("Full 60 days", full)
