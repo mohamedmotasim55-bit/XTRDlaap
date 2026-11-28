@@ -27,6 +27,7 @@ import pandas as pd
 import indicators
 import dynamic_target_engine
 import market_pulse
+import tick_engine
 from market_pulse import PulseContext
 
 import config
@@ -125,7 +126,8 @@ def _limit_entry(direction, close, high, low, atr, atr_points):
 
 
 def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] = None,
-                    regime=None, df_m15: Optional[pd.DataFrame] = None) -> Signal:
+                    regime=None, df_m15: Optional[pd.DataFrame] = None,
+                    tick_flow=None) -> Signal:
     sig = Signal()
     min_rows = max(config.EMA_SLOW, config.BB_PERIOD, config.ATR_PERIOD,
                    config.SWING_LOOKBACK) + 2
@@ -143,7 +145,7 @@ def generate_signal(df: pd.DataFrame, mode: str, df_m5: Optional[pd.DataFrame] =
         return sig
 
     if set(config.ENABLED_STRATEGIES) & set(config.PULSE_MODELS):
-        return _build_pulse_signal(df, df_m5, df_m15, regime,
+        return _build_pulse_signal(df, df_m5, df_m15, regime, tick_flow,
                                    set(config.ENABLED_STRATEGIES), sig)
 
     atr = _last(df, "atr_14")
@@ -545,7 +547,7 @@ def _cand(c, name, direction, confidence, entry_type="MARKET", offset=15.0):
                 limit_price=c.limit_price(direction, offset) if entry_type == "LIMIT" else 0.0)
 
 
-def _build_pulse_signal(df, df_m5, df_m15, regime, enabled, base_sig):
+def _build_pulse_signal(df, df_m5, df_m15, regime, tick_flow, enabled, base_sig):
     c = PulseContext(df, df_m5, df_m15)
     if c.close is None or c.atr is None or c.atr_points is None:
         base_sig.reason = "pulse indicators unavailable"
@@ -592,32 +594,23 @@ def _build_pulse_signal(df, df_m5, df_m15, regime, enabled, base_sig):
     if not buy_ok:
         cands = [x for x in cands if x["direction"] != "BUY"]
 
-    if "H1_Trend_Pullback_Limit" in enabled and c.m5_adx is not None and c.ema21:
-        if (c.h1_up() and c.m15_up and c.m5_adx >= 23 and c.rsi is not None
-                and 38 <= c.rsi <= 48 and c.close <= c.ema21 + 0.25 * (c.atr or 0)):
-            cands.append(_cand(c, "H1_Trend_Pullback_Limit", "BUY", 0.72, "LIMIT", 14.0))
-        if (c.h1_dn() and c.m15_dn and c.m5_adx >= 23 and c.rsi is not None
-                and 52 <= c.rsi <= 62 and c.close >= c.ema21 - 0.25 * (c.atr or 0)):
-            cands.append(_cand(c, "H1_Trend_Pullback_Limit", "SELL", 0.72, "LIMIT", 14.0))
-
-    if ("Session_SwingSweep_Limit" in enabled and c.pulse >= 1.45
+    if ("Session_SwingSweep_Limit" in enabled and c.pulse >= 1.65
+            and c.m15_adx is not None and c.m15_adx < 25
             and c.swing_hi is not None and c.swing_lo is not None):
-        if (c.wick_low >= 0.45 * rng and c.low < c.swing_lo and c.close > c.open_):
+        if (c.wick_low >= 0.55 * rng and c.low < c.swing_lo and c.close > c.open_):
             cands.append(_cand(c, "Session_SwingSweep_Limit", "BUY", 0.72, "LIMIT", 10.0))
-        if (c.wick_high >= 0.45 * rng and c.high > c.swing_hi and c.close < c.open_):
+        if (c.wick_high >= 0.55 * rng and c.high > c.swing_hi and c.close < c.open_):
             cands.append(_cand(c, "Session_SwingSweep_Limit", "SELL", 0.72, "LIMIT", 10.0))
 
-    if ("M5_OrderBlock_Rebound" in enabled and c.m5_pulse is not None
-            and c.m5_body is not None and c.m5_atr and c.m5_atr > 0):
-        displacement = c.m5_pulse >= 1.60 and c.m5_body > 1.3 * c.m5_atr
-        if (displacement and c.h1_up() and c.m5_ob_bull_top is not None
-                and c.m5_ob_bull_bot is not None
-                and c.close <= c.m5_ob_bull_top + 0.5 * (c.atr or 0)):
-            cands.append(_cand(c, "M5_OrderBlock_Rebound", "BUY", 0.72, "LIMIT", 12.0))
-        if (displacement and c.h1_dn() and c.m5_ob_bear_bot is not None
-                and c.m5_ob_bear_top is not None
-                and c.close >= c.m5_ob_bear_bot - 0.5 * (c.atr or 0)):
-            cands.append(_cand(c, "M5_OrderBlock_Rebound", "SELL", 0.72, "LIMIT", 12.0))
+    if "Tick_Impulse_Stacker" in enabled and tick_flow is not None:
+        tick_dir = tick_flow.signal(config.TICK_MIN_FAST_MOVE_POINTS)
+        if tick_dir:
+            ok, _reason = tick_engine.evaluate(
+                tick_flow, tick_dir, dict(open=c.open_, high=c.high, low=c.low, close=c.close),
+                c.ema5, c.atr,
+                (c.ema5 is not None and c.close > c.ema5), c.m5_up)
+            if ok:
+                cands.append(_cand(c, "Tick_Impulse_Stacker", tick_dir, 0.78))
 
     if not cands:
         base_sig.reason = "no pulse-engine match"

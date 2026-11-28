@@ -85,8 +85,8 @@ class PulseContext:
         self.accel_buy, self.accel_sell = g("tick_accel_buy"), g("tick_accel_sell")
         self.session_active = bool(g("session_pulse_active"))
 
-        self.ema9, self.ema13, self.ema21, self.ema50 = (
-            g("ema_9"), g("ema_13"), g("ema_21"), g("ema_50"))
+        self.ema5, self.ema9, self.ema13, self.ema21, self.ema50 = (
+            g("ema_5"), g("ema_9"), g("ema_13"), g("ema_21"), g("ema_50"))
         self.bb_width_rank = g("bb_width_rank_prev")
         self.bb_up, self.bb_lo = g("bb_upper"), g("bb_lower")
         self.kelt_up, self.kelt_lo = g("keltner_upper"), g("keltner_lower")

@@ -19,6 +19,7 @@ import adaptive_trailing
 import indicators
 import regime_detector
 import safety_guard
+import tick_engine
 import strategy_engine
 from adaptive_brain import AdaptiveBrain
 from dynamic_lot_sizer import DynamicLotSizer
@@ -41,6 +42,9 @@ def _session_mode(ts):
         return config.SESSION_MODE_MOMENTUM
     return config.SESSION_MODE_STOP
 
+
+CORE_REVERSAL_ENGINES = ("Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption",
+                         "Exhaustion_FOMOFade")
 
 _PREP_CACHE = {}
 
@@ -184,6 +188,7 @@ class BacktestRunner:
                      daily_dd=0, pause=0, daycap=0, opened=0,
                      limit_placed=0, limit_filled=0, limit_expired=0)
         pending = None
+        tick_flow = tick_engine.TickFlow(point=self.point)
         trades_today = 0
         last_entry_i = -10 ** 9
         consec_losses = 0
@@ -217,11 +222,19 @@ class BacktestRunner:
             n_open = len(positions)
             can = n_open < config.MAX_BASE_TRADES
             if not can and n_open >= config.MAX_BASE_TRADES and config.ENABLE_ZERO_RISK_PYRAMID \
-                    and n_open < config.MAX_TOTAL_TRADES_WITH_PYRAMID:
-                ex = positions[0]
-                same = ex["dir"] == direction
-                risk_free = (ex["sl"] >= ex["entry"]) if ex["dir"] == "BUY" else (ex["sl"] <= ex["entry"] and ex["sl"] > 0)
-                can = same and risk_free
+                    and n_open < config.STACK_MAX_POSITIONS:
+                newest = positions[-1]
+                same = all(p["dir"] == direction for p in positions)
+                if newest["dir"] == "BUY":
+                    risk_free = newest["sl"] >= newest["entry"] + config.STACK_RISK_FREE_MIN_POINTS * self.point
+                    advanced = entry - newest["entry"] >= config.STACK_MIN_ADVANCE_ATR * (
+                        newest.get("atr_points", 0.0) or 0.0) * self.point
+                else:
+                    risk_free = (newest["sl"] > 0
+                                 and newest["sl"] <= newest["entry"] - config.STACK_RISK_FREE_MIN_POINTS * self.point)
+                    advanced = newest["entry"] - entry >= config.STACK_MIN_ADVANCE_ATR * (
+                        newest.get("atr_points", 0.0) or 0.0) * self.point
+                can = same and risk_free and advanced
             if not can:
                 return False
             cooldown_bars = max(1, int(config.COOLDOWN_SECONDS // 60))
@@ -253,6 +266,16 @@ class BacktestRunner:
             row = m1.iloc[i]
             ts = row["time"]
             cur_time = ts
+            o_, h_, l_, c_ = float(row["open"]), float(row["high"]), float(row["low"]), float(row["close"])
+            path = [o_, l_, h_, c_] if c_ >= o_ else [o_, h_, l_, c_]
+            base_msc = int(ts.timestamp() * 1000) if hasattr(ts, "timestamp") else 0
+            for k in range(1, 9):
+                frac = k / 8.0
+                seg = frac * 3.0
+                idx = min(2, int(seg))
+                local = seg - idx
+                mid = path[idx] + (path[idx + 1] - path[idx]) * local
+                tick_flow.add(mid, base_msc + k * 7500)
             d = ts.date() if hasattr(ts, "date") else None
             if d != day:
                 day, day_start_equity, ratchet_peak, ratchet_locked = d, balance, 0.0, False
@@ -339,32 +362,41 @@ class BacktestRunner:
                 continue
 
             if pending is not None:
-                if positions:
+                hit = _limit_hit(pending["dir"], pending["limit"],
+                                 row["low"], row["high"])
+                if hit and i > pending["placed_i"]:
+                    delta = pending["limit"] - pending["sig"].entry
+                    if open_position(i, pending["dir"], pending["limit"],
+                                     pending["sl"] + delta, pending["tp"] + delta,
+                                     pending["strategy"], pending["conf"], ts,
+                                     pending.get("meta")):
+                        audit["limit_filled"] += 1
                     pending = None
-                else:
-                    hit = _limit_hit(pending["dir"], pending["limit"],
-                                     row["low"], row["high"])
-                    if hit and i > pending["placed_i"]:
-                        delta = pending["limit"] - pending["sig"].entry
-                        if open_position(i, pending["dir"], pending["limit"],
-                                         pending["sl"] + delta, pending["tp"] + delta,
-                                         pending["strategy"], pending["conf"], ts,
-                                         pending.get("meta")):
-                            audit["limit_filled"] += 1
-                        pending = None
-                    elif i - pending["placed_i"] >= pending["ttl"]:
-                        audit["limit_expired"] += 1
-                        pending = None
+                elif i - pending["placed_i"] >= pending["ttl"]:
+                    audit["limit_expired"] += 1
+                    pending = None
 
             sub = m1.iloc[: i + 1]
             m5sub = self._m5_slice(i)
             m15sub = self._m15_slice(i)
             regime = regime_detector.RegimeDetector.classify(sub, m5sub)
             sig = strategy_engine.generate_signal(sub, mode, m5sub, regime=regime,
-                                                  df_m15=m15sub)
+                                                  df_m15=m15sub, tick_flow=tick_flow)
             if not sig:
                 continue
             audit["raw"] += 1
+
+            if (sig.strategy in CORE_REVERSAL_ENGINES and positions
+                    and sig.signal in ("BUY", "SELL")):
+                for p in list(positions):
+                    if p["strategy"] != "Tick_Impulse_Stacker" or p["dir"] == sig.signal:
+                        continue
+                    fl = (((row["close"] - p["entry"]) if p["dir"] == "BUY"
+                           else (p["entry"] - row["close"])) / self.point
+                          - self.spread_points) * p["lots"]
+                    if fl >= config.MOMENTUM_EXIT_MIN_USD:
+                        close_pos(p, row["close"], "MOMENTUM_EXIT")
+                        positions.remove(p)
 
             allowed, conf, _ = brain.evaluate(sig, regime, now=ts)
             if not allowed:
@@ -389,7 +421,13 @@ class BacktestRunner:
                 audit["limit_placed"] += 1
                 continue
 
-            open_position(i, sig.signal, row["close"], sig.sl, sig.tp,
+            sl, tp = sig.sl, sig.tp
+            if (equity < config.EARLY_SHIELD_EQUITY_USD
+                    and float(row.get("pulse_intensity", 0.0) or 0.0) < config.EARLY_TIGHT_SL_PULSE):
+                tight = config.EARLY_TIGHT_SL_POINTS * self.point
+                if abs(row["close"] - sl) > tight:
+                    sl = row["close"] - tight if sig.signal == "BUY" else row["close"] + tight
+            open_position(i, sig.signal, row["close"], sl, tp,
                           sig.strategy, conf, ts, self._meta(sig))
 
         if positions:

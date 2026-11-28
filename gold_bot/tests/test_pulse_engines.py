@@ -60,20 +60,22 @@ class TestAdaptiveTrailing(unittest.TestCase):
 
 
 class TestRegistry(unittest.TestCase):
-    def test_six_engine_registry(self):
-        self.assertEqual(len(config.PULSE_MODELS), 6)
+    def test_five_engine_registry(self):
+        self.assertEqual(len(config.PULSE_MODELS), 5)
         for retired in ("Pulse_LiquiditySweep_Snap", "InstantMomentum_SqueezeBreak",
                         "InstantMomentum_TickAcceleration", "GoldImpulse_PullbackSniper",
                         "MicroKeltner_SnapLimit", "Intraday_Level_RejectionPulse",
                         "M5_VWAP_ElasticAbsorption", "Exhaustion_MultiBarStretch",
-                        "M5_Absorption_M1Trigger"):
+                        "M5_Absorption_M1Trigger", "H1_Trend_Pullback_Limit",
+                        "M5_OrderBlock_Rebound"):
             self.assertNotIn(retired, config.PULSE_MODELS)
         for name in ("Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption",
-                     "Exhaustion_FOMOFade", "H1_Trend_Pullback_Limit",
-                     "Session_SwingSweep_Limit", "M5_OrderBlock_Rebound"):
+                     "Exhaustion_FOMOFade", "Session_SwingSweep_Limit",
+                     "Tick_Impulse_Stacker"):
             self.assertIn(name, config.PULSE_MODELS)
         self.assertEqual(config.MAX_BASE_TRADES, 2)
-        self.assertEqual(config.MAX_TOTAL_TRADES_WITH_PYRAMID, 3)
+        self.assertEqual(config.MAX_TOTAL_TRADES_WITH_PYRAMID, 4)
+        self.assertEqual(config.STACK_MAX_POSITIONS, 4)
 
 
 class TestPulseEngines(unittest.TestCase):

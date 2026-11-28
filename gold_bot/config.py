@@ -50,8 +50,15 @@ MAX_SPREAD_POINTS: float = 38.0      # JustMarkets base ~26 pts; 38 tolerates no
 MAX_OPEN_TRADES: int = 1             # strict single-position cap to protect $10
 DAILY_LOSS_LIMIT_USD: float = 1.50
 EARLY_SHIELD_EQUITY_USD: float = 15.0   # below this equity the early account shield applies
-DAILY_LOSS_LIMIT_EARLY_USD: float = 1.25
-DAILY_LOSS_LIMIT_EXPANDED_USD: float = 2.20   # equity guard; 3-loss pause handles micro-DD
+DAILY_LOSS_LIMIT_EARLY_USD: float = 0.85
+DAILY_LOSS_LIMIT_EXPANDED_USD: float = 1.80
+EARLY_TIGHT_SL_POINTS: float = 55.0   # used below the shield equity when pulse < EARLY_TIGHT_SL_PULSE
+EARLY_TIGHT_SL_PULSE: float = 1.8
+STACK_MAX_POSITIONS: int = 4          # v1.29 zero-risk continuation stacking
+STACK_MIN_ADVANCE_ATR: float = 0.30
+STACK_RISK_FREE_MIN_POINTS: float = 10.0
+MOMENTUM_EXIT_MIN_USD: float = 0.25   # bank tick positions on a core reversal
+TICK_MIN_FAST_MOVE_POINTS: float = 20.0   # equity guard; 3-loss pause handles micro-DD
 MAX_TRADES_PER_DAY: int = 25         # keep quality high, volume 50-80/week
 RISK_PER_TRADE_PCT: float = 1.0      # kept for reference / future dynamic sizing
 MAX_DAILY_DRAWDOWN_PCT: float = 4.0  # legacy % cap (superseded by DAILY_LOSS_LIMIT_USD)
@@ -109,7 +116,7 @@ NEW_MODELS = (
 ALL_STRATEGIES = LEGACY_STRATEGIES + NEW_MODELS
 PULSE_MODELS = (
     "Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption", "Exhaustion_FOMOFade",
-    "H1_Trend_Pullback_Limit", "Session_SwingSweep_Limit", "M5_OrderBlock_Rebound",
+    "Session_SwingSweep_Limit", "Tick_Impulse_Stacker",
 )
 ENABLED_STRATEGIES = PULSE_MODELS
 PULSE_MIN_ATR_POINTS: float = 95.0
@@ -191,7 +198,7 @@ CONSECUTIVE_LOSS_PAUSE_MIN: int = 60
 # Zero-risk pyramiding
 # ---------------------------------------------------------------------------
 MAX_BASE_TRADES: int = 2
-MAX_TOTAL_TRADES_WITH_PYRAMID: int = 3
+MAX_TOTAL_TRADES_WITH_PYRAMID: int = 4
 ENABLE_ZERO_RISK_PYRAMID: bool = True
 
 # ---------------------------------------------------------------------------
