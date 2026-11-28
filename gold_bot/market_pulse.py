@@ -6,9 +6,9 @@ from typing import Optional
 
 import pandas as pd
 
-PULSE_MIN_ATR_POINTS = 80.0
-SESSION_START = 1.5
-SESSION_END = 21.0
+PULSE_MIN_ATR_POINTS = 95.0
+SESSION_START = 8.0
+SESSION_END = 18.5
 
 
 def _num(value) -> Optional[float]:

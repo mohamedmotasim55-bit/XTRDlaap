@@ -188,7 +188,7 @@ CONSECUTIVE_LOSS_PAUSE_MIN: int = 45
 # ---------------------------------------------------------------------------
 # Zero-risk pyramiding
 # ---------------------------------------------------------------------------
-MAX_BASE_TRADES: int = 2
+MAX_BASE_TRADES: int = 1
 MAX_TOTAL_TRADES_WITH_PYRAMID: int = 2
 ENABLE_ZERO_RISK_PYRAMID: bool = True
 
