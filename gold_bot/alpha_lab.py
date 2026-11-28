@@ -137,8 +137,9 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
     _dir_line("BUY vs SELL", full)
     print(" Engine-by-engine contribution (full 60 days):")
     for name, d in sorted((full.get("by_strategy") or {}).items(), key=lambda x: -x[1]["net"]):
-        wr = 100 * d["wins"] / d["trades"] if d["trades"] else 0.0
-        print(f"  {name:<32}{d['trades']:>5} trades  WR {wr:>5.1f}%  Net ${d['net']:>7.2f}")
+        n = d.get("n", d.get("trades", 0))
+        wr = 100 * d["wins"] / n if n else 0.0
+        print(f"  {name:<32}{n:>5} trades  WR {wr:>5.1f}%  Net ${d['net']:>7.2f}")
 
     print("\n########## TARGET TIER BREAKDOWN ##########")
     for label, r in (("Month 1", p1), ("Month 2", p2)):
