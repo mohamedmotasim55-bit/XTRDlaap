@@ -52,12 +52,13 @@ def _run(m1, m5, strategies, label, dynamic=False):
         m1, m5, initial_balance=10.0, spread_points=_spread, point=_point,
         strategies=strategies, overrides=TOURNAMENT_OVERRIDES,
         use_dynamic_lots=dynamic, verbose=False,
-        journal_path=f"logs/alpha_{label}.csv",
+        journal_path=f"logs/alpha_{label}.csv", ticks=_ticks,
     ).run()
 
 
 _spread = 26.0
 _point = 0.01
+_ticks = None
 
 
 def _line(label, r):
@@ -77,9 +78,9 @@ def _dir_line(label, r):
           f" | SELL {sell['n']:>3} ({swr:>4.1f}% WR, ${sell['net']:>6.2f})")
 
 
-def run_tournament(m1, m5, spread=26.0, point=0.01):
-    global _spread, _point
-    _spread, _point = float(spread), float(point)
+def run_tournament(m1, m5, spread=26.0, point=0.01, ticks=None):
+    global _spread, _point, _ticks
+    _spread, _point, _ticks = float(spread), float(point), ticks
     m1a, m1b, m5a, m5b, cut = split_months(m1, m5)
     print(f"Month 1: {m1a['time'].iloc[0]} -> {m1a['time'].iloc[-1]} ({len(m1a)} bars)")
     print(f"Month 2: {m1b['time'].iloc[0]} -> {m1b['time'].iloc[-1]} ({len(m1b)} bars)")

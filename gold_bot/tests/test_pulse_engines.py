@@ -71,11 +71,11 @@ class TestRegistry(unittest.TestCase):
             self.assertNotIn(retired, config.PULSE_MODELS)
         for name in ("Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption",
                      "Exhaustion_FOMOFade", "Session_SwingSweep_Limit",
-                     "Tick_Impulse_Stacker"):
+                     "RealTick_VelocityStacker"):
             self.assertIn(name, config.PULSE_MODELS)
         self.assertEqual(config.MAX_BASE_TRADES, 2)
         self.assertEqual(config.MAX_TOTAL_TRADES_WITH_PYRAMID, 4)
-        self.assertEqual(config.STACK_MAX_POSITIONS, 4)
+        self.assertEqual(config.MAX_EXECUTIVE_SLOTS, 5)
 
 
 class TestPulseEngines(unittest.TestCase):

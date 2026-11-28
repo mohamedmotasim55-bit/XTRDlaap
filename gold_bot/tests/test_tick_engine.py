@@ -43,5 +43,5 @@ class TestTickFlow(unittest.TestCase):
         self.assertFalse(te.is_overextended("BUY", 2000.2, 2000.0, 1.0))
 
     def test_limits_sane(self):
-        self.assertEqual(config.TICK_MIN_FAST_MOVE_POINTS, 20.0)
+        self.assertEqual(config.TICK_MIN_FAST_MOVE_POINTS, 18.0)
         self.assertLess(config.MOMENTUM_EXIT_MIN_USD, 1.0)

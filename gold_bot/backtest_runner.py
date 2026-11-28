@@ -20,6 +20,7 @@ import indicators
 import regime_detector
 import safety_guard
 import tick_engine
+import executive_controller
 import strategy_engine
 from adaptive_brain import AdaptiveBrain
 from dynamic_lot_sizer import DynamicLotSizer
@@ -120,7 +121,8 @@ def _prepare_frames(m1_df, m5_df, point):
 class BacktestRunner:
     def __init__(self, m1_df, m5_df=None, initial_balance=10.0, spread_points=26.0,
                  point=0.01, warmup=60, journal_path="logs/backtest_results.csv",
-                 verbose=True, use_dynamic_lots=True, strategies=None, overrides=None):
+                 verbose=True, use_dynamic_lots=True, strategies=None, overrides=None,
+                 ticks=None):
         self.point = point
         self.spread_points = float(spread_points)
         self.initial_balance = float(initial_balance)
@@ -133,6 +135,13 @@ class BacktestRunner:
             self.overrides["ENABLED_STRATEGIES"] = tuple(strategies)
         self._sizer = DynamicLotSizer(mt5_module=None)
         self.m1, self.m5, self.m15 = _prepare_frames(m1_df, m5_df, point)
+        self.tick_dirs, self.tick_audit = tick_engine.build_bar_tick_features(
+            self.m1, ticks, point)
+        if verbose:
+            a = self.tick_audit
+            print(f" TICK AUDIT: ticks={a['total_ticks']} | median_dt={a['median_interval_ms']}ms"
+                  f" | spread p50={a['spread_pts_p50']}pts | bursts_bars={a['bars_with_burst']}"
+                  f" | synthetic={a['synthetic']}")
 
     @staticmethod
     def _resample_m15(m1_df):
@@ -188,7 +197,9 @@ class BacktestRunner:
                      daily_dd=0, pause=0, daycap=0, opened=0,
                      limit_placed=0, limit_filled=0, limit_expired=0)
         pending = None
-        tick_flow = tick_engine.TickFlow(point=self.point)
+        exec_ctl = executive_controller.ExecutiveController()
+        exec_state = dict(max_slots=config.MAX_BASE_TRADES,
+                          cooldown_bars=max(1, int(config.COOLDOWN_SECONDS // 60)))
         trades_today = 0
         last_entry_i = -10 ** 9
         consec_losses = 0
@@ -215,14 +226,16 @@ class BacktestRunner:
             if pnl > 0:
                 tt["wins"] += 1
             brain.record_trade(p["strategy"], pnl, now=cur_time)
+            exec_ctl.record_trade(pnl)
             consec_losses = consec_losses + 1 if pnl < 0 else 0
 
         def open_position(i, direction, entry, sl, tp, strategy, conf, ts, meta=None):
             nonlocal ticket, last_entry_i, trades_today
             n_open = len(positions)
-            can = n_open < config.MAX_BASE_TRADES
+            max_slots = int(exec_state.get("max_slots", config.MAX_BASE_TRADES))
+            can = n_open < min(config.MAX_BASE_TRADES, max_slots)
             if not can and n_open >= config.MAX_BASE_TRADES and config.ENABLE_ZERO_RISK_PYRAMID \
-                    and n_open < config.STACK_MAX_POSITIONS:
+                    and n_open < min(max_slots, config.MAX_EXECUTIVE_SLOTS):
                 newest = positions[-1]
                 same = all(p["dir"] == direction for p in positions)
                 if newest["dir"] == "BUY":
@@ -237,8 +250,9 @@ class BacktestRunner:
                 can = same and risk_free and advanced
             if not can:
                 return False
-            cooldown_bars = max(1, int(config.COOLDOWN_SECONDS // 60))
-            if i - last_entry_i < cooldown_bars:
+            cooldown_bars = int(exec_state.get("cooldown_bars",
+                                                max(1, int(config.COOLDOWN_SECONDS // 60))))
+            if cooldown_bars > 0 and i - last_entry_i < cooldown_bars:
                 audit["cooldown"] += 1
                 return False
             lot = config.LOT_SIZE
@@ -266,16 +280,6 @@ class BacktestRunner:
             row = m1.iloc[i]
             ts = row["time"]
             cur_time = ts
-            o_, h_, l_, c_ = float(row["open"]), float(row["high"]), float(row["low"]), float(row["close"])
-            path = [o_, l_, h_, c_] if c_ >= o_ else [o_, h_, l_, c_]
-            base_msc = int(ts.timestamp() * 1000) if hasattr(ts, "timestamp") else 0
-            for k in range(1, 9):
-                frac = k / 8.0
-                seg = frac * 3.0
-                idx = min(2, int(seg))
-                local = seg - idx
-                mid = path[idx] + (path[idx + 1] - path[idx]) * local
-                tick_flow.add(mid, base_msc + k * 7500)
             d = ts.date() if hasattr(ts, "date") else None
             if d != day:
                 day, day_start_equity, ratchet_peak, ratchet_locked = d, balance, 0.0, False
@@ -337,6 +341,9 @@ class BacktestRunner:
             peak_equity = max(peak_equity, equity)
             max_dd = max(max_dd, peak_equity - equity)
 
+            exec_state = exec_ctl.update(
+                float(row.get("pulse_intensity", 0.0) or 0.0),
+                self.spread_points, equity)
             day_pnl = equity - day_start_equity
             ratchet_peak = max(ratchet_peak, day_pnl)
             if ratchet_peak >= config.PROFIT_RATCHET_START_USD and \
@@ -381,7 +388,8 @@ class BacktestRunner:
             m15sub = self._m15_slice(i)
             regime = regime_detector.RegimeDetector.classify(sub, m5sub)
             sig = strategy_engine.generate_signal(sub, mode, m5sub, regime=regime,
-                                                  df_m15=m15sub, tick_flow=tick_flow)
+                                                  df_m15=m15sub,
+                                                  tick_dir=self._tick_dir(i))
             if not sig:
                 continue
             audit["raw"] += 1
@@ -417,7 +425,10 @@ class BacktestRunner:
             if sig.entry_type == "LIMIT" and sig.limit_price > 0 and pending is None:
                 pending = dict(sig=sig, dir=sig.signal, limit=sig.limit_price,
                                sl=sig.sl, tp=sig.tp, strategy=sig.strategy,
-                               conf=conf, placed_i=i, ttl=1, meta=self._meta(sig))
+                               conf=conf, placed_i=i,
+                               ttl=(config.SWINGSWEEP_LIMIT_TTL_BARS
+                                    if sig.strategy == "Session_SwingSweep_Limit" else 1),
+                               meta=self._meta(sig))
                 audit["limit_placed"] += 1
                 continue
 
@@ -436,6 +447,9 @@ class BacktestRunner:
                 close_pos(p, last["close"], "EOD"); positions.remove(p)
 
         return self._report(trades, balance, max_dd, audit)
+
+    def _tick_dir(self, i):
+        return self.tick_dirs[i] if 0 <= i < len(self.tick_dirs) else None
 
     def _adaptive_sl(self, p, row, i, m1):
         prof = ((row["close"] - p["entry"]) / self.point if p["dir"] == "BUY"

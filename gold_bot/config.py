@@ -51,14 +51,22 @@ MAX_OPEN_TRADES: int = 1             # strict single-position cap to protect $10
 DAILY_LOSS_LIMIT_USD: float = 1.50
 EARLY_SHIELD_EQUITY_USD: float = 15.0   # below this equity the early account shield applies
 DAILY_LOSS_LIMIT_EARLY_USD: float = 0.85
-DAILY_LOSS_LIMIT_EXPANDED_USD: float = 1.80
+DAILY_LOSS_LIMIT_EXPANDED_USD: float = 2.20
 EARLY_TIGHT_SL_POINTS: float = 55.0   # used below the shield equity when pulse < EARLY_TIGHT_SL_PULSE
 EARLY_TIGHT_SL_PULSE: float = 1.8
 STACK_MAX_POSITIONS: int = 4          # v1.29 zero-risk continuation stacking
-STACK_MIN_ADVANCE_ATR: float = 0.30
+STACK_MIN_ADVANCE_ATR: float = 0.25
 STACK_RISK_FREE_MIN_POINTS: float = 10.0
 MOMENTUM_EXIT_MIN_USD: float = 0.25   # bank tick positions on a core reversal
-TICK_MIN_FAST_MOVE_POINTS: float = 20.0   # equity guard; 3-loss pause handles micro-DD
+TICK_MIN_FAST_MOVE_POINTS: float = 18.0
+MAX_EXECUTIVE_SLOTS: int = 5
+EXEC_PULSE_THRESHOLD: float = 1.55
+EXEC_MAX_SPREAD_POINTS: float = 32.0
+EXEC_MIN_WIN_RATE: float = 45.0
+REALTICK_SL_POINTS: float = 52.0
+REALTICK_BE_TRIGGER: float = 30.0
+REALTICK_BE_LOCK: float = 10.0
+SWINGSWEEP_LIMIT_TTL_BARS: int = 2   # equity guard; 3-loss pause handles micro-DD
 MAX_TRADES_PER_DAY: int = 25         # keep quality high, volume 50-80/week
 RISK_PER_TRADE_PCT: float = 1.0      # kept for reference / future dynamic sizing
 MAX_DAILY_DRAWDOWN_PCT: float = 4.0  # legacy % cap (superseded by DAILY_LOSS_LIMIT_USD)
@@ -116,7 +124,7 @@ NEW_MODELS = (
 ALL_STRATEGIES = LEGACY_STRATEGIES + NEW_MODELS
 PULSE_MODELS = (
     "Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption", "Exhaustion_FOMOFade",
-    "Session_SwingSweep_Limit", "Tick_Impulse_Stacker",
+    "Session_SwingSweep_Limit", "RealTick_VelocityStacker",
 )
 ENABLED_STRATEGIES = PULSE_MODELS
 PULSE_MIN_ATR_POINTS: float = 95.0
@@ -212,8 +220,9 @@ PROFIT_RATCHET_KEEP_PCT: float = 0.70
 # ---------------------------------------------------------------------------
 MAX_LOT_SIZE: float = 0.50
 COMPOUND_EQUITY_STEP_USD: float = 20.0
+LOT_SCHEDULE = ((18.0, 0.02), (28.0, 0.03), (40.0, 0.04), (55.0, 0.05))
 COMPOUND_START_EQUITY_USD: float = 25.0
-DD_THROTTLE_PCT: float = 0.08
+DD_THROTTLE_PCT: float = 0.07
 DD_RECOVER_PCT: float = 0.03
 MARGIN_FREE_FRACTION: float = 0.40
 ACCOUNT_LEVERAGE: int = 3000

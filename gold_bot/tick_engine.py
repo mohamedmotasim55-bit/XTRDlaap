@@ -164,3 +164,60 @@ def evaluate(tf: TickFlow, direction: str, row, ema5: Optional[float],
     if direction == "SELL" and m1_up:
         return False, "m1_ema_not_aligned"
     return True, "ok"
+
+
+def build_bar_tick_features(m1, ticks, point: float = 0.01):
+    """Map authentic ticks onto M1 bars.
+
+    Returns ``(dirs, audit)`` where ``dirs[i]`` is "BUY"/"SELL"/None for bar i,
+    derived only from real broker ticks (no synthetic interpolation).
+    """
+    import numpy as np
+    import pandas as pd
+
+    audit = dict(total_ticks=int(len(ticks)) if ticks is not None else 0, synthetic=False,
+                 median_interval_ms=None, spread_p25=None, spread_p50=None,
+                 spread_p75=None, spread_pts_p50=None, bars_with_burst=0)
+
+    if ticks is None or len(ticks) == 0:
+        return [None] * len(m1), audit
+
+    bid = pd.to_numeric(ticks["bid"], errors="coerce").to_numpy(dtype="float64")
+    ask = pd.to_numeric(ticks["ask"], errors="coerce").to_numpy(dtype="float64")
+    msc = pd.to_numeric(ticks["time_msc"], errors="coerce").to_numpy(dtype="int64")
+    ok = (bid > 0) & (ask > 0)
+    bid, ask, msc = bid[ok], ask[ok], msc[ok]
+    if len(bid) < 64:
+        return [None] * len(m1), audit
+
+    spread = ask - bid
+    audit["median_interval_ms"] = float(np.median(np.diff(msc))) if len(msc) > 1 else None
+    audit["spread_p25"] = float(np.percentile(spread, 25))
+    audit["spread_p50"] = float(np.percentile(spread, 50))
+    audit["spread_p75"] = float(np.percentile(spread, 75))
+    audit["spread_pts_p50"] = round(audit["spread_p50"] / point, 1)
+
+    mid = (bid + ask) / 2.0
+    s = pd.Series(mid)
+    diff = s.diff()
+    fast_move = (s - s.shift(FAST_TICKS)) / point
+    abs_sum = diff.abs().rolling(SLOW_TICKS).sum()
+    path_eff = ((s - s.shift(SLOW_TICKS)).abs() / abs_sum).fillna(0.0)
+
+    qualify = (fast_move.abs() >= 18.0) & (path_eff >= 0.30)
+    if not qualify.any():
+        return [None] * len(m1), audit
+
+    times = pd.to_datetime(m1["time"]).astype("int64") // 10 ** 6  # ms
+    idx = np.searchsorted(times.to_numpy(), msc, side="right") - 1
+    sel = qualify.to_numpy() & (idx >= 0) & (idx < len(m1))
+    dirs = [None] * len(m1)
+    if sel.any():
+        bars = idx[sel]
+        signs = np.where(fast_move.to_numpy()[sel] > 0, 1, -1)
+        frame = pd.DataFrame(dict(bar=bars, sign=signs))
+        last = frame.groupby("bar")["sign"].last()
+        for bar, sign in last.items():
+            dirs[int(bar)] = "BUY" if sign > 0 else "SELL"
+        audit["bars_with_burst"] = int(len(last))
+    return dirs, audit

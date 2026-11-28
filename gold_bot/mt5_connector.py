@@ -194,6 +194,31 @@ class MT5Connector:
         return pd.Timestamp(tick.time, unit="s")
 
     # ---------------------------------------------------------------- candles
+    def get_real_ticks(self, date_from, date_to, day_chunk: int = 5,
+                       max_ticks: int = 3_000_000):
+        """Fetch 100% authentic broker ticks (bid/ask/time_msc) via COPY_TICKS_ALL.
+
+        The range is fetched in ``day_chunk`` windows so the terminal never
+        times out on multi-week requests, then the newest ``max_ticks`` are kept.
+        """
+        if mt5 is None or self.symbol is None:
+            raise MT5ConnectionError("Not initialised.")
+        import datetime as _dt
+        frames = []
+        cur = date_from
+        while cur < date_to:
+            end = min(cur + _dt.timedelta(days=day_chunk), date_to)
+            ticks = mt5.copy_ticks_range(self.symbol, cur, end, mt5.COPY_TICKS_ALL)
+            if ticks is not None and len(ticks):
+                frames.append(pd.DataFrame(ticks))
+            cur = end
+        if not frames:
+            raise MT5ConnectionError("copy_ticks_range returned no ticks.")
+        df = pd.concat(frames, ignore_index=True)
+        if len(df) > max_ticks:
+            df = df.iloc[-max_ticks:]
+        return df.reset_index(drop=True)
+
     def get_candles(self, count: int = None, timeframe_name: str = None) -> pd.DataFrame:
         """Return the most recent OHLCV candles as a DataFrame.
 

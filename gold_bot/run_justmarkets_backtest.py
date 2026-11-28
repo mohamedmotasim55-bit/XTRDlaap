@@ -37,11 +37,32 @@ def main() -> int:
         m5 = conn.get_candles(count=M5_BARS, timeframe_name="M5")
         print(f"Fetched M1={len(m1)} bars, M5={len(m5)} bars "
               f"({m1['time'].iloc[0]} -> {m1['time'].iloc[-1]})")
+
+        ticks = None
+        try:
+            import pandas as _pd
+            start = _pd.Timestamp(m1["time"].iloc[0]).to_pydatetime()
+            end = _pd.Timestamp(m1["time"].iloc[-1]).to_pydatetime() + _pd.Timedelta(minutes=1)
+            ticks = conn.get_real_ticks(start, end, max_ticks=3_000_000)
+            print(f"Real ticks loaded: {len(ticks)} (COPY_TICKS_ALL, no synthetic data)")
+            import tick_engine as _te
+            _dirs, _audit = _te.build_bar_tick_features(m1, ticks, info["point"])
+            print("========== TICK DATA AUTHENTICITY AUDIT ==========")
+            print(f" total real ticks      : {_audit['total_ticks']}")
+            print(f" median tick interval  : {_audit['median_interval_ms']} ms")
+            print(f" spread bid/ask p25/50/75 : "
+                  f"{_audit['spread_p25']:.3f} / {_audit['spread_p50']:.3f} / {_audit['spread_p75']:.3f} USD")
+            print(f" median spread (points)   : {_audit['spread_pts_p50']}")
+            print(f" M1 bars with real burst  : {_audit['bars_with_burst']}")
+            print(f" synthetic ticks          : {_audit['synthetic']}")
+            print("=================================================")
+        except Exception as exc:  # noqa: BLE001
+            print(f"[WARN] real ticks unavailable: {exc}")
     except MT5ConnectionError as exc:
         print(f"[ABORT] data fetch failed: {exc}")
         return 1
 
-    run_tournament(m1, m5, spread=spread, point=info["point"])
+    run_tournament(m1, m5, spread=spread, point=info["point"], ticks=ticks)
     conn.shutdown()
     return 0
 
