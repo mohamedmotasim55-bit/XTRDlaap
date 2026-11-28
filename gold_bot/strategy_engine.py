@@ -578,23 +578,6 @@ def _build_pulse_signal(df, df_m5, df_m15, regime, enabled, base_sig):
                 and c.close > c.open_):
             cands.append(_cand(c, "Exhaustion_FOMOFade", "BUY", 0.74))
 
-    if ("Exhaustion_MultiBarStretch" in enabled and c.pulse >= 1.45
-            and c.rsi is not None and c.move_4 is not None and c.atr):
-        stretch = 1.8 * c.atr
-        if c.rsi < 27 and c.move_4 <= -stretch and c.close > c.open_:
-            cands.append(_cand(c, "Exhaustion_MultiBarStretch", "BUY", 0.73))
-        if c.rsi > 73 and c.move_4 >= stretch and c.close < c.open_:
-            cands.append(_cand(c, "Exhaustion_MultiBarStretch", "SELL", 0.73))
-
-    if ("M5_Absorption_M1Trigger" in enabled and c.m5_pulse is not None
-            and c.m5_pulse >= 1.50 and c.m5_range and c.m5_rsi is not None):
-        if c.m5_wick_lo is not None and c.m5_wick_lo >= 0.42 * c.m5_range \
-                and c.m5_rsi < 34 and c.close > c.open_:
-            cands.append(_cand(c, "M5_Absorption_M1Trigger", "BUY", 0.74))
-        if c.m5_wick_hi is not None and c.m5_wick_hi >= 0.42 * c.m5_range \
-                and c.m5_rsi > 66 and c.close < c.open_:
-            cands.append(_cand(c, "M5_Absorption_M1Trigger", "SELL", 0.74))
-
     if "Pulse_ExhaustionDivergence" in enabled and c.pulse >= 1.55 and c.rsi is not None:
         stretched_lo = ((c.m5_vwap_lo is not None and c.low <= c.m5_vwap_lo)
                         or (c.kelt_lo is not None and c.low <= c.kelt_lo))

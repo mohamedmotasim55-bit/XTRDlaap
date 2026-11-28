@@ -26,7 +26,7 @@ class TestDynamicTargets(unittest.TestCase):
     def test_tp_floor_and_cap(self):
         lo = dynamic_target_engine.select_targets(1.0, 80)
         hi = dynamic_target_engine.select_targets(4.0, 80, m5_aligned=True, consensus=3)
-        self.assertGreaterEqual(lo["tp_points"], 145.0)
+        self.assertGreaterEqual(lo["tp_points"], 155.0)
         self.assertLessEqual(hi["tp_points"], 420.0)
         self.assertGreater(hi["tp_points"], lo["tp_points"])
 
@@ -56,16 +56,16 @@ class TestAdaptiveTrailing(unittest.TestCase):
 
 
 class TestRegistry(unittest.TestCase):
-    def test_five_winning_dna_engines(self):
-        self.assertEqual(len(config.PULSE_MODELS), 5)
+    def test_core_three_production_engines(self):
+        self.assertEqual(len(config.PULSE_MODELS), 3)
         for retired in ("Pulse_LiquiditySweep_Snap", "InstantMomentum_SqueezeBreak",
                         "InstantMomentum_TickAcceleration", "GoldImpulse_PullbackSniper",
                         "MicroKeltner_SnapLimit", "Intraday_Level_RejectionPulse",
-                        "M5_VWAP_ElasticAbsorption"):
+                        "M5_VWAP_ElasticAbsorption", "Exhaustion_MultiBarStretch",
+                        "M5_Absorption_M1Trigger"):
             self.assertNotIn(retired, config.PULSE_MODELS)
         for name in ("Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption",
-                     "Exhaustion_FOMOFade", "Exhaustion_MultiBarStretch",
-                     "M5_Absorption_M1Trigger"):
+                     "Exhaustion_FOMOFade"):
             self.assertIn(name, config.PULSE_MODELS)
 
 

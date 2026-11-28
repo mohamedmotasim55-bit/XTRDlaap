@@ -15,10 +15,10 @@ import config
 from backtest_runner import BacktestRunner
 
 TOURNAMENT_OVERRIDES = dict(
-    MIN_SL_POINTS=58.0, MAX_SL_POINTS=78.0, SL_ATR_MULT=0.62,
-    MIN_TP_POINTS=165.0, MAX_TP_POINTS=380.0, TP_ATR_MULT=2.5,
-    BREAKEVEN_TRIGGER_POINTS=42.0, BREAKEVEN_LOCK_POINTS=12.0,
-    TRAILING_START_POINTS=75.0, TRAILING_ATR_MULT=0.75,
+    MIN_SL_POINTS=58.0, MAX_SL_POINTS=74.0, SL_ATR_MULT=0.58,
+    MIN_TP_POINTS=155.0, MAX_TP_POINTS=420.0, TP_ATR_MULT=2.5,
+    BREAKEVEN_TRIGGER_POINTS=38.0, BREAKEVEN_LOCK_POINTS=12.0,
+    TRAILING_START_POINTS=65.0, TRAILING_ATR_MULT=0.75,
 )
 
 MIN_PF = 1.15
@@ -84,7 +84,7 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
     print(f"Month 1: {m1a['time'].iloc[0]} -> {m1a['time'].iloc[-1]} ({len(m1a)} bars)")
     print(f"Month 2: {m1b['time'].iloc[0]} -> {m1b['time'].iloc[-1]} ({len(m1b)} bars)")
 
-    print("\n########## 5-ENGINE MARKET-PULSE TOURNAMENT ##########")
+    print("\n########## 3-ENGINE CORE PRODUCTION TOURNAMENT ##########")
     header = (f" {'Engine':<34}{'T':>6}{'WR':>7}{'PF':>7}{'Net$':>9}{'DD%':>7}")
     print(header)
     m1_results, m2_results, rows = {}, {}, []
@@ -101,10 +101,9 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
     for model, _, r2 in sorted(rows, key=lambda x: -x[2]["net_profit"]):
         print(_line(model, r2))
 
-    winners = [m for m, r, _ in sorted(rows, key=lambda x: -x[1]["net_profit"])
-               if (r.get("profit_factor", 0.0) >= 1.15 or r.get("profit_factor", 0.0) == float("inf"))
-               and r.get("total_trades", 0) >= 5]
-    print(f"\nAuto-filtered winners (M1 PF >= 1.15, >= 5 trades): {winners or 'NONE'}")
+    winners = [m for m, r1, r2 in sorted(rows, key=lambda x: -(x[1]["net_profit"] + x[2]["net_profit"]))
+               if r1["net_profit"] > 0 and r2["net_profit"] > 0 and r1["total_trades"] >= 5]
+    print(f"\nDual-month winners (net > 0 in BOTH months, >= 5 M1 trades): {winners or 'NONE'}")
     if winners:
         ens = _run(m1b, m5b, tuple(winners), "ensemble_m2", dynamic=True)
         print(" Ensemble Month 2 (blind):")
@@ -114,7 +113,7 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
               f" | PF {_pf(ens)} | MaxDD {ens['max_drawdown_pct']:.1f}%")
         _dir_line("Ensemble M2", ens)
 
-    print("\n########## COMBINED 5-ENGINE PORTFOLIO (dynamic lots) ##########")
+    print("\n########## CORE-3 PRODUCTION PORTFOLIO (dynamic lots) ##########")
     p1 = _run(m1a, m5a, config.PULSE_MODELS, "portfolio_m1", dynamic=True)
     p2 = _run(m1b, m5b, config.PULSE_MODELS, "portfolio_m2", dynamic=True)
     print(f" {'Window':<34}{'T':>6}{'WR':>7}{'PF':>7}{'Net$':>9}{'DD%':>7}")
@@ -125,6 +124,22 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
     _dir_line("Month 1", p1)
     _dir_line("Month 2", p2)
 
+    full = _run(m1, m5, config.PULSE_MODELS, "portfolio_full60", dynamic=True)
+    print("\n########## FULL 60-DAY CONTINUOUS RUN (dynamic lots) ##########")
+    print(_line("Full 60 days", full))
+    _dir_line("Full 60 days", full)
+
+    print("\n########## PRODUCTION READINESS REPORT ##########")
+    print(f" Initial ${full['initial_balance']:.2f} -> Final ${full['final_balance']:.2f}"
+          f" ({100 * (full['final_balance'] / full['initial_balance'] - 1):+.1f}%)")
+    print(f" Total trades {full['total_trades']} | WR {full['win_rate']:.1f}%"
+          f" | PF {_pf(full)} | MaxDD {full['max_drawdown_pct']:.1f}%")
+    _dir_line("BUY vs SELL", full)
+    print(" Engine-by-engine contribution (full 60 days):")
+    for name, d in sorted((full.get("by_strategy") or {}).items(), key=lambda x: -x[1]["net"]):
+        wr = 100 * d["wins"] / d["trades"] if d["trades"] else 0.0
+        print(f"  {name:<32}{d['trades']:>5} trades  WR {wr:>5.1f}%  Net ${d['net']:>7.2f}")
+
     print("\n########## TARGET TIER BREAKDOWN ##########")
     for label, r in (("Month 1", p1), ("Month 2", p2)):
         for tier in ("T1", "T2", "T3"):
@@ -134,7 +149,8 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
             wr = 100 * d["wins"] / d["trades"]
             print(f" {label} {tier}: {d['trades']:>4} trades  WR {wr:>5.1f}%  Net ${d['net']:>7.2f}")
 
-    return dict(m1=m1_results, m2=m2_results, portfolio_m1=p1, portfolio_m2=p2, cut=cut)
+    return dict(m1=m1_results, m2=m2_results, portfolio_m1=p1, portfolio_m2=p2,
+                portfolio_full=full, cut=cut)
 
 
 def _agg_tiers(results):

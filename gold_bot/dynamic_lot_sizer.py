@@ -5,10 +5,9 @@ Smart anti-Martingale compounding lot sizer.
 
 Rules
 -----
-* Micro tier (equity < $20): strictly 0.01 lot.
-* Growth tier (equity >= $20): 0.01 lot per $15 of equity
-  ($20->0.01, $30->0.02, $45->0.03, $75->0.05, $150->0.10),
-  capped at MAX_LOT_SIZE (0.50).
+* Micro tier (equity < $25): strictly 0.01 lot, locking a +150% buffer.
+* Growth tier (equity >= $25): +0.01 lot per $20 of equity
+  ($25->0.02, $45->0.03, $65->0.04), capped at MAX_LOT_SIZE (0.50).
 * Drawdown throttle: if equity < peak*(1-8%) halve the lot until equity
   recovers to within 3% of peak (hysteresis).
 * Margin guard: step the lot down until free margin after the order keeps
@@ -69,8 +68,9 @@ class DynamicLotSizer:
     def base_lot(equity: float) -> float:
         if equity < config.COMPOUND_START_EQUITY_USD:
             return 0.01
-        lots = 0.01 * int(equity // config.COMPOUND_EQUITY_STEP_USD)
-        return max(0.01, lots)
+        steps = 1 + int((equity - config.COMPOUND_START_EQUITY_USD)
+                         // config.COMPOUND_EQUITY_STEP_USD)
+        return 0.01 + 0.01 * steps
 
     def _update_throttle(self, equity: float, peak_equity: float) -> None:
         if peak_equity and peak_equity > 0:

@@ -20,12 +20,12 @@ class FakeMT5:
 class TestDynamicLotSizer(unittest.TestCase):
     def test_micro_tier(self):
         s = DynamicLotSizer(mt5_module=None)
-        for eq in (8.0, 10.0, 15.0, 19.99):
+        for eq in (8.0, 10.0, 15.0, 24.99):
             self.assertAlmostEqual(s.size(eq, eq), 0.01, places=2)
 
     def test_growth_scaling(self):
         s = DynamicLotSizer(mt5_module=None)
-        cases = {20.0: 0.01, 30.0: 0.02, 45.0: 0.03, 75.0: 0.05, 150.0: 0.10}
+        cases = {25.0: 0.02, 45.0: 0.03, 65.0: 0.04, 105.0: 0.06, 205.0: 0.11}
         for eq, want in cases.items():
             self.assertAlmostEqual(s.size(eq, eq), want, places=2, msg=f"eq={eq}")
 
@@ -35,7 +35,7 @@ class TestDynamicLotSizer(unittest.TestCase):
 
     def test_drawdown_throttle(self):
         s = DynamicLotSizer(mt5_module=None)
-        base = DynamicLotSizer.base_lot(80.0)          # 0.05
+        base = DynamicLotSizer.base_lot(80.0)          # 0.03
         throttled = s.size(80.0, peak_equity=100.0)    # 80 < 92 -> halve
         self.assertTrue(s.throttled)
         self.assertLess(throttled, base)

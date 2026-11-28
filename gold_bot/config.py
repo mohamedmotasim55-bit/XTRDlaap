@@ -106,7 +106,6 @@ NEW_MODELS = (
 ALL_STRATEGIES = LEGACY_STRATEGIES + NEW_MODELS
 PULSE_MODELS = (
     "Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption", "Exhaustion_FOMOFade",
-    "Exhaustion_MultiBarStretch", "M5_Absorption_M1Trigger",
 )
 ENABLED_STRATEGIES = PULSE_MODELS
 PULSE_MIN_ATR_POINTS: float = 95.0
@@ -201,8 +200,8 @@ PROFIT_RATCHET_KEEP_PCT: float = 0.70
 # Dynamic lot sizing / compounding
 # ---------------------------------------------------------------------------
 MAX_LOT_SIZE: float = 0.50
-COMPOUND_EQUITY_STEP_USD: float = 15.0
-COMPOUND_START_EQUITY_USD: float = 20.0
+COMPOUND_EQUITY_STEP_USD: float = 20.0
+COMPOUND_START_EQUITY_USD: float = 25.0
 DD_THROTTLE_PCT: float = 0.08
 DD_RECOVER_PCT: float = 0.03
 MARGIN_FREE_FRACTION: float = 0.40
