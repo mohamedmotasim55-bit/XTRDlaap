@@ -158,6 +158,7 @@ class BacktestRunner:
         n = len(m1)
         balance = self.initial_balance
         positions, trades = [], []
+        strategy_engine.ENGINE_HITS.clear()
         brain = AdaptiveBrain()
         peak_equity, max_dd = balance, 0.0
         day = None
@@ -469,6 +470,7 @@ class BacktestRunner:
         print(f" Trades: {r['total_trades']}  W:{r['wins']}  L:{r['losses']}  WinRate: {r['win_rate']:.1f}%")
         print(f" Profit Factor: {pf}  MaxDD: ${r['max_drawdown_usd']:.2f} ({r['max_drawdown_pct']:.1f}%)")
         a = r.get("signal_audit") or {}
+        print(f" Engine hits: {strategy_engine.ENGINE_HITS}")
         print(f" Signals: raw={a.get('raw',0)} conf_rej={a.get('conf',0)} "
               f"spread_rej={a.get('spread',0)} cool_rej={a.get('cooldown',0)} "
               f"margin_rej={a.get('margin',0)} dailyDD_rej={a.get('daily_dd',0)} "

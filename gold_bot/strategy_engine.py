@@ -535,7 +535,11 @@ def _institutional_models(cands, enabled, df, df_m5, df_m15, close, open_, high,
                                 config.SL_ATR_MULT, config.TP_ATR_MULT, 0.66))
 
 
+ENGINE_HITS = {}
+
+
 def _cand(c, name, direction, confidence, entry_type="MARKET", offset=15.0):
+    ENGINE_HITS[name] = ENGINE_HITS.get(name, 0) + 1
     return dict(direction=direction, strategy=name, entry=round(c.close, 5),
                 confidence=confidence, entry_type=entry_type,
                 limit_price=c.limit_price(direction, offset) if entry_type == "LIMIT" else 0.0)
@@ -566,31 +570,32 @@ def _build_pulse_signal(df, df_m5, df_m15, regime, enabled, base_sig):
         if c.wick_high >= 0.45 * rng and c.rsi is not None and c.rsi > 65 and c.close < c.open_:
             cands.append(_cand(c, "Pulse_ClimaxAbsorption", "SELL", 0.75))
 
-    if ("InstantMomentum_SqueezeBreak" in enabled and c.pulse >= 1.55
-            and rng > 1.25 * c.atr and c.bb_width_rank is not None
-            and c.bb_width_rank <= 0.30 and c.m5_adx is not None and c.m5_adx > 22):
+    if ("InstantMomentum_SqueezeBreak" in enabled and c.pulse >= 1.35
+            and rng > 1.10 * c.atr and c.bb_width_rank is not None
+            and c.bb_width_rank <= 0.40 and c.m5_adx is not None and c.m5_adx > 18):
         if c.m5_up and c.close > c.open_:
             cands.append(_cand(c, "InstantMomentum_SqueezeBreak", "BUY", 0.71, "LIMIT", 14.0))
         if c.m5_dn and c.close < c.open_:
             cands.append(_cand(c, "InstantMomentum_SqueezeBreak", "SELL", 0.71, "LIMIT", 14.0))
 
-    if ("InstantMomentum_TickAcceleration" in enabled and c.pulse >= 1.50
-            and c.accel_buy and c.rsi is not None and 54.0 <= c.rsi <= 68.0
-            and c.close >= c.low + 0.8 * rng and c.m5_up and c.m15_up):
+    if ("InstantMomentum_TickAcceleration" in enabled and c.pulse >= 1.35
+            and c.accel_buy and c.rsi is not None and c.rsi >= 50.0
+            and c.close >= c.low + 0.60 * rng and c.m5_up and c.m15_up):
         cands.append(_cand(c, "InstantMomentum_TickAcceleration", "BUY", 0.72, "LIMIT", 14.0))
-    if ("InstantMomentum_TickAcceleration" in enabled and c.pulse >= 1.50
-            and c.accel_sell and c.rsi is not None and 32.0 <= c.rsi <= 46.0
-            and c.close <= c.low + 0.2 * rng and c.m5_dn and c.m15_dn):
+    if ("InstantMomentum_TickAcceleration" in enabled and c.pulse >= 1.35
+            and c.accel_sell and c.rsi is not None and c.rsi <= 50.0
+            and c.close <= c.low + 0.40 * rng and c.m5_dn and c.m15_dn):
         cands.append(_cand(c, "InstantMomentum_TickAcceleration", "SELL", 0.72, "LIMIT", 14.0))
 
     if ("GoldImpulse_PullbackSniper" in enabled and c.m5_adx is not None
-            and c.m5_adx >= 27 and c.pulse >= 1.50 and c.ema13 is not None
+            and c.m5_adx >= 22 and c.pulse >= 1.35 and c.ema13 is not None
             and c.rsi is not None):
-        if c.h1_up() and c.m15_up and c.m5_trend_up and c.low <= c.ema13 \
-                and c.rsi < 48 and c.close > c.open_:
+        tol = 0.35 * c.atr
+        if c.h1_up() and c.m15_up and c.m5_trend_up and c.low <= c.ema13 + tol \
+                and c.rsi < 52 and c.close > c.open_:
             cands.append(_cand(c, "GoldImpulse_PullbackSniper", "BUY", 0.71, "LIMIT", 15.0))
-        if c.h1_dn() and c.m15_dn and c.m5_trend_dn and c.high >= c.ema13 \
-                and c.rsi > 52 and c.close < c.open_:
+        if c.h1_dn() and c.m15_dn and c.m5_trend_dn and c.high >= c.ema13 - tol \
+                and c.rsi > 48 and c.close < c.open_:
             cands.append(_cand(c, "GoldImpulse_PullbackSniper", "SELL", 0.71, "LIMIT", 15.0))
 
     if "Pulse_ExhaustionDivergence" in enabled and c.pulse >= 1.55 and c.rsi is not None:
@@ -805,7 +810,11 @@ def _institutional_models(cands, enabled, df, df_m5, df_m15, close, open_, high,
                                 config.SL_ATR_MULT, config.TP_ATR_MULT, 0.66))
 
 
+ENGINE_HITS = {}
+
+
 def _cand(c, name, direction, confidence, entry_type="MARKET", offset=15.0):
+    ENGINE_HITS[name] = ENGINE_HITS.get(name, 0) + 1
     return dict(direction=direction, strategy=name, entry=round(c.close, 5),
                 confidence=confidence, entry_type=entry_type,
                 limit_price=c.limit_price(direction, offset) if entry_type == "LIMIT" else 0.0)

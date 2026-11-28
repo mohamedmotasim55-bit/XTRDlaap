@@ -87,7 +87,7 @@ class PulseContext:
 
         self.ema9, self.ema13, self.ema21, self.ema50 = (
             g("ema_9"), g("ema_13"), g("ema_21"), g("ema_50"))
-        self.bb_width_rank = g("bb_width_rank")
+        self.bb_width_rank = g("bb_width_rank_prev")
         self.bb_up, self.bb_lo = g("bb_upper"), g("bb_lower")
         self.kelt_up, self.kelt_lo = g("keltner_upper"), g("keltner_lower")
         self.vwap_up, self.vwap_lo = g("vwap_upper"), g("vwap_lower")
