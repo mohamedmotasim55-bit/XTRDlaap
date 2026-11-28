@@ -271,7 +271,7 @@ def _supertrend(df, period: int = 10, mult: float = 2.5):
 
 def _pivots(df):
     empty = {k: pd.Series(np.nan, index=df.index)
-             for k in ("pivot_p", "pivot_r1", "pivot_s1")}
+             for k in ("pivot_p", "pivot_r1", "pivot_s1", "pivot_r2", "pivot_s2")}
     if "time" not in df.columns or len(df) < 2:
         return empty
     try:
@@ -283,9 +283,12 @@ def _pivots(df):
     g["p"] = p
     g["r1"] = 2 * p - g["l"]
     g["s1"] = 2 * p - g["h"]
+    g["r2"] = p + (g["h"] - g["l"])
+    g["s2"] = p - (g["h"] - g["l"])
     g = g.shift(1)
     return {"pivot_p": day.map(g["p"]), "pivot_r1": day.map(g["r1"]),
-            "pivot_s1": day.map(g["s1"])}
+            "pivot_s1": day.map(g["s1"]),
+            "pivot_r2": day.map(g["r2"]), "pivot_s2": day.map(g["s2"])}
 
 
 def vwap_bands(df, sigma: float = 1.35):

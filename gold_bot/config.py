@@ -49,7 +49,7 @@ LOT_SIZE: float = 0.01               # fixed lot for the $10 micro-account
 MAX_SPREAD_POINTS: float = 38.0      # JustMarkets base ~26 pts; 38 tolerates normal vol
 MAX_OPEN_TRADES: int = 1             # strict single-position cap to protect $10
 DAILY_LOSS_LIMIT_USD: float = 2.00   # equity guard; 3-loss pause handles micro-DD
-MAX_TRADES_PER_DAY: int = 12         # keep quality high, volume 50-80/week
+MAX_TRADES_PER_DAY: int = 25         # keep quality high, volume 50-80/week
 RISK_PER_TRADE_PCT: float = 1.0      # kept for reference / future dynamic sizing
 MAX_DAILY_DRAWDOWN_PCT: float = 4.0  # legacy % cap (superseded by DAILY_LOSS_LIMIT_USD)
 
@@ -80,7 +80,7 @@ ATR_PERIOD: int = 14
 MIN_ATR_POINTS: float = 35.0     # skip dead market (spread cannot be covered)
 SL_ATR_MULT: float = 0.52        # momentum-mode stop distance (x ATR)
 TP_ATR_MULT: float = 2.00        # momentum-mode target distance (x ATR)
-COOLDOWN_SECONDS: int = 20       # wait after a close before a new entry
+COOLDOWN_SECONDS: int = 10       # wait after a close before a new entry
 
 # Hard SL/TP calibration (points) sized for $3770 gold on a $10 account.
 MIN_SL_POINTS: float = 45.0
@@ -106,8 +106,8 @@ NEW_MODELS = (
 ALL_STRATEGIES = LEGACY_STRATEGIES + NEW_MODELS
 PULSE_MODELS = (
     "Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption",
-    "InstantMomentum_SqueezeBreak", "InstantMomentum_TickAcceleration",
-    "GoldImpulse_PullbackSniper",
+    "Exhaustion_FOMOFade", "M5_VWAP_ElasticAbsorption",
+    "Intraday_Level_RejectionPulse", "MicroKeltner_SnapLimit",
 )
 ENABLED_STRATEGIES = PULSE_MODELS
 PULSE_MIN_ATR_POINTS: float = 95.0
@@ -188,7 +188,7 @@ CONSECUTIVE_LOSS_PAUSE_MIN: int = 45
 # ---------------------------------------------------------------------------
 # Zero-risk pyramiding
 # ---------------------------------------------------------------------------
-MAX_BASE_TRADES: int = 1
+MAX_BASE_TRADES: int = 2
 MAX_TOTAL_TRADES_WITH_PYRAMID: int = 2
 ENABLE_ZERO_RISK_PYRAMID: bool = True
 

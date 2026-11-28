@@ -60,6 +60,8 @@ def _prepare_frames(m1_df, m5_df, point):
             m5["m5_adx_14"] = indicators._adx(m5, 14)
             v, up, lo = indicators.vwap_bands(m5, 1.75)
             m5["m5_vwap"], m5["m5_vwap_upper"], m5["m5_vwap_lower"] = v, up, lo
+            v2, up2, lo2 = indicators.vwap_bands(m5, 1.45)
+            m5["m5_vwap_upper_145"], m5["m5_vwap_lower_145"] = up2, lo2
             prev_close = m5["close"].shift(1)
             tr = pd.concat([m5["high"] - m5["low"],
                             (m5["high"] - prev_close).abs(),
@@ -73,6 +75,8 @@ def _prepare_frames(m1_df, m5_df, point):
             m5["fvg_bull"] = (m5["low"] > m5["high"].shift(2)).astype(int)
             m5["fvg_bear"] = (m5["high"] < m5["low"].shift(2)).astype(int)
             m5["swing_high_20"] = m5["high"].rolling(20).max().shift(1)
+            m5["swing_high_12"] = m5["high"].rolling(12).max().shift(1)
+            m5["swing_low_12"] = m5["low"].rolling(12).min().shift(1)
             m5["swing_low_20"] = m5["low"].rolling(20).min().shift(1)
             m5["inside_bar"] = ((m5["high"] < m5["high"].shift(1))
                                 & (m5["low"] > m5["low"].shift(1))).astype(int)
@@ -199,8 +203,8 @@ class BacktestRunner:
         def open_position(i, direction, entry, sl, tp, strategy, conf, ts, meta=None):
             nonlocal ticket, last_entry_i, trades_today
             n_open = len(positions)
-            can = n_open == 0
-            if not can and n_open == 1 and config.ENABLE_ZERO_RISK_PYRAMID \
+            can = n_open < config.MAX_BASE_TRADES
+            if not can and n_open >= config.MAX_BASE_TRADES and config.ENABLE_ZERO_RISK_PYRAMID \
                     and n_open < config.MAX_TOTAL_TRADES_WITH_PYRAMID:
                 ex = positions[0]
                 same = ex["dir"] == direction

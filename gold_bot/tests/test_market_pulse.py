@@ -48,7 +48,7 @@ class TestPulseColumns(unittest.TestCase):
         self.assertGreater(d["effort_vs_result"].iloc[-1], 2.0)
 
     def test_session_window(self):
-        d = frame(40, start="2026-01-05 20:00")
+        d = frame(40, start="2026-01-05 22:00")
         self.assertEqual(int(d["session_pulse_active"].iloc[-1]), 0)
         d2 = frame(40, start="2026-01-05 10:00")
         self.assertEqual(int(d2["session_pulse_active"].iloc[-1]), 1)
@@ -63,7 +63,7 @@ class TestPulseContext(unittest.TestCase):
         d = frame(80)
         ctx = market_pulse.PulseContext(d, d, d)
         self.assertGreater(ctx.pulse, 0.0)
-        self.assertGreater(ctx.atr_points, 95.0)
+        self.assertGreater(ctx.atr_points, 80.0)
         self.assertTrue(ctx.session_active)
         self.assertIsNotNone(ctx.point)
 

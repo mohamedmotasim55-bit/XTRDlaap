@@ -84,7 +84,7 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
     print(f"Month 1: {m1a['time'].iloc[0]} -> {m1a['time'].iloc[-1]} ({len(m1a)} bars)")
     print(f"Month 2: {m1b['time'].iloc[0]} -> {m1b['time'].iloc[-1]} ({len(m1b)} bars)")
 
-    print("\n########## 4-ENGINE MARKET-PULSE TOURNAMENT ##########")
+    print("\n########## 6-ENGINE MARKET-PULSE TOURNAMENT ##########")
     header = (f" {'Engine':<34}{'T':>6}{'WR':>7}{'PF':>7}{'Net$':>9}{'DD%':>7}")
     print(header)
     m1_results, m2_results, rows = {}, {}, []
@@ -114,7 +114,7 @@ def run_tournament(m1, m5, spread=26.0, point=0.01):
               f" | PF {_pf(ens)} | MaxDD {ens['max_drawdown_pct']:.1f}%")
         _dir_line("Ensemble M2", ens)
 
-    print("\n########## COMBINED 4-ENGINE PORTFOLIO (dynamic lots) ##########")
+    print("\n########## COMBINED 6-ENGINE PORTFOLIO (dynamic lots) ##########")
     p1 = _run(m1a, m5a, config.PULSE_MODELS, "portfolio_m1", dynamic=True)
     p2 = _run(m1b, m5b, config.PULSE_MODELS, "portfolio_m2", dynamic=True)
     print(f" {'Window':<34}{'T':>6}{'WR':>7}{'PF':>7}{'Net$':>9}{'DD%':>7}")

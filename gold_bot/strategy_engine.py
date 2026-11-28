@@ -563,40 +563,47 @@ def _build_pulse_signal(df, df_m5, df_m15, regime, enabled, base_sig):
     rng = c.range or 1e-9
     cands = []
 
-    if "Pulse_ClimaxAbsorption" in enabled and c.pulse >= 1.55 and c.evr >= 2.2 \
+    if "Pulse_ClimaxAbsorption" in enabled and c.pulse >= 1.50 and c.evr >= 2.3 \
             and c.body <= 0.48 * rng:
-        if c.wick_low >= 0.45 * rng and c.rsi is not None and c.rsi < 35 and c.close > c.open_:
-            cands.append(_cand(c, "Pulse_ClimaxAbsorption", "BUY", 0.75))
-        if c.wick_high >= 0.45 * rng and c.rsi is not None and c.rsi > 65 and c.close < c.open_:
-            cands.append(_cand(c, "Pulse_ClimaxAbsorption", "SELL", 0.75))
+        if c.wick_low >= 0.45 * rng and c.rsi is not None and c.rsi < 33 and c.close > c.open_:
+            cands.append(_cand(c, "Pulse_ClimaxAbsorption", "BUY", 0.76))
+        if c.wick_high >= 0.45 * rng and c.rsi is not None and c.rsi > 67 and c.close < c.open_:
+            cands.append(_cand(c, "Pulse_ClimaxAbsorption", "SELL", 0.76))
 
-    if ("InstantMomentum_SqueezeBreak" in enabled and c.pulse >= 1.35
-            and rng > 1.10 * c.atr and c.bb_width_rank is not None
-            and c.bb_width_rank <= 0.40 and c.m5_adx is not None and c.m5_adx > 18):
-        if c.m5_up and c.close > c.open_:
-            cands.append(_cand(c, "InstantMomentum_SqueezeBreak", "BUY", 0.71, "LIMIT", 14.0))
-        if c.m5_dn and c.close < c.open_:
-            cands.append(_cand(c, "InstantMomentum_SqueezeBreak", "SELL", 0.71, "LIMIT", 14.0))
+    if "Exhaustion_FOMOFade" in enabled and c.pulse >= 1.45 and c.rsi is not None:
+        if (c.rsi > 75 and (c.rsi_prev or 0) > 70 and c.wick_high >= 0.42 * rng
+                and c.close < c.open_):
+            cands.append(_cand(c, "Exhaustion_FOMOFade", "SELL", 0.74))
+        if (c.rsi < 25 and (c.rsi_prev or 100) < 30 and c.wick_low >= 0.42 * rng
+                and c.close > c.open_):
+            cands.append(_cand(c, "Exhaustion_FOMOFade", "BUY", 0.74))
 
-    if ("InstantMomentum_TickAcceleration" in enabled and c.pulse >= 1.35
-            and c.accel_buy and c.rsi is not None and c.rsi >= 50.0
-            and c.close >= c.low + 0.60 * rng and c.m5_up and c.m15_up):
-        cands.append(_cand(c, "InstantMomentum_TickAcceleration", "BUY", 0.72, "LIMIT", 14.0))
-    if ("InstantMomentum_TickAcceleration" in enabled and c.pulse >= 1.35
-            and c.accel_sell and c.rsi is not None and c.rsi <= 50.0
-            and c.close <= c.low + 0.40 * rng and c.m5_dn and c.m15_dn):
-        cands.append(_cand(c, "InstantMomentum_TickAcceleration", "SELL", 0.72, "LIMIT", 14.0))
+    vwap_lo = c.m5_vwap_lo_145 if c.m5_vwap_lo_145 is not None else c.m5_vwap_lo
+    vwap_up = c.m5_vwap_up_145 if c.m5_vwap_up_145 is not None else c.m5_vwap_up
+    if "M5_VWAP_ElasticAbsorption" in enabled and c.pulse >= 1.40 and c.rsi is not None:
+        if vwap_lo is not None and c.low <= vwap_lo and c.rsi < 32 and c.close > c.open_:
+            cands.append(_cand(c, "M5_VWAP_ElasticAbsorption", "BUY", 0.73, "LIMIT", 10.0))
+        if vwap_up is not None and c.high >= vwap_up and c.rsi > 68 and c.close < c.open_:
+            cands.append(_cand(c, "M5_VWAP_ElasticAbsorption", "SELL", 0.73, "LIMIT", 10.0))
 
-    if ("GoldImpulse_PullbackSniper" in enabled and c.m5_adx is not None
-            and c.m5_adx >= 22 and c.pulse >= 1.35 and c.ema13 is not None
-            and c.rsi is not None):
-        tol = 0.35 * c.atr
-        if c.h1_up() and c.m15_up and c.m5_trend_up and c.low <= c.ema13 + tol \
-                and c.rsi < 52 and c.close > c.open_:
-            cands.append(_cand(c, "GoldImpulse_PullbackSniper", "BUY", 0.71, "LIMIT", 15.0))
-        if c.h1_dn() and c.m15_dn and c.m5_trend_dn and c.high >= c.ema13 - tol \
-                and c.rsi > 48 and c.close < c.open_:
-            cands.append(_cand(c, "GoldImpulse_PullbackSniper", "SELL", 0.71, "LIMIT", 15.0))
+    if "Intraday_Level_RejectionPulse" in enabled and c.pulse >= 1.45 and c.atr:
+        tol = 0.15 * c.atr
+        buy_levels = [v for v in (c.pivot_s1, c.pivot_s2, c.asian_low,
+                                  c.m5_sw12_lo, c.swing_lo) if v is not None]
+        sell_levels = [v for v in (c.pivot_r1, c.pivot_r2, c.asian_high,
+                                   c.m5_sw12_hi, c.swing_hi) if v is not None]
+        touched_lo = any(c.low <= lv + tol and c.close > lv for lv in buy_levels)
+        touched_hi = any(c.high >= lv - tol and c.close < lv for lv in sell_levels)
+        if touched_lo and c.wick_low >= 0.45 * rng and c.close > c.open_:
+            cands.append(_cand(c, "Intraday_Level_RejectionPulse", "BUY", 0.72))
+        if touched_hi and c.wick_high >= 0.45 * rng and c.close < c.open_:
+            cands.append(_cand(c, "Intraday_Level_RejectionPulse", "SELL", 0.72))
+
+    if "MicroKeltner_SnapLimit" in enabled and c.pulse >= 1.35 and c.stoch_k is not None:
+        if c.kelt_lo is not None and c.low <= c.kelt_lo and c.stoch_k < 20:
+            cands.append(_cand(c, "MicroKeltner_SnapLimit", "BUY", 0.72, "LIMIT", 10.0))
+        if c.kelt_up is not None and c.high >= c.kelt_up and c.stoch_k > 80:
+            cands.append(_cand(c, "MicroKeltner_SnapLimit", "SELL", 0.72, "LIMIT", 10.0))
 
     if "Pulse_ExhaustionDivergence" in enabled and c.pulse >= 1.55 and c.rsi is not None:
         stretched_lo = ((c.m5_vwap_lo is not None and c.low <= c.m5_vwap_lo)
@@ -615,7 +622,7 @@ def _build_pulse_signal(df, df_m5, df_m15, regime, enabled, base_sig):
     winner = max(cands, key=lambda x: (x["confidence"], x["strategy"]))
     agree = [x for x in cands if x["direction"] == winner["direction"]]
     aligned = c.aligned_buy if winner["direction"] == "BUY" else c.aligned_sell
-    momentum = winner["strategy"].startswith(("InstantMomentum", "GoldImpulse"))
+    momentum = False
     targets = dynamic_target_engine.select_targets(
         c.pulse, c.atr_points, m5_adx=c.m5_adx or 0.0, atr_ratio=c.atr_ratio,
         m5_aligned=aligned, consensus=len(agree), momentum=momentum)
