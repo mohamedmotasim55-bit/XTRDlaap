@@ -105,9 +105,8 @@ NEW_MODELS = (
 )
 ALL_STRATEGIES = LEGACY_STRATEGIES + NEW_MODELS
 PULSE_MODELS = (
-    "Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption",
-    "Exhaustion_FOMOFade", "M5_VWAP_ElasticAbsorption",
-    "Intraday_Level_RejectionPulse", "MicroKeltner_SnapLimit",
+    "Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption", "Exhaustion_FOMOFade",
+    "Exhaustion_MultiBarStretch", "M5_Absorption_M1Trigger",
 )
 ENABLED_STRATEGIES = PULSE_MODELS
 PULSE_MIN_ATR_POINTS: float = 95.0

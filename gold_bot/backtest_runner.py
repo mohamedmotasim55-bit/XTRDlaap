@@ -57,6 +57,11 @@ def _prepare_frames(m1_df, m5_df, point):
             m5["m5_ema_21"] = m5["close"].ewm(span=21, adjust=False).mean()
             m5["m5_ema_50"] = m5["close"].ewm(span=config.EMA_SLOW, adjust=False).mean()
             m5["m5_ema21_slope"] = m5["m5_ema_21"].diff()
+            m5["m5_pulse_intensity"] = m5["tick_volume"] / m5["tick_volume"].rolling(20).mean()
+            m5["m5_rsi"] = indicators._rsi(m5["close"], 7)
+            m5["m5_range"] = m5["high"] - m5["low"]
+            m5["m5_wick_high"] = m5["high"] - m5[["open", "close"]].max(axis=1)
+            m5["m5_wick_low"] = m5[["open", "close"]].min(axis=1) - m5["low"]
             m5["m5_adx_14"] = indicators._adx(m5, 14)
             v, up, lo = indicators.vwap_bands(m5, 1.75)
             m5["m5_vwap"], m5["m5_vwap_upper"], m5["m5_vwap_lower"] = v, up, lo

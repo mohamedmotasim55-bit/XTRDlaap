@@ -17,7 +17,7 @@ def select_targets(pulse_intensity, atr_points, m5_adx=0.0, atr_ratio=1.0,
                    m5_aligned=False, consensus=0, momentum=False) -> dict:
     pulse = _clamp(float(pulse_intensity or 0.0), 1.0, 4.0)
     atr_points = float(atr_points or 0.0)
-    sl = _clamp(0.58 * atr_points, 55.0, 74.0)
+    sl = _clamp(0.58 * atr_points, 58.0, 74.0)
 
     pulse_s = _clamp((pulse - 1.45) / 1.55, 0.0, 1.0)
     adx_s = _clamp((float(m5_adx or 0.0) - 21.0) / 20.0, 0.0, 1.0)

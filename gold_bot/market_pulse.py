@@ -6,7 +6,7 @@ from typing import Optional
 
 import pandas as pd
 
-PULSE_MIN_ATR_POINTS = 95.0
+PULSE_MIN_ATR_POINTS = 92.0
 SESSION_START = 8.0
 SESSION_END = 18.5
 
@@ -97,6 +97,7 @@ class PulseContext:
         self.stoch_k = g("stoch_k")
         prev = df.iloc[-2].to_dict() if df is not None and len(df) > 1 else {}
         self.rsi_prev = _num(prev.get("rsi_7"))
+        self.move_4 = (self.close - float(df["close"].iloc[-5])) if df is not None and len(df) > 4 else None
         self.swing_hi, self.swing_lo = g("swing_high_15"), g("swing_low_15")
 
         self.m5_close, self.m5_ema21, self.m5_ema50 = g5("close"), g5("m5_ema_21"), g5("m5_ema_50")
@@ -105,6 +106,10 @@ class PulseContext:
         self.m5_sw_hi, self.m5_sw_lo = g5("swing_high_20"), g5("swing_low_20")
         self.m5_sw12_hi, self.m5_sw12_lo = g5("swing_high_12"), g5("swing_low_12")
         self.m5_vwap_up_145, self.m5_vwap_lo_145 = g5("m5_vwap_upper_145"), g5("m5_vwap_lower_145")
+        self.m5_pulse = g5("m5_pulse_intensity")
+        self.m5_rsi = g5("m5_rsi")
+        self.m5_wick_hi, self.m5_wick_lo = g5("m5_wick_high"), g5("m5_wick_low")
+        self.m5_range = g5("m5_range")
         self.m15_close = g15("close")
         self.m15_ema21, self.m15_ema50 = g15("ema_21"), g15("ema_50")
         self.m15_adx = g15("adx_14")

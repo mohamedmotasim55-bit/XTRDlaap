@@ -19,7 +19,7 @@ def build_climax_frame():
 
 class TestDynamicTargets(unittest.TestCase):
     def test_sl_clamped(self):
-        self.assertEqual(dynamic_target_engine.select_targets(2.0, 50)["sl_points"], 55.0)
+        self.assertEqual(dynamic_target_engine.select_targets(2.0, 50)["sl_points"], 58.0)
         self.assertEqual(dynamic_target_engine.select_targets(2.0, 500)["sl_points"], 74.0)
         self.assertAlmostEqual(dynamic_target_engine.select_targets(2.0, 100)["sl_points"], 58.0, 1)
 
@@ -56,13 +56,16 @@ class TestAdaptiveTrailing(unittest.TestCase):
 
 
 class TestRegistry(unittest.TestCase):
-    def test_six_winning_dna_engines(self):
-        self.assertEqual(len(config.PULSE_MODELS), 6)
+    def test_five_winning_dna_engines(self):
+        self.assertEqual(len(config.PULSE_MODELS), 5)
         for retired in ("Pulse_LiquiditySweep_Snap", "InstantMomentum_SqueezeBreak",
-                        "InstantMomentum_TickAcceleration", "GoldImpulse_PullbackSniper"):
+                        "InstantMomentum_TickAcceleration", "GoldImpulse_PullbackSniper",
+                        "MicroKeltner_SnapLimit", "Intraday_Level_RejectionPulse",
+                        "M5_VWAP_ElasticAbsorption"):
             self.assertNotIn(retired, config.PULSE_MODELS)
-        for name in ("Exhaustion_FOMOFade", "M5_VWAP_ElasticAbsorption",
-                     "Intraday_Level_RejectionPulse", "MicroKeltner_SnapLimit"):
+        for name in ("Pulse_ExhaustionDivergence", "Pulse_ClimaxAbsorption",
+                     "Exhaustion_FOMOFade", "Exhaustion_MultiBarStretch",
+                     "M5_Absorption_M1Trigger"):
             self.assertIn(name, config.PULSE_MODELS)
 
 
