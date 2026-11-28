@@ -54,6 +54,7 @@ class TestRealTickFeatures(unittest.TestCase):
         self.assertAlmostEqual(audit["spread_pts_p50"], 26.0, delta=1.0)
         self.assertLessEqual(audit["median_interval_ms"], 300)
         self.assertEqual(len(dirs), len(bars))
+        self.assertIn("bars_with_burst", audit)
 
     def test_no_ticks_means_no_signal(self):
         bars = self._bars()

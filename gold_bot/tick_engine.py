@@ -201,10 +201,13 @@ def build_bar_tick_features(m1, ticks, point: float = 0.01):
     s = pd.Series(mid)
     diff = s.diff()
     fast_move = (s - s.shift(FAST_TICKS)) / point
-    abs_sum = diff.abs().rolling(SLOW_TICKS).sum()
-    path_eff = ((s - s.shift(SLOW_TICKS)).abs() / abs_sum).fillna(0.0)
+    # v1.29 measures path efficiency over the same burst window, plus a
+    # hard 4-second ceiling between the first and last tick of the burst.
+    burst_path = diff.abs().rolling(FAST_TICKS).sum()
+    path_eff = ((s - s.shift(FAST_TICKS)).abs() / burst_path).fillna(0.0)
+    span_ms = pd.Series(msc).diff(FAST_TICKS)
 
-    qualify = (fast_move.abs() >= 18.0) & (path_eff >= 0.30)
+    qualify = (fast_move.abs() >= 18.0) & (path_eff >= 0.30) & (span_ms <= 4000)
     if not qualify.any():
         return [None] * len(m1), audit
 

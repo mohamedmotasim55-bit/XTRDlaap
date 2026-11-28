@@ -43,7 +43,7 @@ def main() -> int:
             import pandas as _pd
             start = _pd.Timestamp(m1["time"].iloc[0]).to_pydatetime()
             end = _pd.Timestamp(m1["time"].iloc[-1]).to_pydatetime() + _pd.Timedelta(minutes=1)
-            ticks = conn.get_real_ticks(start, end, max_ticks=3_000_000)
+            ticks = conn.get_real_ticks(start, end, max_ticks=6_000_000)
             print(f"Real ticks loaded: {len(ticks)} (COPY_TICKS_ALL, no synthetic data)")
             import tick_engine as _te
             _dirs, _audit = _te.build_bar_tick_features(m1, ticks, info["point"])

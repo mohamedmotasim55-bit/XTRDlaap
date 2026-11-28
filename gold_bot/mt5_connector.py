@@ -195,7 +195,7 @@ class MT5Connector:
 
     # ---------------------------------------------------------------- candles
     def get_real_ticks(self, date_from, date_to, day_chunk: int = 5,
-                       max_ticks: int = 3_000_000):
+                       max_ticks: int = 6_000_000):
         """Fetch 100% authentic broker ticks (bid/ask/time_msc) via COPY_TICKS_ALL.
 
         The range is fetched in ``day_chunk`` windows so the terminal never
